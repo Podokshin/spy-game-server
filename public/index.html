@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Шпион Online</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <h1>🌐 Шпион Online</h1>
+    <p class="subtitle">Создайте комнату или присоединитесь по коду — играйте с друзьями, у каждого свой телефон.</p>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <div class="divider">или</div>
+
+    <div class="field">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+    </div>
+
+    <div class="field" id="lobbySettingsField">
+      <label>Категория</label>
+      <div class="category-toggle">
+        <button type="button" class="cat-btn active" data-category="places">📍 Места</button>
+        <button type="button" class="cat-btn" data-category="characters">🎭 Персонажи</button>
+      </div>
+    </div>
+
+    <div class="field hidden" id="lobbySubcategoryField">
+      <label>Тема персонажей</label>
+      <div class="subcat-toggle" id="lobbySubcategoryToggle"></div>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-field-label">
+        <input type="checkbox" id="lobbyTimerEnabled" checked>
+        Таймер обсуждения
+      </label>
+    </div>
+
+    <div class="field" id="lobbyTimerMinutesField">
+      <label for="lobbyTimerMinutes">Минут на обсуждение</label>
+      <input type="number" id="lobbyTimerMinutes" min="1" max="30" value="8">
+    </div>
+
+    <div class="field">
+      <label>Игроки (<span id="playerCountLabel">0</span>)</label>
+      <div id="lobbyPlayersList" class="chip-list"></div>
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needMorePlayersHint">Нужно минимум 3 игрока</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Показ своей роли ===== -->
+  <section id="screen-role" class="screen">
+    <div class="role-card" id="roleCard">
+      <div id="roleContent"></div>
+      <button id="roleReadyBtn" class="primary-btn">Я запомнил(а), готов(а)</button>
+    </div>
+    <p class="hint hidden" id="readyHint"></p>
+    <button id="forceStartBtn" class="secondary-btn hidden">Начать обсуждение, не дожидаясь всех</button>
+  </section>
+
+  <!-- ===== Обсуждение ===== -->
+  <section id="screen-discussion" class="screen">
+    <h2>Обсуждение началось!</h2>
+    <p class="discuss-hint">Игроки по очереди рассказывают, что они «видят». Найдите шпиона.</p>
+
+    <div id="timerBlock" class="timer-block hidden">
+      <div id="timerRing" class="timer-ring">
+        <div class="timer-ring-inner">
+          <span id="timerDisplay" class="timer-display">08:00</span>
+        </div>
+      </div>
+      <button id="pauseBtn" class="secondary-btn hidden">Пауза</button>
+    </div>
+
+    <button id="endDiscussionBtn" class="primary-btn hidden">Завершить обсуждение</button>
+    <p class="hint hidden" id="discussionWaitHint">Решение о завершении принимает хост.</p>
+  </section>
+
+  <!-- ===== Итоги ===== -->
+  <section id="screen-end" class="screen">
+    <h2>🕵️ Результаты раунда</h2>
+
+    <button id="revealSpyStageBtn" class="primary-btn hidden">Раскрыть шпиона</button>
+    <p class="hint hidden" id="waitSpyHint">Хост раскроет шпиона…</p>
+
+    <p class="end-line hidden" id="spyLine">Шпионом был(а): <b id="endSpyName"></b></p>
+
+    <button id="revealTopicStageBtn" class="primary-btn hidden">Раскрыть локацию</button>
+
+    <p class="end-line hidden" id="topicLine"><span id="endTopicLabel">Локация</span>: <b id="endLocation"></b></p>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
