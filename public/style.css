@@ -338,6 +338,13 @@ input[type="text"]:focus, input[type="number"]:focus {
   color: transparent;
 }
 
+.copy-link-btn {
+  margin-top: 8px;
+  padding: 8px 16px;
+  font-size: 0.82rem;
+  width: auto;
+}
+
 /* Player chips */
 .chip-list {
   display: flex;
@@ -359,6 +366,65 @@ input[type="text"]:focus, input[type="number"]:focus {
 .player-chip .host-tag {
   font-size: 0.7rem;
   color: var(--gold);
+}
+
+.player-chip .turn-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-chip .vote-count {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.player-chip .score-value {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.vote-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vote-option-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+
+.vote-option-btn.selected {
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.4);
+}
+
+.vote-option-btn:active {
+  transform: scale(0.96);
+}
+
+.vote-option-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .ready-badge {

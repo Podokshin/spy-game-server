@@ -18,6 +18,7 @@
     lobby: document.getElementById('screen-lobby'),
     role: document.getElementById('screen-role'),
     discussion: document.getElementById('screen-discussion'),
+    voting: document.getElementById('screen-voting'),
     end: document.getElementById('screen-end')
   };
 
@@ -35,6 +36,7 @@
     menuError: document.getElementById('menuError'),
 
     roomCodeDisplay: document.getElementById('roomCodeDisplay'),
+    copyLinkBtn: document.getElementById('copyLinkBtn'),
     lobbySettingsField: document.getElementById('lobbySettingsField'),
     lobbyCatBtns: document.querySelectorAll('#lobbySettingsField .cat-btn'),
     lobbySubcategoryField: document.getElementById('lobbySubcategoryField'),
@@ -56,6 +58,7 @@
     readyHint: document.getElementById('readyHint'),
     forceStartBtn: document.getElementById('forceStartBtn'),
 
+    turnOrderList: document.getElementById('turnOrderList'),
     timerBlock: document.getElementById('timerBlock'),
     timerRing: document.getElementById('timerRing'),
     timerDisplay: document.getElementById('timerDisplay'),
@@ -63,14 +66,24 @@
     endDiscussionBtn: document.getElementById('endDiscussionBtn'),
     discussionWaitHint: document.getElementById('discussionWaitHint'),
 
+    voteOptions: document.getElementById('voteOptions'),
+    submitVoteBtn: document.getElementById('submitVoteBtn'),
+    voteWaitHint: document.getElementById('voteWaitHint'),
+    forceFinishVoteBtn: document.getElementById('forceFinishVoteBtn'),
+
+    voteTallyField: document.getElementById('voteTallyField'),
+    voteTallyList: document.getElementById('voteTallyList'),
     revealSpyStageBtn: document.getElementById('revealSpyStageBtn'),
     waitSpyHint: document.getElementById('waitSpyHint'),
     spyLine: document.getElementById('spyLine'),
+    caughtLine: document.getElementById('caughtLine'),
     endSpyName: document.getElementById('endSpyName'),
     revealTopicStageBtn: document.getElementById('revealTopicStageBtn'),
     topicLine: document.getElementById('topicLine'),
     endTopicLabel: document.getElementById('endTopicLabel'),
     endLocation: document.getElementById('endLocation'),
+    scoreboardField: document.getElementById('scoreboardField'),
+    scoreboardList: document.getElementById('scoreboardList'),
     playAgainBtn: document.getElementById('playAgainBtn'),
     waitPlayAgainHint: document.getElementById('waitPlayAgainHint'),
     leaveRoomBtn2: document.getElementById('leaveRoomBtn2')
@@ -80,9 +93,11 @@
 
   let currentRoom = null;
   let isHost = false;
+  let latestPlayers = [];
   let lobbyCategory = 'places';
   let lobbySubCategory = 'mix';
   let selectedAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+  let selectedVoteTarget = null;
   let timerState = null; // { endsAt, totalMs, enabled }
   let tickHandle = null;
 
@@ -98,6 +113,25 @@
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
     });
     el.avatarGrid.appendChild(btn);
+  });
+
+  // ---------- Invite link ----------
+  const roomFromUrl = new URLSearchParams(window.location.search).get('room');
+  if (roomFromUrl) {
+    el.joinCode.value = roomFromUrl.toUpperCase();
+  }
+
+  el.copyLinkBtn.addEventListener('click', () => {
+    if (!currentRoom) return;
+    const link = window.location.origin + window.location.pathname + '?room=' + currentRoom.code;
+    const restoreLabel = () => { el.copyLinkBtn.textContent = '🔗 Скопировать ссылку-приглашение'; };
+    navigator.clipboard.writeText(link).then(() => {
+      el.copyLinkBtn.textContent = '✅ Ссылка скопирована!';
+      setTimeout(restoreLabel, 1800);
+    }).catch(() => {
+      el.copyLinkBtn.textContent = link;
+      setTimeout(restoreLabel, 3000);
+    });
   });
 
   // ---------- Sound (generated, same as local game) ----------
@@ -221,6 +255,7 @@
     currentRoom = null;
     isHost = false;
     clearTimerTick();
+    history.replaceState(null, '', window.location.pathname);
     showScreen('menu');
   }
   el.leaveRoomBtn.addEventListener('click', leaveRoom);
@@ -228,7 +263,9 @@
 
   function applyRoomUpdate(room) {
     currentRoom = room;
+    latestPlayers = room.players;
     isHost = room.players.some(p => p.id === socket.id && p.isHost);
+    history.replaceState(null, '', '?room=' + room.code);
 
     if (room.phase === 'lobby') {
       renderLobby(room);
@@ -323,6 +360,9 @@
   // ---------- Discussion / timer ----------
   socket.on('discussion_started', (data) => {
     showScreen('discussion');
+    el.turnOrderList.innerHTML = (data.turnOrder || []).map((p, i) => `
+      <span class="player-chip"><span class="turn-num">${i + 1}</span> ${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}</span>
+    `).join('');
     timerState = { endsAt: data.endsAt, totalMs: data.totalMs, enabled: data.timerEnabled, remainingMs: data.totalMs, paused: false };
     el.timerBlock.classList.toggle('hidden', !data.timerEnabled);
     el.pauseBtn.classList.toggle('hidden', !isHost);
@@ -384,20 +424,79 @@
     socket.emit('end_discussion');
   });
 
-  socket.on('discussion_ended', ({ timeUp }) => {
+  // ---------- Voting ----------
+  socket.on('voting_started', (data) => {
     clearTimerTick();
-    if (timeUp) playTimeUpSound();
+    if (data.timeUp) playTimeUpSound();
+    selectedVoteTarget = null;
+    el.submitVoteBtn.disabled = true;
+    el.submitVoteBtn.classList.remove('hidden');
+    el.voteWaitHint.classList.add('hidden');
+    el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
+
+    el.voteOptions.innerHTML = '';
+    data.players.filter(p => p.id !== socket.id).forEach(p => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'vote-option-btn';
+      btn.dataset.targetId = p.id;
+      btn.textContent = `${p.avatar || '🙂'} ${p.name}`;
+      btn.addEventListener('click', () => {
+        selectedVoteTarget = p.id;
+        el.voteOptions.querySelectorAll('.vote-option-btn').forEach(b => b.classList.toggle('selected', b === btn));
+        el.submitVoteBtn.disabled = false;
+      });
+      el.voteOptions.appendChild(btn);
+    });
+
+    showScreen('voting');
+  });
+
+  el.submitVoteBtn.addEventListener('click', () => {
+    if (!selectedVoteTarget) return;
+    socket.emit('cast_vote', { targetId: selectedVoteTarget });
+    el.submitVoteBtn.classList.add('hidden');
+    el.voteOptions.querySelectorAll('.vote-option-btn').forEach(b => b.disabled = true);
+    el.voteWaitHint.classList.remove('hidden');
+    el.voteWaitHint.textContent = 'Голос принят. Ждём остальных…';
+  });
+
+  el.forceFinishVoteBtn.addEventListener('click', () => {
+    socket.emit('force_finish_voting');
+  });
+
+  socket.on('vote_update', ({ votedCount, total }) => {
+    if (!el.voteWaitHint.classList.contains('hidden')) {
+      el.voteWaitHint.textContent = `Проголосовали: ${votedCount} из ${total}`;
+    }
+  });
+
+  socket.on('voting_result', ({ tally }) => {
+    el.voteTallyList.innerHTML = tally.map(p => `
+      <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="vote-count">${p.votes} ${voteWord(p.votes)}</span></span>
+    `).join('');
+    el.voteTallyField.classList.remove('hidden');
     resetEndScreen();
     showScreen('end');
   });
+
+  function voteWord(n) {
+    const mod10 = n % 10;
+    const mod100 = n % 100;
+    if (mod10 === 1 && mod100 !== 11) return 'голос';
+    if ([2, 3, 4].includes(mod10) && ![12, 13, 14].includes(mod100)) return 'голоса';
+    return 'голосов';
+  }
 
   // ---------- End screen (staged reveal) ----------
   function resetEndScreen() {
     el.revealSpyStageBtn.classList.toggle('hidden', !isHost);
     el.waitSpyHint.classList.toggle('hidden', isHost);
     el.spyLine.classList.add('hidden');
+    el.caughtLine.classList.add('hidden');
     el.revealTopicStageBtn.classList.add('hidden');
     el.topicLine.classList.add('hidden');
+    el.scoreboardField.classList.add('hidden');
     el.playAgainBtn.classList.add('hidden');
     el.waitPlayAgainHint.classList.add('hidden');
   }
@@ -406,9 +505,11 @@
     socket.emit('reveal_spy');
   });
 
-  socket.on('spy_revealed', ({ spyName, spyAvatar }) => {
+  socket.on('spy_revealed', ({ spyName, spyAvatar, caught }) => {
     el.endSpyName.textContent = (spyAvatar ? spyAvatar + ' ' : '') + spyName;
     el.spyLine.classList.remove('hidden');
+    el.caughtLine.textContent = caught ? '🎉 Группа вычислила шпиона по голосованию!' : '🕵️ Шпион остался незамеченным!';
+    el.caughtLine.classList.remove('hidden');
     el.revealSpyStageBtn.classList.add('hidden');
     el.waitSpyHint.classList.add('hidden');
     el.revealTopicStageBtn.classList.toggle('hidden', !isHost);
@@ -423,6 +524,13 @@
     el.endLocation.textContent = topicName;
     el.topicLine.classList.remove('hidden');
     el.revealTopicStageBtn.classList.add('hidden');
+
+    const sorted = latestPlayers.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
+    el.scoreboardList.innerHTML = sorted.map(p => `
+      <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>
+    `).join('');
+    el.scoreboardField.classList.remove('hidden');
+
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
   });

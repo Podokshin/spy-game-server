@@ -45,6 +45,7 @@
     <div class="room-code-box">
       <span class="room-code-label">Код комнаты — скажите друзьям</span>
       <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
     </div>
 
     <div class="field" id="lobbySettingsField">
@@ -100,6 +101,11 @@
     <h2>Обсуждение началось!</h2>
     <p class="discuss-hint">Игроки по очереди рассказывают, что они «видят». Найдите шпиона.</p>
 
+    <div class="field">
+      <label>Порядок хода (кто говорит первым)</label>
+      <div class="chip-list" id="turnOrderList"></div>
+    </div>
+
     <div id="timerBlock" class="timer-block hidden">
       <div id="timerRing" class="timer-ring">
         <div class="timer-ring-inner">
@@ -113,18 +119,43 @@
     <p class="hint hidden" id="discussionWaitHint">Решение о завершении принимает хост.</p>
   </section>
 
+  <!-- ===== Голосование ===== -->
+  <section id="screen-voting" class="screen">
+    <h2>🗳️ Голосование</h2>
+    <p class="discuss-hint">Кто, по-вашему, шпион? Голос анонимный — никто не увидит, за кого вы проголосовали.</p>
+
+    <div class="field">
+      <div class="vote-options" id="voteOptions"></div>
+    </div>
+
+    <button id="submitVoteBtn" class="primary-btn" disabled>Проголосовать</button>
+    <p class="hint hidden" id="voteWaitHint"></p>
+    <button id="forceFinishVoteBtn" class="secondary-btn hidden">Завершить голосование сейчас</button>
+  </section>
+
   <!-- ===== Итоги ===== -->
   <section id="screen-end" class="screen">
     <h2>🕵️ Результаты раунда</h2>
+
+    <div class="field hidden" id="voteTallyField">
+      <label>Результаты голосования</label>
+      <div class="chip-list" id="voteTallyList"></div>
+    </div>
 
     <button id="revealSpyStageBtn" class="primary-btn hidden">Раскрыть шпиона</button>
     <p class="hint hidden" id="waitSpyHint">Хост раскроет шпиона…</p>
 
     <p class="end-line hidden" id="spyLine">Шпионом был(а): <b id="endSpyName"></b></p>
+    <p class="end-line hidden" id="caughtLine"></p>
 
     <button id="revealTopicStageBtn" class="primary-btn hidden">Раскрыть локацию</button>
 
     <p class="end-line hidden" id="topicLine"><span id="endTopicLabel">Локация</span>: <b id="endLocation"></b></p>
+
+    <div class="field hidden" id="scoreboardField">
+      <label>🏆 Счёт</label>
+      <div class="chip-list" id="scoreboardList"></div>
+    </div>
 
     <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
     <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>

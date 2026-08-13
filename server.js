@@ -40,7 +40,7 @@ function shuffle(arr) {
 }
 
 function publicPlayers(room) {
-  return room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, isHost: p.id === room.hostId }));
+  return room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, isHost: p.id === room.hostId, score: p.score }));
 }
 
 function roomSummary(room) {
@@ -81,7 +81,8 @@ function startDiscussion(room) {
   io.to(room.code).emit('discussion_started', {
     timerEnabled: room.timer.enabled,
     endsAt: room.timer.endsAt,
-    totalMs: room.timer.totalMs
+    totalMs: room.timer.totalMs,
+    turnOrder: room.game.turnOrder
   });
   clearRoomTimer(room);
   if (room.timer.enabled) {
@@ -93,9 +94,42 @@ function startDiscussion(room) {
 
 function endDiscussion(room, timeUp) {
   clearRoomTimer(room);
+  room.phase = 'voting';
+  room.votes = new Map();
+  io.to(room.code).emit('voting_started', {
+    timeUp,
+    players: room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar }))
+  });
+}
+
+function finalizeVoting(room) {
+  const tallyMap = new Map();
+  room.players.forEach(p => tallyMap.set(p.id, 0));
+  room.votes.forEach(targetId => {
+    if (tallyMap.has(targetId)) tallyMap.set(targetId, tallyMap.get(targetId) + 1);
+  });
+
+  const maxVotes = Math.max(0, ...tallyMap.values());
+  const spyVotes = tallyMap.get(room.game.spyId) || 0;
+  const spyCaught = maxVotes > 0 && spyVotes === maxVotes;
+
+  room.players.forEach(p => {
+    const votedFor = room.votes.get(p.id);
+    if (votedFor === room.game.spyId) p.score += 1;
+  });
+  const spyPlayer = room.players.find(p => p.id === room.game.spyId);
+  if (spyPlayer && !spyCaught) spyPlayer.score += 2;
+
+  room.game.spyCaught = spyCaught;
   room.phase = 'end';
   room.revealStage = 0;
-  io.to(room.code).emit('discussion_ended', { timeUp });
+
+  const tally = room.players
+    .map(p => ({ id: p.id, name: p.name, avatar: p.avatar, votes: tallyMap.get(p.id) || 0 }))
+    .sort((a, b) => b.votes - a.votes);
+
+  io.to(room.code).emit('voting_result', { tally });
+  broadcastRoom(room);
 }
 
 io.on('connection', (socket) => {
@@ -105,7 +139,7 @@ io.on('connection', (socket) => {
     const room = {
       code,
       hostId: socket.id,
-      players: [{ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar) }],
+      players: [{ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0 }],
       settings: { category: 'places', subCategory: 'mix', timerEnabled: true, timerMinutes: 8 },
       phase: 'lobby', // lobby | roles | discussion | end
       game: null,
@@ -124,7 +158,7 @@ io.on('connection', (socket) => {
     if (room.phase !== 'lobby') return ack && ack({ ok: false, error: 'Игра уже началась, дождитесь следующего раунда' });
     if (room.players.length >= 20) return ack && ack({ ok: false, error: 'Комната заполнена' });
     const playerName = (name || '').trim().slice(0, 20) || 'Игрок';
-    room.players.push({ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar) });
+    room.players.push({ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0 });
     socket.join(room.code);
     socket.data.roomCode = room.code;
     ack && ack({ ok: true, ...roomSummary(room) });
@@ -173,7 +207,9 @@ io.on('connection', (socket) => {
       });
     }
 
-    room.game = { category, subCategory, topicName, spyId: room.players[spyIndex].id };
+    const turnOrder = shuffle(room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar })));
+
+    room.game = { category, subCategory, topicName, spyId: room.players[spyIndex].id, turnOrder };
     room.phase = 'roles';
     room.readyIds = new Set();
 
@@ -231,6 +267,21 @@ io.on('connection', (socket) => {
     endDiscussion(room, false);
   });
 
+  socket.on('cast_vote', ({ targetId } = {}) => {
+    const room = getRoom(socket);
+    if (!room || room.phase !== 'voting') return;
+    if (!room.players.some(p => p.id === targetId)) return;
+    room.votes.set(socket.id, targetId);
+    io.to(room.code).emit('vote_update', { votedCount: room.votes.size, total: room.players.length });
+    if (room.votes.size >= room.players.length) finalizeVoting(room);
+  });
+
+  socket.on('force_finish_voting', () => {
+    const room = getRoom(socket);
+    if (!room || room.hostId !== socket.id || room.phase !== 'voting') return;
+    finalizeVoting(room);
+  });
+
   socket.on('reveal_spy', () => {
     const room = getRoom(socket);
     if (!room || room.hostId !== socket.id || room.phase !== 'end' || room.revealStage !== 0) return;
@@ -238,7 +289,8 @@ io.on('connection', (socket) => {
     const spyPlayer = room.players.find(p => p.id === room.game.spyId);
     io.to(room.code).emit('spy_revealed', {
       spyName: spyPlayer ? spyPlayer.name : '(вышел из комнаты)',
-      spyAvatar: spyPlayer ? spyPlayer.avatar : null
+      spyAvatar: spyPlayer ? spyPlayer.avatar : null,
+      caught: room.game.spyCaught
     });
   });
 
@@ -275,6 +327,14 @@ io.on('connection', (socket) => {
     }
     if (room.hostId === sock.id) {
       room.hostId = room.players[0].id;
+    }
+    if (room.phase === 'voting' && room.votes) {
+      room.votes.delete(sock.id);
+      io.to(room.code).emit('vote_update', { votedCount: room.votes.size, total: room.players.length });
+      if (room.votes.size >= room.players.length) {
+        finalizeVoting(room);
+        return;
+      }
     }
     broadcastRoom(room);
   }
