@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Тайная миссия</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🎭 Тайная миссия</h1>
+    <p class="subtitle" id="menuSubtitle">У каждого своя секретная задача на раунд — выполните её незаметно, а потом угадайте чужие.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-field-label">
+        <input type="checkbox" id="lobbyTimerEnabled" checked>
+        Таймер на выполнение миссий
+      </label>
+    </div>
+
+    <div class="field" id="lobbyTimerMinutesField">
+      <label for="lobbyTimerMinutes">Минут на раунд</label>
+      <input type="number" id="lobbyTimerMinutes" min="1" max="30" value="6">
+    </div>
+
+    <div class="field">
+      <label>Игроки (<span id="playerCountLabel">0</span>)</label>
+      <div id="lobbyPlayersList" class="chip-list"></div>
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needMorePlayersHint">Нужно минимум 3 игрока</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Показ своей миссии ===== -->
+  <section id="screen-mission" class="screen">
+    <div class="role-card normal" id="missionCard">
+      <p class="role-title">🎭 Твоя секретная миссия</p>
+      <p class="role-location" id="missionText"></p>
+      <p class="role-hint">Выполни это незаметно во время обычного разговора — так, чтобы никто не догадался, что это специальное задание.</p>
+      <button id="missionReadyBtn" class="primary-btn">Я запомнил(а), готов(а)</button>
+    </div>
+    <p class="hint hidden" id="readyHint"></p>
+    <button id="forceStartBtn" class="secondary-btn hidden">Начать раунд, не дожидаясь всех</button>
+  </section>
+
+  <!-- ===== Обсуждение ===== -->
+  <section id="screen-discussion" class="screen">
+    <h2>Раунд начался!</h2>
+    <p class="discuss-hint">Общайтесь как обычно и постарайтесь незаметно выполнить свою миссию.</p>
+
+    <div id="timerBlock" class="timer-block hidden">
+      <div id="timerRing" class="timer-ring">
+        <div class="timer-ring-inner">
+          <span id="timerDisplay" class="timer-display">06:00</span>
+        </div>
+      </div>
+      <button id="pauseBtn" class="secondary-btn hidden">Пауза</button>
+    </div>
+
+    <button id="endDiscussionBtn" class="primary-btn hidden">Завершить и раскрыть миссии</button>
+    <p class="hint hidden" id="discussionWaitHint">Решение о завершении принимает хост.</p>
+  </section>
+
+  <!-- ===== Угадывание миссий ===== -->
+  <section id="screen-guessing" class="screen">
+    <h2>🔍 Раскрытие миссий</h2>
+    <p class="hint" id="guessProgress">Миссия 1 из 5</p>
+
+    <div class="field">
+      <label>Миссия</label>
+      <p class="role-location" id="guessMissionText"></p>
+    </div>
+
+    <div class="field hidden" id="guessVoteField">
+      <label>Кто её выполнил?</label>
+      <div class="vote-options" id="guessOptions"></div>
+    </div>
+
+    <button id="submitGuessBtn" class="primary-btn" disabled>Ответить</button>
+    <p class="hint hidden" id="guessWaitHint"></p>
+    <button id="forceFinishGuessBtn" class="secondary-btn hidden">Показать ответ сейчас</button>
+
+    <div class="field hidden" id="guessResultField">
+      <label>Ответ</label>
+      <p class="end-line" id="guessResultLine"></p>
+      <p class="end-line" id="guessResultCatchLine"></p>
+    </div>
+
+    <button id="nextGuessBtn" class="primary-btn hidden">Следующая миссия</button>
+    <p class="hint hidden" id="waitNextHint">Хост переключит на следующую миссию…</p>
+  </section>
+
+  <!-- ===== Итоги ===== -->
+  <section id="screen-end" class="screen">
+    <h2>🏆 Итоги игры</h2>
+
+    <div class="field">
+      <label>Счёт</label>
+      <div class="chip-list" id="scoreboardList"></div>
+    </div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
