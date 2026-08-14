@@ -13,6 +13,11 @@
 
   const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
 
+  const DISCUSS_HINTS = {
+    places: 'Игроки по очереди рассказывают, что они «видят» на локации. Найдите шпиона.',
+    characters: 'Игроки по очереди называют факт о персонаже. Найдите шпиона.'
+  };
+
   const screens = {
     menu: document.getElementById('screen-menu'),
     lobby: document.getElementById('screen-lobby'),
@@ -28,11 +33,17 @@
   }
 
   const el = {
+    menuSubtitle: document.getElementById('menuSubtitle'),
+    inviteBanner: document.getElementById('inviteBanner'),
+    inviteCodeDisplay: document.getElementById('inviteCodeDisplay'),
     playerName: document.getElementById('playerName'),
     avatarGrid: document.getElementById('avatarGrid'),
     createRoomBtn: document.getElementById('createRoomBtn'),
+    menuDivider: document.getElementById('menuDivider'),
+    joinCodeField: document.getElementById('joinCodeField'),
     joinCode: document.getElementById('joinCode'),
     joinRoomBtn: document.getElementById('joinRoomBtn'),
+    switchModeLink: document.getElementById('switchModeLink'),
     menuError: document.getElementById('menuError'),
 
     roomCodeDisplay: document.getElementById('roomCodeDisplay'),
@@ -58,6 +69,7 @@
     readyHint: document.getElementById('readyHint'),
     forceStartBtn: document.getElementById('forceStartBtn'),
 
+    discussHint: document.getElementById('discussHint'),
     turnOrderList: document.getElementById('turnOrderList'),
     timerBlock: document.getElementById('timerBlock'),
     timerRing: document.getElementById('timerRing'),
@@ -116,9 +128,38 @@
   });
 
   // ---------- Invite link ----------
+  const DEFAULT_MENU_SUBTITLE = el.menuSubtitle.textContent;
+
+  function applyInviteMode(code) {
+    if (code) {
+      el.joinCode.value = code;
+      el.inviteCodeDisplay.textContent = code;
+      el.inviteBanner.classList.remove('hidden');
+      el.menuSubtitle.textContent = 'Вас пригласили сыграть! Впишите имя, выберите аватар и присоединяйтесь.';
+      el.createRoomBtn.classList.add('hidden');
+      el.menuDivider.classList.add('hidden');
+      el.joinCodeField.classList.add('hidden');
+      el.joinRoomBtn.classList.remove('secondary-btn');
+      el.joinRoomBtn.classList.add('primary-btn');
+      el.switchModeLink.classList.remove('hidden');
+    } else {
+      el.inviteBanner.classList.add('hidden');
+      el.menuSubtitle.textContent = DEFAULT_MENU_SUBTITLE;
+      el.createRoomBtn.classList.remove('hidden');
+      el.menuDivider.classList.remove('hidden');
+      el.joinCodeField.classList.remove('hidden');
+      el.joinRoomBtn.classList.remove('primary-btn');
+      el.joinRoomBtn.classList.add('secondary-btn');
+      el.switchModeLink.classList.add('hidden');
+      history.replaceState(null, '', window.location.pathname);
+    }
+  }
+
+  el.switchModeLink.addEventListener('click', () => applyInviteMode(null));
+
   const roomFromUrl = new URLSearchParams(window.location.search).get('room');
   if (roomFromUrl) {
-    el.joinCode.value = roomFromUrl.toUpperCase();
+    applyInviteMode(roomFromUrl.toUpperCase());
   }
 
   el.copyLinkBtn.addEventListener('click', () => {
@@ -255,7 +296,7 @@
     currentRoom = null;
     isHost = false;
     clearTimerTick();
-    history.replaceState(null, '', window.location.pathname);
+    applyInviteMode(null);
     showScreen('menu');
   }
   el.leaveRoomBtn.addEventListener('click', leaveRoom);
@@ -360,6 +401,7 @@
   // ---------- Discussion / timer ----------
   socket.on('discussion_started', (data) => {
     showScreen('discussion');
+    el.discussHint.textContent = DISCUSS_HINTS[data.category] || DISCUSS_HINTS.places;
     el.turnOrderList.innerHTML = (data.turnOrder || []).map((p, i) => `
       <span class="player-chip"><span class="turn-num">${i + 1}</span> ${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}</span>
     `).join('');
@@ -505,13 +547,14 @@
     socket.emit('reveal_spy');
   });
 
-  socket.on('spy_revealed', ({ spyName, spyAvatar, caught }) => {
+  socket.on('spy_revealed', ({ spyName, spyAvatar, caught, category }) => {
     el.endSpyName.textContent = (spyAvatar ? spyAvatar + ' ' : '') + spyName;
     el.spyLine.classList.remove('hidden');
     el.caughtLine.textContent = caught ? '🎉 Группа вычислила шпиона по голосованию!' : '🕵️ Шпион остался незамеченным!';
     el.caughtLine.classList.remove('hidden');
     el.revealSpyStageBtn.classList.add('hidden');
     el.waitSpyHint.classList.add('hidden');
+    el.revealTopicStageBtn.textContent = category === 'characters' ? 'Раскрыть персонажа' : 'Раскрыть локацию';
     el.revealTopicStageBtn.classList.toggle('hidden', !isHost);
   });
 

@@ -82,7 +82,8 @@ function startDiscussion(room) {
     timerEnabled: room.timer.enabled,
     endsAt: room.timer.endsAt,
     totalMs: room.timer.totalMs,
-    turnOrder: room.game.turnOrder
+    turnOrder: room.game.turnOrder,
+    category: room.game.category
   });
   clearRoomTimer(room);
   if (room.timer.enabled) {
@@ -290,7 +291,8 @@ io.on('connection', (socket) => {
     io.to(room.code).emit('spy_revealed', {
       spyName: spyPlayer ? spyPlayer.name : '(вышел из комнаты)',
       spyAvatar: spyPlayer ? spyPlayer.avatar : null,
-      caught: room.game.spyCaught
+      caught: room.game.spyCaught,
+      category: room.game.category
     });
   });
 

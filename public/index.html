@@ -13,7 +13,12 @@
   <!-- ===== Меню: создать/присоединиться ===== -->
   <section id="screen-menu" class="screen active">
     <h1>🌐 Шпион Online</h1>
-    <p class="subtitle">Создайте комнату или присоединитесь по коду — играйте с друзьями, у каждого свой телефон.</p>
+    <p class="subtitle" id="menuSubtitle">Создайте комнату или присоединитесь по коду — играйте с друзьями, у каждого свой телефон.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
 
     <div class="field">
       <label for="playerName">Ваше имя</label>
@@ -27,13 +32,15 @@
 
     <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
 
-    <div class="divider">или</div>
+    <div class="divider" id="menuDivider">или</div>
 
-    <div class="field">
+    <div class="field" id="joinCodeField">
       <label for="joinCode">Код комнаты</label>
       <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
     </div>
     <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
 
     <p class="error hidden" id="menuError"></p>
   </section>
@@ -99,7 +106,7 @@
   <!-- ===== Обсуждение ===== -->
   <section id="screen-discussion" class="screen">
     <h2>Обсуждение началось!</h2>
-    <p class="discuss-hint">Игроки по очереди рассказывают, что они «видят». Найдите шпиона.</p>
+    <p class="discuss-hint" id="discussHint">Игроки по очереди рассказывают, что они «видят». Найдите шпиона.</p>
 
     <div class="field">
       <label>Порядок хода (кто говорит первым)</label>
