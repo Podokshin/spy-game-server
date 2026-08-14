@@ -136,6 +136,40 @@ h2 {
   font-weight: 600;
 }
 
+.category-toggle {
+  display: flex;
+  gap: 8px;
+}
+
+.cat-btn {
+  flex: 1;
+  padding: 12px 8px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  transition: transform .12s ease, box-shadow .15s ease;
+}
+
+.cat-btn.active {
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 18px rgba(91, 140, 255, 0.4);
+}
+
+.cat-btn:active {
+  transform: scale(0.96);
+}
+
+.cat-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 input[type="text"], input[type="number"], select {
   background: var(--panel-2);
   border: 1px solid var(--border);

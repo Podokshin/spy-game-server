@@ -41,6 +41,7 @@
     blueTeamActions: document.getElementById('blueTeamActions'),
     unassignedField: document.getElementById('unassignedField'),
     unassignedList: document.getElementById('unassignedList'),
+    wordSetToggle: document.getElementById('wordSetToggle'),
     startGameBtn: document.getElementById('startGameBtn'),
     waitingHostHint: document.getElementById('waitingHostHint'),
     needTeamsHint: document.getElementById('needTeamsHint'),
@@ -262,12 +263,25 @@
     renderTeamActions(el.redTeamActions, 'red');
     renderTeamActions(el.blueTeamActions, 'blue');
 
+    const wordSet = (room.settings && room.settings.wordSet) || 'classic';
+    el.wordSetToggle.querySelectorAll('.cat-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.wordSet === wordSet);
+      btn.disabled = !isHost;
+    });
+
     const ready = teamValid(redPlayers) && teamValid(bluePlayers);
     el.startGameBtn.classList.toggle('hidden', !isHost);
     el.startGameBtn.disabled = !ready;
     el.waitingHostHint.classList.toggle('hidden', isHost);
     el.needTeamsHint.classList.toggle('hidden', ready);
   }
+
+  el.wordSetToggle.querySelectorAll('.cat-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      if (!isHost) return;
+      socket.emit('update_settings', { wordSet: btn.dataset.wordSet });
+    });
+  });
 
   el.startGameBtn.addEventListener('click', () => {
     socket.emit('start_game');
