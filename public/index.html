@@ -3,186 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Шпион Online</title>
+<title>Игротека</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app">
+  <h1>🎉 Игротека</h1>
+  <p class="subtitle">Мини-игры для компании друзей — заходите с телефонов и играйте вместе.</p>
 
-  <!-- ===== Меню: создать/присоединиться ===== -->
-  <section id="screen-menu" class="screen active">
-    <h1>🌐 Шпион Online</h1>
-    <p class="subtitle" id="menuSubtitle">Создайте комнату или присоединитесь по коду — играйте с друзьями, у каждого свой телефон.</p>
-
-    <div class="room-code-box hidden" id="inviteBanner">
-      <span class="room-code-label">Вас пригласили в комнату</span>
-      <span class="room-code" id="inviteCodeDisplay">—</span>
-    </div>
-
-    <div class="field">
-      <label for="playerName">Ваше имя</label>
-      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
-    </div>
-
-    <div class="field">
-      <label>Аватар</label>
-      <div class="avatar-grid" id="avatarGrid"></div>
-    </div>
-
-    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
-
-    <div class="divider" id="menuDivider">или</div>
-
-    <div class="field" id="joinCodeField">
-      <label for="joinCode">Код комнаты</label>
-      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
-    </div>
-    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
-
-    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
-
-    <p class="error hidden" id="menuError"></p>
-  </section>
-
-  <!-- ===== Лобби ===== -->
-  <section id="screen-lobby" class="screen">
-    <h2>Лобби</h2>
-
-    <div class="room-code-box">
-      <span class="room-code-label">Код комнаты — скажите друзьям</span>
-      <span class="room-code" id="roomCodeDisplay">—</span>
-      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
-    </div>
-
-    <div class="field" id="lobbySettingsField">
-      <label>Категория</label>
-      <div class="category-toggle">
-        <button type="button" class="cat-btn active" data-category="places">📍 Места</button>
-        <button type="button" class="cat-btn" data-category="characters">🎭 Персонажи</button>
+  <div class="game-grid">
+    <a class="game-card" href="/spy/">
+      <div class="game-card-icon">🕵️</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Шпион</h2>
+        <p class="game-card-desc">Один игрок не знает секретную локацию или персонажа — остальные знают и должны вычислить шпиона по разговору.</p>
+        <span class="game-card-meta">от 3 игроков · онлайн</span>
       </div>
-    </div>
+      <span class="game-card-status status-live">Играть</span>
+    </a>
 
-    <div class="field hidden" id="lobbySubcategoryField">
-      <label>Тема персонажей</label>
-      <div class="subcat-toggle" id="lobbySubcategoryToggle"></div>
-    </div>
-
-    <div class="field">
-      <label class="checkbox-field-label">
-        <input type="checkbox" id="lobbyTwoSpies">
-        Два шпиона (нужно от 6 игроков)
-      </label>
-    </div>
-
-    <div class="field">
-      <label class="checkbox-field-label">
-        <input type="checkbox" id="lobbyTimerEnabled" checked>
-        Таймер обсуждения
-      </label>
-    </div>
-
-    <div class="field" id="lobbyTimerMinutesField">
-      <label for="lobbyTimerMinutes">Минут на обсуждение</label>
-      <input type="number" id="lobbyTimerMinutes" min="1" max="30" value="8">
-    </div>
-
-    <div class="field">
-      <label>Игроки (<span id="playerCountLabel">0</span>)</label>
-      <div id="lobbyPlayersList" class="chip-list"></div>
-    </div>
-
-    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
-    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
-    <p class="hint hidden" id="needMorePlayersHint">Нужно минимум 3 игрока</p>
-
-    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
-    <p class="error hidden" id="lobbyError"></p>
-  </section>
-
-  <!-- ===== Показ своей роли ===== -->
-  <section id="screen-role" class="screen">
-    <div class="role-card" id="roleCard">
-      <div id="roleContent"></div>
-      <button id="roleReadyBtn" class="primary-btn">Я запомнил(а), готов(а)</button>
-    </div>
-    <p class="hint hidden" id="readyHint"></p>
-    <button id="forceStartBtn" class="secondary-btn hidden">Начать обсуждение, не дожидаясь всех</button>
-  </section>
-
-  <!-- ===== Обсуждение ===== -->
-  <section id="screen-discussion" class="screen">
-    <h2>Обсуждение началось!</h2>
-    <p class="discuss-hint" id="discussHint">Игроки по очереди рассказывают, что они «видят». Найдите шпиона.</p>
-
-    <div class="field">
-      <label>Порядок хода (кто говорит первым)</label>
-      <div class="chip-list" id="turnOrderList"></div>
-    </div>
-
-    <div id="timerBlock" class="timer-block hidden">
-      <div id="timerRing" class="timer-ring">
-        <div class="timer-ring-inner">
-          <span id="timerDisplay" class="timer-display">08:00</span>
-        </div>
+    <div class="game-card disabled">
+      <div class="game-card-icon">🎭</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Тайная миссия</h2>
+        <p class="game-card-desc">У каждого своя смешная секретная задача на раунд — выполни её незаметно во время обычного разговора, а потом угадай чужие.</p>
+        <span class="game-card-meta">от 3 игроков</span>
       </div>
-      <button id="pauseBtn" class="secondary-btn hidden">Пауза</button>
+      <span class="game-card-status status-soon">Скоро</span>
     </div>
 
-    <button id="endDiscussionBtn" class="primary-btn hidden">Завершить обсуждение</button>
-    <p class="hint hidden" id="discussionWaitHint">Решение о завершении принимает хост.</p>
-  </section>
-
-  <!-- ===== Голосование ===== -->
-  <section id="screen-voting" class="screen">
-    <h2>🗳️ Голосование</h2>
-    <p class="discuss-hint">Кто, по-вашему, шпион? Голос анонимный — никто не увидит, за кого вы проголосовали.</p>
-
-    <div class="field">
-      <div class="vote-options" id="voteOptions"></div>
+    <div class="game-card disabled">
+      <div class="game-card-icon">🔤</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Кодовые имена</h2>
+        <p class="game-card-desc">Командная игра на подсказки одним словом — угадайте все свои карточки на поле раньше соперников.</p>
+        <span class="game-card-meta">от 4 игроков · 2 команды</span>
+      </div>
+      <span class="game-card-status status-soon">Скоро</span>
     </div>
-
-    <button id="submitVoteBtn" class="primary-btn" disabled>Проголосовать</button>
-    <p class="hint hidden" id="voteWaitHint"></p>
-    <button id="forceFinishVoteBtn" class="secondary-btn hidden">Завершить голосование сейчас</button>
-  </section>
-
-  <!-- ===== Итоги ===== -->
-  <section id="screen-end" class="screen">
-    <h2>🕵️ Результаты раунда</h2>
-
-    <div class="field hidden" id="voteTallyField">
-      <label>Результаты голосования</label>
-      <div class="chip-list" id="voteTallyList"></div>
-    </div>
-
-    <button id="revealSpyStageBtn" class="primary-btn hidden">Раскрыть шпиона</button>
-    <p class="hint hidden" id="waitSpyHint">Хост раскроет шпиона…</p>
-
-    <div class="field hidden" id="spyRevealField">
-      <label id="spyRevealLabel">Шпион</label>
-      <div class="chip-list" id="spyRevealList"></div>
-    </div>
-
-    <button id="revealTopicStageBtn" class="primary-btn hidden">Раскрыть локацию</button>
-
-    <p class="end-line hidden" id="topicLine"><span id="endTopicLabel">Локация</span>: <b id="endLocation"></b></p>
-
-    <div class="field hidden" id="scoreboardField">
-      <label>🏆 Счёт</label>
-      <div class="chip-list" id="scoreboardList"></div>
-    </div>
-
-    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
-    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
-    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
-  </section>
-
+  </div>
 </div>
 
 <div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script src="client.js"></script>
 </body>
 </html>
