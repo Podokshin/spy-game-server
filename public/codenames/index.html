@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Кодовые имена</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🔤 Кодовые имена</h1>
+    <p class="subtitle" id="menuSubtitle">Две команды, капитаны дают подсказки одним словом — угадайте все свои карточки на поле раньше соперников.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби: выбор команды и роли ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="teams-grid">
+      <div class="team-panel team-red">
+        <h3>🔴 Красные</h3>
+        <div class="chip-list" id="redPlayersList"></div>
+        <div class="team-actions" id="redTeamActions"></div>
+      </div>
+      <div class="team-panel team-blue">
+        <h3>🔵 Синие</h3>
+        <div class="chip-list" id="bluePlayersList"></div>
+        <div class="team-actions" id="blueTeamActions"></div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="unassignedField">
+      <label>Без команды</label>
+      <div class="chip-list" id="unassignedList"></div>
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needTeamsHint">В каждой команде нужно минимум 2 игрока и один капитан</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Игровое поле ===== -->
+  <section id="screen-board" class="screen">
+    <div class="my-role-badge" id="myRoleBadge"></div>
+
+    <div class="turn-banner" id="turnBanner">
+      <span class="turn-team-dot" id="turnTeamDot"></span>
+      <span id="turnBannerText">—</span>
+    </div>
+
+    <div class="score-row">
+      <span class="score-pill score-red" id="scoreRed">🔴 9</span>
+      <span class="score-pill score-blue" id="scoreBlue">🔵 8</span>
+    </div>
+
+    <div class="clue-box hidden" id="clueBox">
+      <span class="clue-label">Подсказка</span>
+      <span class="clue-text" id="clueText"></span>
+    </div>
+
+    <div class="clue-form hidden" id="clueForm">
+      <input type="text" id="clueWordInput" placeholder="Слово-подсказка" maxlength="30" autocomplete="off">
+      <select id="clueNumberInput"></select>
+      <button id="submitClueBtn" class="primary-btn">Дать подсказку</button>
+    </div>
+
+    <div class="board-grid" id="boardGrid"></div>
+
+    <button id="endTurnBtn" class="secondary-btn hidden">Завершить ход</button>
+    <p class="hint hidden" id="boardWaitHint"></p>
+
+    <div class="field" id="clueHistoryField">
+      <label>История подсказок</label>
+      <div id="clueHistoryList" class="clue-history-list"></div>
+    </div>
+
+    <button id="leaveRoomBtnBoard" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+  <!-- ===== Итоги ===== -->
+  <section id="screen-end" class="screen">
+    <h2 id="endTitle">🏆 Итоги игры</h2>
+    <p class="hint" id="endReason"></p>
+
+    <div class="board-grid" id="endBoardGrid"></div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+</body>
+</html>
