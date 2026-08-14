@@ -18,6 +18,8 @@
     characters: 'Игроки по очереди называют факт о персонаже. Найдите шпиона.'
   };
 
+  const SESSION_KEY = 'spy_online_session_v1';
+
   const screens = {
     menu: document.getElementById('screen-menu'),
     lobby: document.getElementById('screen-lobby'),
@@ -52,6 +54,7 @@
     lobbyCatBtns: document.querySelectorAll('#lobbySettingsField .cat-btn'),
     lobbySubcategoryField: document.getElementById('lobbySubcategoryField'),
     lobbySubcategoryToggle: document.getElementById('lobbySubcategoryToggle'),
+    lobbyTwoSpies: document.getElementById('lobbyTwoSpies'),
     lobbyTimerEnabled: document.getElementById('lobbyTimerEnabled'),
     lobbyTimerMinutesField: document.getElementById('lobbyTimerMinutesField'),
     lobbyTimerMinutes: document.getElementById('lobbyTimerMinutes'),
@@ -87,9 +90,9 @@
     voteTallyList: document.getElementById('voteTallyList'),
     revealSpyStageBtn: document.getElementById('revealSpyStageBtn'),
     waitSpyHint: document.getElementById('waitSpyHint'),
-    spyLine: document.getElementById('spyLine'),
-    caughtLine: document.getElementById('caughtLine'),
-    endSpyName: document.getElementById('endSpyName'),
+    spyRevealField: document.getElementById('spyRevealField'),
+    spyRevealLabel: document.getElementById('spyRevealLabel'),
+    spyRevealList: document.getElementById('spyRevealList'),
     revealTopicStageBtn: document.getElementById('revealTopicStageBtn'),
     topicLine: document.getElementById('topicLine'),
     endTopicLabel: document.getElementById('endTopicLabel'),
@@ -105,13 +108,36 @@
 
   let currentRoom = null;
   let isHost = false;
+  let myPlayerId = null;
   let latestPlayers = [];
   let lobbyCategory = 'places';
   let lobbySubCategory = 'mix';
   let selectedAvatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
   let selectedVoteTarget = null;
-  let timerState = null; // { endsAt, totalMs, enabled }
+  let timerState = null; // { endsAt, totalMs, enabled, paused, remainingMs }
   let tickHandle = null;
+  let hasConnectedBefore = false;
+
+  function escapeHtml(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ---------- Session persistence (for reconnect) ----------
+  function saveSession() {
+    if (!currentRoom || !myPlayerId) return;
+    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode: currentRoom.code, playerId: myPlayerId })); } catch (e) { /* ignore */ }
+  }
+  function loadSession() {
+    try {
+      const raw = sessionStorage.getItem(SESSION_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
+  }
+  function clearSession() {
+    try { sessionStorage.removeItem(SESSION_KEY); } catch (e) { /* ignore */ }
+  }
 
   // ---------- Avatar picker ----------
   AVATARS.forEach(avatar => {
@@ -216,6 +242,7 @@
     socket.emit('create_room', { name: el.playerName.value, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return showMenuError('Не удалось создать комнату');
       applyRoomUpdate(res);
+      saveSession();
       showScreen('lobby');
     });
   });
@@ -226,6 +253,7 @@
     socket.emit('join_room', { code: el.joinCode.value, name: el.playerName.value, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return showMenuError(res.error || 'Не удалось присоединиться');
       applyRoomUpdate(res);
+      saveSession();
       showScreen('lobby');
     });
   });
@@ -271,6 +299,7 @@
     el.lobbySubcategoryField.classList.toggle('hidden', lobbyCategory !== 'characters');
   }
 
+  el.lobbyTwoSpies.addEventListener('change', () => { if (isHost) pushSettings(); });
   el.lobbyTimerEnabled.addEventListener('change', () => {
     if (!isHost) return;
     el.lobbyTimerMinutesField.classList.toggle('hidden', !el.lobbyTimerEnabled.checked);
@@ -283,7 +312,8 @@
       category: lobbyCategory,
       subCategory: lobbySubCategory,
       timerEnabled: el.lobbyTimerEnabled.checked,
-      timerMinutes: parseInt(el.lobbyTimerMinutes.value, 10) || 8
+      timerMinutes: parseInt(el.lobbyTimerMinutes.value, 10) || 8,
+      twoSpies: el.lobbyTwoSpies.checked
     });
   }
 
@@ -295,7 +325,9 @@
     socket.emit('leave_room');
     currentRoom = null;
     isHost = false;
+    myPlayerId = null;
     clearTimerTick();
+    clearSession();
     applyInviteMode(null);
     showScreen('menu');
   }
@@ -305,8 +337,10 @@
   function applyRoomUpdate(room) {
     currentRoom = room;
     latestPlayers = room.players;
-    isHost = room.players.some(p => p.id === socket.id && p.isHost);
+    if (room.playerId) myPlayerId = room.playerId;
+    isHost = room.players.some(p => p.id === myPlayerId && p.isHost);
     history.replaceState(null, '', '?room=' + room.code);
+    saveSession();
 
     if (room.phase === 'lobby') {
       renderLobby(room);
@@ -318,13 +352,14 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCountLabel.textContent = room.players.length;
     el.lobbyPlayersList.innerHTML = room.players.map(p => `
-      <span class="player-chip"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     lobbyCategory = room.settings.category;
     lobbySubCategory = room.settings.subCategory;
     renderLobbyCategoryButtons();
     renderLobbySubcategoryChips();
+    el.lobbyTwoSpies.checked = !!room.settings.twoSpies;
     el.lobbyTimerEnabled.checked = room.settings.timerEnabled;
     el.lobbyTimerMinutes.value = room.settings.timerMinutes;
     el.lobbyTimerMinutesField.classList.toggle('hidden', !room.settings.timerEnabled);
@@ -332,6 +367,7 @@
     const controlsDisabled = !isHost;
     el.lobbyCatBtns.forEach(b => b.disabled = controlsDisabled);
     el.lobbySubcategoryToggle.querySelectorAll('.subcat-btn').forEach(b => b.disabled = controlsDisabled);
+    el.lobbyTwoSpies.disabled = controlsDisabled;
     el.lobbyTimerEnabled.disabled = controlsDisabled;
     el.lobbyTimerMinutes.disabled = controlsDisabled;
 
@@ -342,21 +378,16 @@
     el.needMorePlayersHint.classList.toggle('hidden', !isHost || enoughPlayers);
   }
 
-  function escapeHtml(str) {
-    const div = document.createElement('div');
-    div.textContent = str;
-    return div.innerHTML;
-  }
-
   // ---------- Role reveal ----------
-  socket.on('your_role', (data) => {
+  function renderRoleCard(data) {
     el.roleCard.classList.remove('spy', 'normal');
     el.roleCard.classList.add(data.isSpy ? 'spy' : 'normal');
 
     if (data.isSpy) {
-      const spyHint = data.category === 'characters'
+      let spyHint = data.category === 'characters'
         ? 'Ты не знаешь персонажа. Слушай факты, которые называют остальные, и попробуй понять, кто это — не спались.'
         : 'Ты не знаешь локацию. Слушай остальных, пытайся понять где вы находитесь — и не спались.';
+      if (data.twoSpies) spyHint += ' В игре есть ещё один шпион, но ты не знаешь, кто это.';
       el.roleContent.innerHTML = `
         <p class="role-title">🕵️ ТЫ ШПИОН</p>
         <p class="role-hint">${spyHint}</p>
@@ -379,7 +410,9 @@
     el.readyHint.classList.add('hidden');
     el.forceStartBtn.classList.toggle('hidden', !isHost);
     showScreen('role');
-  });
+  }
+
+  socket.on('your_role', renderRoleCard);
 
   el.roleReadyBtn.addEventListener('click', () => {
     socket.emit('player_ready');
@@ -399,21 +432,29 @@
   });
 
   // ---------- Discussion / timer ----------
-  socket.on('discussion_started', (data) => {
+  function renderDiscussionScreen(data) {
     showScreen('discussion');
     el.discussHint.textContent = DISCUSS_HINTS[data.category] || DISCUSS_HINTS.places;
     el.turnOrderList.innerHTML = (data.turnOrder || []).map((p, i) => `
       <span class="player-chip"><span class="turn-num">${i + 1}</span> ${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}</span>
     `).join('');
-    timerState = { endsAt: data.endsAt, totalMs: data.totalMs, enabled: data.timerEnabled, remainingMs: data.totalMs, paused: false };
+    timerState = {
+      endsAt: data.endsAt,
+      totalMs: data.totalMs,
+      enabled: data.timerEnabled,
+      remainingMs: data.remainingMs != null ? data.remainingMs : data.totalMs,
+      paused: !!data.paused
+    };
     el.timerBlock.classList.toggle('hidden', !data.timerEnabled);
     el.pauseBtn.classList.toggle('hidden', !isHost);
-    el.pauseBtn.textContent = 'Пауза';
+    el.pauseBtn.textContent = timerState.paused ? 'Продолжить' : 'Пауза';
     el.endDiscussionBtn.classList.toggle('hidden', !isHost);
     el.discussionWaitHint.classList.toggle('hidden', isHost);
 
     if (data.timerEnabled) startTimerTick();
-  });
+  }
+
+  socket.on('discussion_started', renderDiscussionScreen);
 
   function startTimerTick() {
     clearTimerTick();
@@ -467,9 +508,7 @@
   });
 
   // ---------- Voting ----------
-  socket.on('voting_started', (data) => {
-    clearTimerTick();
-    if (data.timeUp) playTimeUpSound();
+  function renderVotingScreen(players) {
     selectedVoteTarget = null;
     el.submitVoteBtn.disabled = true;
     el.submitVoteBtn.classList.remove('hidden');
@@ -477,7 +516,7 @@
     el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
 
     el.voteOptions.innerHTML = '';
-    data.players.filter(p => p.id !== socket.id).forEach(p => {
+    players.filter(p => p.id !== myPlayerId).forEach(p => {
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'vote-option-btn';
@@ -492,6 +531,12 @@
     });
 
     showScreen('voting');
+  }
+
+  socket.on('voting_started', (data) => {
+    clearTimerTick();
+    if (data.timeUp) playTimeUpSound();
+    renderVotingScreen(data.players);
   });
 
   el.submitVoteBtn.addEventListener('click', () => {
@@ -513,11 +558,15 @@
     }
   });
 
-  socket.on('voting_result', ({ tally }) => {
+  function renderTally(tally) {
     el.voteTallyList.innerHTML = tally.map(p => `
       <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="vote-count">${p.votes} ${voteWord(p.votes)}</span></span>
     `).join('');
     el.voteTallyField.classList.remove('hidden');
+  }
+
+  socket.on('voting_result', ({ tally }) => {
+    renderTally(tally);
     resetEndScreen();
     showScreen('end');
   });
@@ -534,8 +583,7 @@
   function resetEndScreen() {
     el.revealSpyStageBtn.classList.toggle('hidden', !isHost);
     el.waitSpyHint.classList.toggle('hidden', isHost);
-    el.spyLine.classList.add('hidden');
-    el.caughtLine.classList.add('hidden');
+    el.spyRevealField.classList.add('hidden');
     el.revealTopicStageBtn.classList.add('hidden');
     el.topicLine.classList.add('hidden');
     el.scoreboardField.classList.add('hidden');
@@ -547,22 +595,28 @@
     socket.emit('reveal_spy');
   });
 
-  socket.on('spy_revealed', ({ spyName, spyAvatar, caught, category }) => {
-    el.endSpyName.textContent = (spyAvatar ? spyAvatar + ' ' : '') + spyName;
-    el.spyLine.classList.remove('hidden');
-    el.caughtLine.textContent = caught ? '🎉 Группа вычислила шпиона по голосованию!' : '🕵️ Шпион остался незамеченным!';
-    el.caughtLine.classList.remove('hidden');
+  function renderSpies(spies, category) {
+    el.spyRevealLabel.textContent = spies.length > 1 ? 'Шпионы' : 'Шпион';
+    el.spyRevealList.innerHTML = spies.map(sp => {
+      let tag = '';
+      if (sp.caught === true) tag = '<span class="caught-tag">🎉 поймали</span>';
+      else if (sp.caught === false) tag = '<span class="escaped-tag">🕵️ сбежал(а)</span>';
+      return `<span class="player-chip">${escapeHtml(sp.avatar || '🙂')} ${escapeHtml(sp.name)} ${tag}</span>`;
+    }).join('');
+    el.spyRevealField.classList.remove('hidden');
     el.revealSpyStageBtn.classList.add('hidden');
     el.waitSpyHint.classList.add('hidden');
     el.revealTopicStageBtn.textContent = category === 'characters' ? 'Раскрыть персонажа' : 'Раскрыть локацию';
     el.revealTopicStageBtn.classList.toggle('hidden', !isHost);
-  });
+  }
+
+  socket.on('spy_revealed', ({ spies, category }) => renderSpies(spies, category));
 
   el.revealTopicStageBtn.addEventListener('click', () => {
     socket.emit('reveal_topic');
   });
 
-  socket.on('topic_revealed', ({ topicLabel, topicName }) => {
+  function renderTopic(topicLabel, topicName) {
     el.endTopicLabel.textContent = topicLabel;
     el.endLocation.textContent = topicName;
     el.topicLine.classList.remove('hidden');
@@ -576,7 +630,9 @@
 
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
-  });
+  }
+
+  socket.on('topic_revealed', ({ topicLabel, topicName }) => renderTopic(topicLabel, topicName));
 
   el.playAgainBtn.addEventListener('click', () => {
     socket.emit('play_again');
@@ -584,12 +640,53 @@
 
   // ---------- Room-wide updates (player list, settings, return to lobby) ----------
   socket.on('room_update', (room) => {
-    applyRoomUpdate(room);
+    latestPlayers = room.players;
+    applyRoomUpdate(Object.assign({ playerId: myPlayerId }, room));
+  });
+
+  // ---------- Reconnect ----------
+  function attemptRejoin() {
+    const saved = loadSession();
+    if (!saved) return;
+    socket.emit('rejoin', saved, (res) => {
+      if (!res || !res.ok) {
+        clearSession();
+        return;
+      }
+      applyRoomUpdate(res);
+
+      if (res.phase === 'roles') {
+        if (res.yourRole) renderRoleCard(res.yourRole);
+      } else if (res.phase === 'discussion') {
+        if (res.discussion) renderDiscussionScreen(res.discussion);
+      } else if (res.phase === 'voting') {
+        if (res.voting) renderVotingScreen(res.voting.players);
+      } else if (res.phase === 'end') {
+        resetEndScreen();
+        if (res.tally) renderTally(res.tally);
+        if (res.revealStage >= 1 && res.spies) renderSpies(res.spies, res.yourRole ? res.yourRole.category : undefined);
+        if (res.revealStage >= 2 && res.topicName) renderTopic(res.topicLabel, res.topicName);
+        showScreen('end');
+      }
+    });
+  }
+
+  socket.on('connect', () => {
+    if (hasConnectedBefore) {
+      // переподключение после разрыва связи в этой же вкладке — пробуем восстановить сессию из памяти
+      if (currentRoom && myPlayerId) {
+        saveSession();
+        attemptRejoin();
+      }
+    } else {
+      hasConnectedBefore = true;
+      attemptRejoin();
+    }
   });
 
   socket.on('disconnect', () => {
     if (currentRoom) {
-      showMenuError('Соединение потеряно. Обновите страницу, чтобы переподключиться.');
+      showMenuError('Соединение потеряно, пробуем восстановить связь…');
     }
   });
 })();

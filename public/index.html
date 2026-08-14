@@ -70,6 +70,13 @@
 
     <div class="field">
       <label class="checkbox-field-label">
+        <input type="checkbox" id="lobbyTwoSpies">
+        Два шпиона (нужно от 6 игроков)
+      </label>
+    </div>
+
+    <div class="field">
+      <label class="checkbox-field-label">
         <input type="checkbox" id="lobbyTimerEnabled" checked>
         Таймер обсуждения
       </label>
@@ -152,8 +159,10 @@
     <button id="revealSpyStageBtn" class="primary-btn hidden">Раскрыть шпиона</button>
     <p class="hint hidden" id="waitSpyHint">Хост раскроет шпиона…</p>
 
-    <p class="end-line hidden" id="spyLine">Шпионом был(а): <b id="endSpyName"></b></p>
-    <p class="end-line hidden" id="caughtLine"></p>
+    <div class="field hidden" id="spyRevealField">
+      <label id="spyRevealLabel">Шпион</label>
+      <div class="chip-list" id="spyRevealList"></div>
+    </div>
 
     <button id="revealTopicStageBtn" class="primary-btn hidden">Раскрыть локацию</button>
 

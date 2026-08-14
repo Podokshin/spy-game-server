@@ -1,4 +1,5 @@
 const path = require('path');
+const crypto = require('crypto');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -15,8 +16,9 @@ const PORT = process.env.PORT || 3000;
 const rooms = new Map(); // code -> room
 
 const CODE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // без похожих символов (0/O, 1/I)
-
 const ALLOWED_AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+
+const DISCONNECT_GRACE_MS = 5 * 60 * 1000; // 5 минут на переподключение во время активного раунда
 
 function sanitizeAvatar(avatar) {
   return ALLOWED_AVATARS.includes(avatar) ? avatar : ALLOWED_AVATARS[0];
@@ -30,6 +32,10 @@ function makeRoomCode() {
   return code;
 }
 
+function makePlayerId() {
+  return crypto.randomUUID();
+}
+
 function shuffle(arr) {
   const a = arr.slice();
   for (let i = a.length - 1; i > 0; i--) {
@@ -40,7 +46,14 @@ function shuffle(arr) {
 }
 
 function publicPlayers(room) {
-  return room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar, isHost: p.id === room.hostId, score: p.score }));
+  return room.players.map(p => ({
+    id: p.id,
+    name: p.name,
+    avatar: p.avatar,
+    isHost: p.id === room.hostId,
+    score: p.score,
+    connected: p.connected
+  }));
 }
 
 function roomSummary(room) {
@@ -59,6 +72,19 @@ function broadcastRoom(room) {
 function getRoom(socket) {
   const code = socket.data.roomCode;
   return code ? rooms.get(code) : null;
+}
+
+function getPlayer(room, socket) {
+  return room.players.find(p => p.socketId === socket.id) || null;
+}
+
+function isHost(room, socket) {
+  const player = getPlayer(room, socket);
+  return !!player && player.id === room.hostId;
+}
+
+function emitToPlayer(player, event, payload) {
+  if (player.socketId) io.to(player.socketId).emit(event, payload);
 }
 
 function clearRoomTimer(room) {
@@ -111,46 +137,91 @@ function finalizeVoting(room) {
   });
 
   const maxVotes = Math.max(0, ...tallyMap.values());
-  const spyVotes = tallyMap.get(room.game.spyId) || 0;
-  const spyCaught = maxVotes > 0 && spyVotes === maxVotes;
+  const spyCaughtMap = {};
+  room.game.spyIds.forEach(spyId => {
+    const spyVotes = tallyMap.get(spyId) || 0;
+    spyCaughtMap[spyId] = maxVotes > 0 && spyVotes === maxVotes;
+  });
 
   room.players.forEach(p => {
     const votedFor = room.votes.get(p.id);
-    if (votedFor === room.game.spyId) p.score += 1;
+    if (room.game.spyIds.includes(votedFor)) p.score += 1;
   });
-  const spyPlayer = room.players.find(p => p.id === room.game.spyId);
-  if (spyPlayer && !spyCaught) spyPlayer.score += 2;
+  room.game.spyIds.forEach(spyId => {
+    const spyPlayer = room.players.find(p => p.id === spyId);
+    if (spyPlayer && !spyCaughtMap[spyId]) spyPlayer.score += 2;
+  });
 
-  room.game.spyCaught = spyCaught;
+  room.game.spyCaughtMap = spyCaughtMap;
   room.phase = 'end';
   room.revealStage = 0;
 
   const tally = room.players
     .map(p => ({ id: p.id, name: p.name, avatar: p.avatar, votes: tallyMap.get(p.id) || 0 }))
     .sort((a, b) => b.votes - a.votes);
+  room.lastTally = tally;
 
   io.to(room.code).emit('voting_result', { tally });
   broadcastRoom(room);
+}
+
+function removePlayer(room, playerId) {
+  const player = room.players.find(p => p.id === playerId);
+  if (player && player.disconnectTimer) clearTimeout(player.disconnectTimer);
+
+  room.players = room.players.filter(p => p.id !== playerId);
+
+  if (room.players.length === 0) {
+    clearRoomTimer(room);
+    rooms.delete(room.code);
+    return;
+  }
+  if (room.hostId === playerId) {
+    const nextHost = room.players.find(p => p.connected) || room.players[0];
+    room.hostId = nextHost.id;
+  }
+  if (room.phase === 'voting' && room.votes) {
+    room.votes.delete(playerId);
+    io.to(room.code).emit('vote_update', { votedCount: room.votes.size, total: room.players.length });
+    if (room.votes.size >= room.players.length) {
+      finalizeVoting(room);
+      return;
+    }
+  }
+  broadcastRoom(room);
+}
+
+function scheduleDisconnectCleanup(room, playerId) {
+  const player = room.players.find(p => p.id === playerId);
+  if (!player) return;
+  if (player.disconnectTimer) clearTimeout(player.disconnectTimer);
+  player.disconnectTimer = setTimeout(() => {
+    const stillThere = room.players.find(p => p.id === playerId);
+    if (stillThere && !stillThere.connected) removePlayer(room, playerId);
+  }, DISCONNECT_GRACE_MS);
 }
 
 io.on('connection', (socket) => {
   socket.on('create_room', ({ name, avatar } = {}, ack) => {
     const playerName = (name || '').trim().slice(0, 20) || 'Игрок';
     const code = makeRoomCode();
+    const playerId = makePlayerId();
     const room = {
       code,
-      hostId: socket.id,
-      players: [{ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0 }],
-      settings: { category: 'places', subCategory: 'mix', timerEnabled: true, timerMinutes: 8 },
-      phase: 'lobby', // lobby | roles | discussion | end
+      hostId: playerId,
+      players: [{ id: playerId, socketId: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0, connected: true, disconnectTimer: null }],
+      settings: { category: 'places', subCategory: 'mix', timerEnabled: true, timerMinutes: 8, twoSpies: false },
+      phase: 'lobby', // lobby | roles | discussion | voting | end
       game: null,
+      votes: null,
+      lastTally: null,
       readyIds: new Set(),
       timerHandle: null
     };
     rooms.set(code, room);
     socket.join(code);
     socket.data.roomCode = code;
-    ack && ack({ ok: true, ...roomSummary(room) });
+    ack && ack({ ok: true, ...roomSummary(room), playerId });
   });
 
   socket.on('join_room', ({ code, name, avatar } = {}, ack) => {
@@ -159,68 +230,140 @@ io.on('connection', (socket) => {
     if (room.phase !== 'lobby') return ack && ack({ ok: false, error: 'Игра уже началась, дождитесь следующего раунда' });
     if (room.players.length >= 20) return ack && ack({ ok: false, error: 'Комната заполнена' });
     const playerName = (name || '').trim().slice(0, 20) || 'Игрок';
-    room.players.push({ id: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0 });
+    const playerId = makePlayerId();
+    room.players.push({ id: playerId, socketId: socket.id, name: playerName, avatar: sanitizeAvatar(avatar), score: 0, connected: true, disconnectTimer: null });
     socket.join(room.code);
     socket.data.roomCode = room.code;
-    ack && ack({ ok: true, ...roomSummary(room) });
+    ack && ack({ ok: true, ...roomSummary(room), playerId });
+    broadcastRoom(room);
+  });
+
+  socket.on('rejoin', ({ roomCode, playerId } = {}, ack) => {
+    const room = rooms.get((roomCode || '').toUpperCase().trim());
+    if (!room) return ack && ack({ ok: false, error: 'Комната не найдена' });
+    const player = room.players.find(p => p.id === playerId);
+    if (!player) return ack && ack({ ok: false, error: 'Вы не были в этой комнате' });
+
+    if (player.disconnectTimer) {
+      clearTimeout(player.disconnectTimer);
+      player.disconnectTimer = null;
+    }
+    player.socketId = socket.id;
+    player.connected = true;
+    socket.join(room.code);
+    socket.data.roomCode = room.code;
+
+    const payload = { ok: true, ...roomSummary(room), playerId: player.id };
+
+    if (room.game && ['roles', 'discussion', 'voting', 'end'].includes(room.phase)) {
+      const roleInfo = room.game.rolesByPlayerId[player.id];
+      if (roleInfo) {
+        payload.yourRole = {
+          isSpy: roleInfo.isSpy,
+          category: room.game.category,
+          topicName: roleInfo.isSpy ? null : room.game.topicName,
+          role: roleInfo.isSpy ? null : roleInfo.role,
+          twoSpies: room.game.spyIds.length > 1
+        };
+      }
+    }
+    if (room.phase === 'discussion' && room.timer) {
+      payload.discussion = {
+        timerEnabled: room.timer.enabled,
+        totalMs: room.timer.totalMs,
+        paused: room.timer.paused,
+        endsAt: room.timer.paused ? null : room.timer.endsAt,
+        remainingMs: room.timer.paused ? room.timer.remainingMs : null,
+        turnOrder: room.game.turnOrder,
+        category: room.game.category
+      };
+    }
+    if (room.phase === 'voting') {
+      payload.voting = { players: room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar })) };
+    }
+    if (room.phase === 'end') {
+      payload.revealStage = room.revealStage;
+      if (room.lastTally) payload.tally = room.lastTally;
+      if (room.revealStage >= 1) {
+        payload.spies = room.game.spyIds.map(id => {
+          const sp = room.players.find(pp => pp.id === id);
+          return { name: sp ? sp.name : '(вышел из комнаты)', avatar: sp ? sp.avatar : null, caught: room.game.spyCaughtMap ? room.game.spyCaughtMap[id] : null };
+        });
+      }
+      if (room.revealStage >= 2) {
+        payload.topicLabel = room.game.category === 'characters' ? 'Персонаж' : 'Локация';
+        payload.topicName = room.game.topicName;
+      }
+    }
+
+    ack && ack(payload);
     broadcastRoom(room);
   });
 
   socket.on('update_settings', (settings = {}) => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'lobby') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'lobby') return;
     room.settings = {
       category: settings.category === 'characters' ? 'characters' : 'places',
       subCategory: settings.subCategory || room.settings.subCategory,
       timerEnabled: !!settings.timerEnabled,
-      timerMinutes: Math.min(30, Math.max(1, parseInt(settings.timerMinutes, 10) || 8))
+      timerMinutes: Math.min(30, Math.max(1, parseInt(settings.timerMinutes, 10) || 8)),
+      twoSpies: !!settings.twoSpies
     };
     broadcastRoom(room);
   });
 
   socket.on('start_game', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'lobby') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'lobby') return;
     if (room.players.length < 3) return;
 
-    const { category, subCategory } = room.settings;
+    const { category, subCategory, twoSpies } = room.settings;
+    const spyCount = (twoSpies && room.players.length >= 6) ? 2 : 1;
     let topicName;
     let location = null;
-    const rolesByPlayer = {};
-    const spyIndex = Math.floor(Math.random() * room.players.length);
+    const rolesByPlayerId = {};
+    const spyIndices = shuffle(room.players.map((_, i) => i)).slice(0, spyCount);
+    const spyIds = spyIndices.map(i => room.players[i].id);
 
     if (category === 'characters') {
       const cat = CHARACTER_CATEGORIES.find(c => c.key === subCategory) || CHARACTER_CATEGORIES[0];
       if (!cat || cat.list.length === 0) return;
       topicName = cat.list[Math.floor(Math.random() * cat.list.length)];
+      room.players.forEach(p => {
+        rolesByPlayerId[p.id] = { isSpy: spyIds.includes(p.id), role: null };
+      });
     } else {
       const usable = LOCATIONS.filter(l => l.roles.length > 0);
       if (usable.length === 0) return;
       location = usable[Math.floor(Math.random() * usable.length)];
       topicName = location.name;
-      const nonSpyCount = room.players.length - 1;
+      const nonSpyCount = room.players.length - spyCount;
       let roles = [];
       while (roles.length < nonSpyCount) roles = roles.concat(shuffle(location.roles));
       roles = roles.slice(0, nonSpyCount);
       let cursor = 0;
-      room.players.forEach((p, i) => {
-        if (i !== spyIndex) rolesByPlayer[p.id] = roles[cursor++];
+      room.players.forEach(p => {
+        const isSpy = spyIds.includes(p.id);
+        rolesByPlayerId[p.id] = { isSpy, role: isSpy ? null : roles[cursor++] };
       });
     }
 
     const turnOrder = shuffle(room.players.map(p => ({ id: p.id, name: p.name, avatar: p.avatar })));
 
-    room.game = { category, subCategory, topicName, spyId: room.players[spyIndex].id, turnOrder };
+    room.game = { category, subCategory, topicName, spyIds, rolesByPlayerId, turnOrder, spyCaughtMap: null };
     room.phase = 'roles';
     room.readyIds = new Set();
+    room.lastTally = null;
 
-    room.players.forEach((p, i) => {
-      const isSpy = i === spyIndex;
-      io.to(p.id).emit('your_role', {
-        isSpy,
+    room.players.forEach(p => {
+      const roleInfo = rolesByPlayerId[p.id];
+      emitToPlayer(p, 'your_role', {
+        isSpy: roleInfo.isSpy,
         category,
-        topicName: isSpy ? null : topicName,
-        role: isSpy ? null : (rolesByPlayer[p.id] || null)
+        topicName: roleInfo.isSpy ? null : topicName,
+        role: roleInfo.isSpy ? null : roleInfo.role,
+        twoSpies: spyIds.length > 1
       });
     });
 
@@ -230,7 +373,9 @@ io.on('connection', (socket) => {
   socket.on('player_ready', () => {
     const room = getRoom(socket);
     if (!room || room.phase !== 'roles') return;
-    room.readyIds.add(socket.id);
+    const player = getPlayer(room, socket);
+    if (!player) return;
+    room.readyIds.add(player.id);
     io.to(room.code).emit('ready_update', { readyCount: room.readyIds.size, total: room.players.length });
     if (room.readyIds.size >= room.players.length) {
       startDiscussion(room);
@@ -239,13 +384,13 @@ io.on('connection', (socket) => {
 
   socket.on('force_start_discussion', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'roles') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'roles') return;
     startDiscussion(room);
   });
 
   socket.on('toggle_pause', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'discussion' || !room.timer.enabled) return;
+    if (!room || !isHost(room, socket) || room.phase !== 'discussion' || !room.timer.enabled) return;
     if (room.timer.paused) {
       room.timer.paused = false;
       room.timer.endsAt = Date.now() + room.timer.remainingMs;
@@ -264,41 +409,45 @@ io.on('connection', (socket) => {
 
   socket.on('end_discussion', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'discussion') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'discussion') return;
     endDiscussion(room, false);
   });
 
   socket.on('cast_vote', ({ targetId } = {}) => {
     const room = getRoom(socket);
     if (!room || room.phase !== 'voting') return;
+    const player = getPlayer(room, socket);
+    if (!player) return;
     if (!room.players.some(p => p.id === targetId)) return;
-    room.votes.set(socket.id, targetId);
+    room.votes.set(player.id, targetId);
     io.to(room.code).emit('vote_update', { votedCount: room.votes.size, total: room.players.length });
     if (room.votes.size >= room.players.length) finalizeVoting(room);
   });
 
   socket.on('force_finish_voting', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'voting') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'voting') return;
     finalizeVoting(room);
   });
 
   socket.on('reveal_spy', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'end' || room.revealStage !== 0) return;
+    if (!room || !isHost(room, socket) || room.phase !== 'end' || room.revealStage !== 0) return;
     room.revealStage = 1;
-    const spyPlayer = room.players.find(p => p.id === room.game.spyId);
-    io.to(room.code).emit('spy_revealed', {
-      spyName: spyPlayer ? spyPlayer.name : '(вышел из комнаты)',
-      spyAvatar: spyPlayer ? spyPlayer.avatar : null,
-      caught: room.game.spyCaught,
-      category: room.game.category
+    const spies = room.game.spyIds.map(id => {
+      const sp = room.players.find(p => p.id === id);
+      return {
+        name: sp ? sp.name : '(вышел из комнаты)',
+        avatar: sp ? sp.avatar : null,
+        caught: room.game.spyCaughtMap ? room.game.spyCaughtMap[id] : null
+      };
     });
+    io.to(room.code).emit('spy_revealed', { spies, category: room.game.category });
   });
 
   socket.on('reveal_topic', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'end' || room.revealStage !== 1) return;
+    if (!room || !isHost(room, socket) || room.phase !== 'end' || room.revealStage !== 1) return;
     room.revealStage = 2;
     io.to(room.code).emit('topic_revealed', {
       topicLabel: room.game.category === 'characters' ? 'Персонаж' : 'Локация',
@@ -308,38 +457,47 @@ io.on('connection', (socket) => {
 
   socket.on('play_again', () => {
     const room = getRoom(socket);
-    if (!room || room.hostId !== socket.id || room.phase !== 'end') return;
+    if (!room || !isHost(room, socket) || room.phase !== 'end') return;
     room.phase = 'lobby';
     room.game = null;
-    broadcastRoom(room);
-  });
-
-  socket.on('leave_room', () => leaveRoom(socket));
-  socket.on('disconnect', () => leaveRoom(socket));
-
-  function leaveRoom(sock) {
-    const room = getRoom(sock);
-    if (!room) return;
-    room.players = room.players.filter(p => p.id !== sock.id);
-    sock.data.roomCode = null;
+    room.lastTally = null;
+    room.players = room.players.filter(p => p.connected);
     if (room.players.length === 0) {
       clearRoomTimer(room);
       rooms.delete(room.code);
       return;
     }
-    if (room.hostId === sock.id) {
+    if (!room.players.some(p => p.id === room.hostId)) {
       room.hostId = room.players[0].id;
     }
-    if (room.phase === 'voting' && room.votes) {
-      room.votes.delete(sock.id);
-      io.to(room.code).emit('vote_update', { votedCount: room.votes.size, total: room.players.length });
-      if (room.votes.size >= room.players.length) {
-        finalizeVoting(room);
-        return;
-      }
-    }
     broadcastRoom(room);
-  }
+  });
+
+  socket.on('leave_room', () => {
+    const room = getRoom(socket);
+    if (!room) return;
+    const player = getPlayer(room, socket);
+    socket.data.roomCode = null;
+    if (player) removePlayer(room, player.id);
+  });
+
+  socket.on('disconnect', () => {
+    const room = getRoom(socket);
+    if (!room) return;
+    const player = getPlayer(room, socket);
+    if (!player) return;
+    socket.data.roomCode = null;
+
+    if (room.phase === 'lobby') {
+      removePlayer(room, player.id);
+      return;
+    }
+
+    player.connected = false;
+    player.socketId = null;
+    broadcastRoom(room);
+    scheduleDisconnectCleanup(room, player.id);
+  });
 });
 
 server.listen(PORT, () => {
