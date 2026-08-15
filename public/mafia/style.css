@@ -10,10 +10,6 @@
   --good: #2fe08f;
   --gold: #ffc95c;
   --radius: 18px;
-  --team-red: #ff3d63;
-  --team-blue: #5b8cff;
-  --neutral-card: #cbb896;
-  --assassin-card: #23262f;
 }
 
 * { box-sizing: border-box; }
@@ -43,7 +39,7 @@ body {
 }
 
 body::before {
-  content: '🔤';
+  content: '🌙';
   position: fixed;
   right: -6vw;
   bottom: -8vw;
@@ -60,11 +56,6 @@ body::before {
   max-width: 480px;
   position: relative;
   z-index: 1;
-  transition: max-width .2s ease;
-}
-
-#app.wide {
-  max-width: 720px;
 }
 
 .screen {
@@ -82,6 +73,11 @@ body::before {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cardPop {
+  0% { opacity: 0; transform: scale(0.9) rotateX(12deg); }
+  100% { opacity: 1; transform: scale(1) rotateX(0); }
 }
 
 h1 {
@@ -110,7 +106,7 @@ h2 {
   text-align: center;
 }
 
-.subtitle, .hint {
+.subtitle, .discuss-hint, .hint {
   color: var(--muted);
   text-align: center;
   font-size: 0.95rem;
@@ -134,6 +130,24 @@ h2 {
   text-transform: uppercase;
   letter-spacing: 0.6px;
   font-weight: 600;
+}
+
+.checkbox-field-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--text);
+  font-size: 1rem;
+  text-transform: none !important;
+  letter-spacing: 0;
+  font-weight: 500 !important;
+  cursor: pointer;
+}
+
+.checkbox-field-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
 }
 
 .category-toggle {
@@ -161,16 +175,37 @@ h2 {
   box-shadow: 0 4px 18px rgba(91, 140, 255, 0.4);
 }
 
-.cat-btn:active {
+.cat-btn:active, .subcat-btn:active {
   transform: scale(0.96);
 }
 
-.cat-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.subcat-toggle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
-input[type="text"], input[type="number"], select {
+.subcat-btn {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition: transform .12s ease, box-shadow .15s ease;
+  white-space: nowrap;
+}
+
+.subcat-btn.active {
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  border-color: transparent;
+  color: white;
+  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
+}
+
+input[type="text"], input[type="number"] {
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 10px;
@@ -180,7 +215,7 @@ input[type="text"], input[type="number"], select {
   width: 100%;
 }
 
-input[type="text"]:focus, input[type="number"]:focus, select:focus {
+input[type="text"]:focus, input[type="number"]:focus {
   outline: 2px solid var(--accent);
 }
 
@@ -270,6 +305,10 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
   transform: scale(0.92);
 }
 
+.player-chip .player-avatar {
+  font-size: 1rem;
+}
+
 .divider {
   text-align: center;
   color: var(--muted);
@@ -355,9 +394,15 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
   color: var(--gold);
 }
 
-.player-chip .captain-tag {
-  font-size: 0.7rem;
-  color: var(--gold);
+.player-chip .caught-tag {
+  font-size: 0.75rem;
+  color: var(--good);
+  font-weight: 700;
+}
+
+.player-chip .escaped-tag {
+  font-size: 0.75rem;
+  color: var(--accent-2);
   font-weight: 700;
 }
 
@@ -365,245 +410,198 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
   opacity: 0.5;
 }
 
-/* Teams */
-.teams-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+.player-chip .turn-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  color: white;
+  font-size: 0.68rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.team-panel {
-  background: linear-gradient(180deg, var(--panel), #131829);
+.player-chip .vote-count {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.player-chip .score-value {
+  color: var(--good);
+  font-weight: 700;
+}
+
+.vote-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.vote-option-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--panel-2);
   border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+  border-radius: 999px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  color: var(--text);
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .15s ease;
 }
 
-.team-panel.team-red {
-  border-color: rgba(255, 61, 99, 0.35);
+.vote-option-btn.selected {
+  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  border-color: transparent;
+  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.4);
 }
 
-.team-panel.team-blue {
-  border-color: rgba(91, 140, 255, 0.35);
+.vote-option-btn:active {
+  transform: scale(0.96);
 }
 
-.team-panel h3 {
-  margin: 0;
-  font-size: 1rem;
-  text-align: center;
+.vote-option-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.team-panel .chip-list {
-  min-height: 30px;
-}
-
-.team-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.team-actions button {
-  width: 100%;
-  padding: 10px 8px;
-  font-size: 0.82rem;
-}
-
-/* Компактные командные панели на игровом экране (слева синие, справа красные) */
-.board-teams-grid {
-  margin: 4px 0 6px;
-}
-
-.board-teams-grid .team-panel {
-  padding: 8px 10px;
-  gap: 6px;
-}
-
-.board-teams-grid .team-panel h3 {
-  font-size: 0.8rem;
-}
-
-.board-teams-grid .chip-list {
-  min-height: 0;
-  gap: 4px;
-}
-
-.board-teams-grid .player-chip {
-  font-size: 0.76rem;
-  padding: 3px 8px;
-}
-
-.board-teams-grid .team-panel.active-turn {
-  box-shadow: 0 0 0 2px var(--gold);
-}
-
-/* Board */
-.my-role-badge {
-  align-self: center;
+.ready-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   background: var(--panel-2);
   border: 1px solid var(--border);
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 0.85rem;
-  font-weight: 600;
+  color: var(--muted);
+  align-self: center;
 }
 
-.turn-banner {
+/* Role card (reused from local game) */
+.role-card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 40px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 24px;
+  text-align: center;
+  min-height: 260px;
+  justify-content: center;
+  animation: cardPop .35s cubic-bezier(.2, .8, .3, 1.2);
+}
+
+.role-card.spy {
+  background: linear-gradient(160deg, #3d0f1f, var(--panel) 65%);
+  border: 1px solid #6e2338;
+  box-shadow: 0 0 40px rgba(255, 61, 99, 0.18), inset 0 0 60px rgba(255, 61, 99, 0.06);
+}
+
+.role-card.normal {
+  background: linear-gradient(160deg, #0f3324, var(--panel) 65%);
+  border: 1px solid #1f5c3f;
+  box-shadow: 0 0 40px rgba(47, 224, 143, 0.14), inset 0 0 60px rgba(47, 224, 143, 0.05);
+}
+
+.role-title {
+  font-size: 2rem;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.role-location {
+  font-size: 1.5rem;
+  margin: 0;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.role-role {
+  font-size: 1.1rem;
+  color: var(--muted);
+  margin: 0;
+}
+
+.role-hint {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 8px 0 0;
+  line-height: 1.4;
+}
+
+/* Discuss */
+.timer-block {
+  background: linear-gradient(180deg, var(--panel), #131829);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 28px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.timer-ring {
+  --progress: 1;
+  --ring-color: var(--accent);
+  width: 170px;
+  height: 170px;
+  border-radius: 50%;
+  background: conic-gradient(var(--ring-color) calc(var(--progress) * 360deg), #262f48 0deg);
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-  background: linear-gradient(180deg, var(--panel), #131829);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px 16px;
-  font-weight: 700;
-  text-align: center;
+  transition: background-image 0.4s linear;
+  box-shadow: 0 0 30px rgba(91, 140, 255, 0.2);
 }
 
-.turn-team-dot {
-  width: 14px;
-  height: 14px;
+.timer-ring.warning {
+  --ring-color: var(--accent-2);
+  box-shadow: 0 0 30px rgba(255, 61, 99, 0.28);
+}
+
+.timer-ring-inner {
+  width: 138px;
+  height: 138px;
   border-radius: 50%;
-  background: var(--muted);
-  flex-shrink: 0;
-}
-
-.turn-team-dot.dot-red { background: var(--team-red); box-shadow: 0 0 12px rgba(255, 61, 99, 0.6); }
-.turn-team-dot.dot-blue { background: var(--team-blue); box-shadow: 0 0 12px rgba(91, 140, 255, 0.6); }
-
-.score-row {
+  background: var(--panel);
   display: flex;
+  align-items: center;
   justify-content: center;
-  gap: 10px;
 }
 
-.score-pill {
-  border-radius: 999px;
-  padding: 8px 18px;
-  font-weight: 800;
-  font-size: 1.1rem;
-  border: 1px solid var(--border);
-}
-
-.score-pill.score-red { background: rgba(255, 61, 99, 0.14); color: var(--team-red); }
-.score-pill.score-blue { background: rgba(91, 140, 255, 0.14); color: var(--team-blue); }
-
-.clue-box {
-  text-align: center;
-  background: linear-gradient(180deg, var(--panel), #131829);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.clue-label {
-  font-size: 0.75rem;
-  color: var(--muted);
-  text-transform: uppercase;
+.timer-display {
+  font-size: 2.3rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
   letter-spacing: 1px;
 }
 
-.clue-text {
-  font-size: 1.4rem;
-  font-weight: 800;
+.timer-display.warning {
+  color: var(--accent-2);
+}
+
+/* End screen */
+.end-line {
+  text-align: center;
+  font-size: 1.1rem;
+  background: linear-gradient(180deg, var(--panel), #131829);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px;
+  margin: 0;
+}
+
+.end-line b {
   color: var(--gold);
 }
-
-.clue-form {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-
-.clue-form input[type="text"] {
-  flex: 2;
-}
-
-.clue-form select {
-  flex: 0 0 70px;
-}
-
-.clue-form button {
-  flex: 1;
-  padding: 10px 12px;
-  font-size: 0.9rem;
-}
-
-.board-grid {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  gap: 6px;
-}
-
-.board-card {
-  aspect-ratio: 1 / 0.72;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--panel-2);
-  color: var(--text);
-  font-size: 0.72rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding: 4px;
-  cursor: pointer;
-  transition: transform .1s ease, box-shadow .15s ease;
-  word-break: break-word;
-  line-height: 1.15;
-}
-
-.board-card:disabled {
-  cursor: default;
-}
-
-.board-card:active:not(:disabled) {
-  transform: scale(0.94);
-}
-
-.board-card.hint-red { box-shadow: inset 0 0 0 3px var(--team-red); }
-.board-card.hint-blue { box-shadow: inset 0 0 0 3px var(--team-blue); }
-.board-card.hint-neutral { box-shadow: inset 0 0 0 3px var(--neutral-card); }
-.board-card.hint-assassin { box-shadow: inset 0 0 0 3px #000; }
-
-.board-card.revealed {
-  color: #1a1a1a;
-  cursor: default;
-  opacity: 0.9;
-}
-
-.board-card.revealed-red { background: var(--team-red); color: white; }
-.board-card.revealed-blue { background: var(--team-blue); color: white; }
-.board-card.revealed-neutral { background: var(--neutral-card); }
-.board-card.revealed-assassin { background: var(--assassin-card); color: white; }
-
-.clue-history-list {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  max-height: 140px;
-  overflow-y: auto;
-}
-
-.clue-history-item {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.85rem;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: var(--panel-2);
-}
-
-.clue-history-item.hist-red { border-left: 3px solid var(--team-red); }
-.clue-history-item.hist-blue { border-left: 3px solid var(--team-blue); }
 
 /* Credit badge */
 .credit {
@@ -640,8 +638,47 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 }
 
 @media (max-width: 380px) {
+  .timer-ring { width: 150px; height: 150px; }
+  .timer-ring-inner { width: 120px; height: 120px; }
+  .timer-display { font-size: 2rem; }
   .room-code { font-size: 2rem; letter-spacing: 4px; }
-  .board-card { font-size: 0.62rem; }
-  .clue-form { flex-wrap: wrap; }
-  .clue-form select { flex: 1 1 60px; }
+}
+
+/* ===== Мафия — специфичные стили ролей и ночных действий ===== */
+.role-card.mafia {
+  background: linear-gradient(160deg, #3d0f1f, var(--panel) 65%);
+  border: 1px solid #6e2338;
+  box-shadow: 0 0 40px rgba(255, 61, 99, 0.18), inset 0 0 60px rgba(255, 61, 99, 0.06);
+}
+.role-card.sheriff {
+  background: linear-gradient(160deg, #1f2e4d, var(--panel) 65%);
+  border: 1px solid #33518a;
+  box-shadow: 0 0 40px rgba(91, 140, 255, 0.18), inset 0 0 60px rgba(91, 140, 255, 0.06);
+}
+.role-card.doctor {
+  background: linear-gradient(160deg, #0f3324, var(--panel) 65%);
+  border: 1px solid #1f5c3f;
+  box-shadow: 0 0 40px rgba(47, 224, 143, 0.14), inset 0 0 60px rgba(47, 224, 143, 0.05);
+}
+.role-card.civilian {
+  background: linear-gradient(160deg, #2a2540, var(--panel) 65%);
+  border: 1px solid #4a3f70;
+}
+
+.player-chip.dead {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.player-chip .role-tag {
+  font-size: 0.75rem;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.night-action-hint {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 4px 0 12px;
 }

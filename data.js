@@ -1,7 +1,7 @@
 // Серверная копия локаций и категорий персонажей (используется для выбора темы раунда).
 // Держите в синхронизации со значениями из sp/locations.js и sp/characters.js, если меняете их там.
 
-const LOCATIONS = [
+const PLACES_MIX = [
   { name: 'Пляж', roles: ['Спасатель', 'Продавец мороженого', 'Турист', 'Фотограф', 'Сёрфер', 'Массажист'] },
   { name: 'Больница', roles: ['Хирург', 'Медсестра', 'Пациент', 'Санитар', 'Анестезиолог', 'Посетитель'] },
   { name: 'Космическая станция', roles: ['Командир', 'Инженер', 'Учёный', 'Пилот', 'Связист', 'Врач'] },
@@ -57,6 +57,50 @@ const LOCATIONS = [
   { name: 'Автомойка', roles: ['Мойщик', 'Администратор', 'Клиент', 'Кассир', 'Механик', 'Охранник'] },
   { name: 'Квест-комната', roles: ['Игрок', 'Ведущий квеста', 'Актёр-аниматор', 'Техник', 'Организатор', 'Гость'] },
   { name: 'Винодельня', roles: ['Винодел', 'Дегустатор', 'Сборщик урожая', 'Турист', 'Экскурсовод', 'Владелец'] }
+];
+
+// Игровые локации по темам видеоигр — отдельная тема категории «Места».
+const DOTA_POSITIONS = ['Керри (позиция 1)', 'Мидер (позиция 2)', 'Оффлейнер (позиция 3)', 'Софт-саппорт (позиция 4)', 'Хард-саппорт (позиция 5)', 'Комментатор матча'];
+const PLACES_DOTA = [
+  { name: 'Трон Radiant', roles: DOTA_POSITIONS },
+  { name: 'Трон Dire', roles: DOTA_POSITIONS },
+  { name: 'Логово Рошана', roles: DOTA_POSITIONS },
+  { name: 'Тайный магазин (Secret Shop)', roles: DOTA_POSITIONS },
+  { name: 'Топ-лейн', roles: DOTA_POSITIONS },
+  { name: 'Мид-лейн', roles: DOTA_POSITIONS },
+  { name: 'Ботлейн', roles: DOTA_POSITIONS },
+  { name: 'Лес (свои крипы)', roles: DOTA_POSITIONS },
+  { name: 'Фонтан возрождения', roles: DOTA_POSITIONS },
+  { name: 'Река у Руны', roles: DOTA_POSITIONS }
+];
+
+const MINECRAFT_ROLES = ['Строитель', 'Шахтёр', 'Фермер', 'Зельевар', 'Охотник на мобов', 'Торговец с жителями'];
+const PLACES_MINECRAFT = [
+  { name: 'Нижний мир', roles: MINECRAFT_ROLES },
+  { name: 'Край (Энд)', roles: MINECRAFT_ROLES },
+  { name: 'Деревня жителей', roles: MINECRAFT_ROLES },
+  { name: 'Заброшенная шахта', roles: MINECRAFT_ROLES },
+  { name: 'Крепость Незера', roles: MINECRAFT_ROLES },
+  { name: 'Океанский храм', roles: MINECRAFT_ROLES },
+  { name: 'Ферма на выживании', roles: MINECRAFT_ROLES },
+  { name: 'Спавн (стартовая точка)', roles: MINECRAFT_ROLES }
+];
+
+const TACTICAL_SHOOTER_ROLES = ['Дуэлянт', 'Инициатор', 'Контроллер', 'Страж (Sentinel)', 'Снайпер', 'Капитан команды (IGL)'];
+const PLACES_TACTICAL_SHOOTER = [
+  { name: 'Сайт A', roles: TACTICAL_SHOOTER_ROLES },
+  { name: 'Сайт B', roles: TACTICAL_SHOOTER_ROLES },
+  { name: 'Мид (центр карты)', roles: TACTICAL_SHOOTER_ROLES },
+  { name: 'Спавн атакующих', roles: TACTICAL_SHOOTER_ROLES },
+  { name: 'Спавн защиты', roles: TACTICAL_SHOOTER_ROLES },
+  { name: 'Связка/вентиляция', roles: TACTICAL_SHOOTER_ROLES }
+];
+
+const LOCATION_CATEGORIES = [
+  { key: 'mix', label: 'Микс', icon: '🎲', list: PLACES_MIX },
+  { key: 'dota', label: 'Dota 2', icon: '⚔️', list: PLACES_DOTA },
+  { key: 'minecraft', label: 'Minecraft', icon: '🧱', list: PLACES_MINECRAFT },
+  { key: 'valorant', label: 'Valorant / CS', icon: '🔫', list: PLACES_TACTICAL_SHOOTER }
 ];
 
 const CHARACTER_CATEGORIES = [
@@ -192,4 +236,4 @@ const CHARACTER_CATEGORIES = [
   }
 ];
 
-module.exports = { LOCATIONS, CHARACTER_CATEGORIES };
+module.exports = { LOCATION_CATEGORIES, CHARACTER_CATEGORIES };

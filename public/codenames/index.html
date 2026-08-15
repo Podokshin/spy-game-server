@@ -104,6 +104,17 @@
       <span class="score-pill score-blue" id="scoreBlue">🔵 8</span>
     </div>
 
+    <div class="teams-grid board-teams-grid" id="boardTeamsGrid">
+      <div class="team-panel team-blue" id="boardBluePanel">
+        <h3>🔵 Синие</h3>
+        <div class="chip-list" id="boardBluePlayersList"></div>
+      </div>
+      <div class="team-panel team-red" id="boardRedPanel">
+        <h3>🔴 Красные</h3>
+        <div class="chip-list" id="boardRedPlayersList"></div>
+      </div>
+    </div>
+
     <div class="clue-box hidden" id="clueBox">
       <span class="clue-label">Подсказка</span>
       <span class="clue-text" id="clueText"></span>
@@ -119,6 +130,7 @@
 
     <button id="endTurnBtn" class="secondary-btn hidden">Завершить ход</button>
     <p class="hint hidden" id="boardWaitHint"></p>
+    <button id="forceEndTurnBtn" class="secondary-btn hidden">⚠️ Пропустить ход (капитан пропал)</button>
 
     <div class="field" id="clueHistoryField">
       <label>История подсказок</label>

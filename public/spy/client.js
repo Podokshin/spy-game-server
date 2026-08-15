@@ -11,6 +11,17 @@
     { key: 'sport', label: 'Спорт', icon: '⚽' }
   ];
 
+  const PLACE_CATEGORY_META = [
+    { key: 'mix', label: 'Микс', icon: '🎲' },
+    { key: 'dota', label: 'Dota 2', icon: '⚔️' },
+    { key: 'minecraft', label: 'Minecraft', icon: '🧱' },
+    { key: 'valorant', label: 'Valorant / CS', icon: '🔫' }
+  ];
+
+  function subcategoryMetaFor(category) {
+    return category === 'characters' ? CHARACTER_CATEGORY_META : PLACE_CATEGORY_META;
+  }
+
   const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
 
   const DISCUSS_HINTS = {
@@ -264,20 +275,24 @@
   }
 
   // ---------- Lobby ----------
-  CHARACTER_CATEGORY_META.forEach(sub => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'subcat-btn';
-    btn.dataset.subcategory = sub.key;
-    btn.textContent = `${sub.icon} ${sub.label}`;
-    btn.addEventListener('click', () => {
-      if (!isHost) return;
-      lobbySubCategory = sub.key;
-      renderLobbySubcategoryChips();
-      pushSettings();
+  function rebuildSubcategoryButtons() {
+    el.lobbySubcategoryToggle.innerHTML = '';
+    subcategoryMetaFor(lobbyCategory).forEach(sub => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'subcat-btn';
+      btn.dataset.subcategory = sub.key;
+      btn.textContent = `${sub.icon} ${sub.label}`;
+      btn.addEventListener('click', () => {
+        if (!isHost) return;
+        lobbySubCategory = sub.key;
+        renderLobbySubcategoryChips();
+        pushSettings();
+      });
+      el.lobbySubcategoryToggle.appendChild(btn);
     });
-    el.lobbySubcategoryToggle.appendChild(btn);
-  });
+  }
+  rebuildSubcategoryButtons();
 
   function renderLobbySubcategoryChips() {
     el.lobbySubcategoryToggle.querySelectorAll('.subcat-btn').forEach(b => {
@@ -288,6 +303,7 @@
   el.lobbyCatBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       if (!isHost) return;
+      if (lobbyCategory !== btn.dataset.category) lobbySubCategory = 'mix'; // сброс темы при смене категории
       lobbyCategory = btn.dataset.category;
       renderLobbyCategoryButtons();
       pushSettings();
@@ -296,7 +312,9 @@
 
   function renderLobbyCategoryButtons() {
     el.lobbyCatBtns.forEach(b => b.classList.toggle('active', b.dataset.category === lobbyCategory));
-    el.lobbySubcategoryField.classList.toggle('hidden', lobbyCategory !== 'characters');
+    el.lobbySubcategoryField.classList.remove('hidden'); // тема доступна и для мест, и для персонажей
+    rebuildSubcategoryButtons();
+    renderLobbySubcategoryChips();
   }
 
   el.lobbyTwoSpies.addEventListener('change', () => { if (isHost) pushSettings(); });

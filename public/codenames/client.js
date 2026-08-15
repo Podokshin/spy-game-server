@@ -37,6 +37,10 @@
     copyLinkBtn: document.getElementById('copyLinkBtn'),
     redPlayersList: document.getElementById('redPlayersList'),
     bluePlayersList: document.getElementById('bluePlayersList'),
+    boardRedPlayersList: document.getElementById('boardRedPlayersList'),
+    boardBluePlayersList: document.getElementById('boardBluePlayersList'),
+    boardRedPanel: document.getElementById('boardRedPanel'),
+    boardBluePanel: document.getElementById('boardBluePanel'),
     redTeamActions: document.getElementById('redTeamActions'),
     blueTeamActions: document.getElementById('blueTeamActions'),
     unassignedField: document.getElementById('unassignedField'),
@@ -55,6 +59,7 @@
     scoreRed: document.getElementById('scoreRed'),
     scoreBlue: document.getElementById('scoreBlue'),
     clueBox: document.getElementById('clueBox'),
+    forceEndTurnBtn: document.getElementById('forceEndTurnBtn'),
     clueText: document.getElementById('clueText'),
     clueForm: document.getElementById('clueForm'),
     clueWordInput: document.getElementById('clueWordInput'),
@@ -322,12 +327,27 @@
       resetBoardData();
       renderLobby(room);
       showScreen('lobby');
+    } else {
+      // Составы команд на игровом экране нужно освежать и вне game_state
+      // (например, когда кто-то отключился/переподключился), поэтому рендерим
+      // их прямо на любое обновление комнаты, а не только вместе с board-состоянием.
+      renderBoardTeams(room.players, latestGameState);
     }
+  }
+
+  function renderBoardTeams(players, gs) {
+    const redPlayers = players.filter(p => p.team === 'red');
+    const bluePlayers = players.filter(p => p.team === 'blue');
+    el.boardRedPlayersList.innerHTML = renderTeamChips(redPlayers);
+    el.boardBluePlayersList.innerHTML = renderTeamChips(bluePlayers);
+    el.boardRedPanel.classList.toggle('active-turn', !!gs && gs.currentTeam === 'red');
+    el.boardBluePanel.classList.toggle('active-turn', !!gs && gs.currentTeam === 'blue');
   }
 
   // ---------- Board ----------
   function renderBoardScreen(gs) {
     latestGameState = gs;
+    renderBoardTeams(currentRoom.players, gs);
 
     el.myRoleBadge.textContent = `Вы: ${myTeam === 'red' ? '🔴' : myTeam === 'blue' ? '🔵' : '—'} ${myRole === 'spymaster' ? 'Капитан' : 'Агент'}`;
 
@@ -379,6 +399,10 @@
     const showEndTurn = isMyTurn && !!gs.currentClue;
     el.endTurnBtn.classList.toggle('hidden', !showEndTurn);
 
+    // Хосту всегда доступна кнопка аварийной передачи хода — на случай если
+    // капитан активной команды отключился и никто не может продолжить игру.
+    el.forceEndTurnBtn.classList.toggle('hidden', !isHost);
+
     el.boardWaitHint.classList.toggle('hidden', isMyTurn);
     if (!isMyTurn) {
       el.boardWaitHint.textContent = gs.currentClue
@@ -402,6 +426,11 @@
 
   el.endTurnBtn.addEventListener('click', () => {
     socket.emit('end_turn');
+  });
+
+  el.forceEndTurnBtn.addEventListener('click', () => {
+    if (!confirm('Передать ход другой команде? Используйте только если капитан текущей команды пропал и игра зависла.')) return;
+    socket.emit('force_end_turn');
   });
 
   socket.on('color_key', ({ colors }) => {
