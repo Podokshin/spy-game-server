@@ -1,15 +1,19 @@
 :root {
-  --bg: #0a0c14;
-  --panel: #161b2b;
-  --panel-2: #1e2540;
-  --border: #2c3557;
-  --text: #eef1f8;
-  --muted: #8d96b3;
-  --accent: #5b8cff;
-  --accent-2: #ff3d63;
-  --good: #2fe08f;
-  --gold: #ffc95c;
-  --radius: 18px;
+  --bg: #0b0907;
+  --panel: #17130f;
+  --panel-2: #1e1712;
+  --border: rgba(212, 175, 106, 0.2);
+  --text: #f3ecdd;
+  --muted: #a89a86;
+  --accent: #d4af6a;
+  --accent-2: #e0483f;
+  --good: #5fae7c;
+  --gold: #d4af6a;
+  --radius: 16px;
+
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-label: 'Oswald', 'Nunito', sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
 * { box-sizing: border-box; }
@@ -20,11 +24,10 @@ html, body {
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+  font-family: var(--font-body);
   background:
-    radial-gradient(circle at 50% -10%, #232d52 0%, transparent 55%),
-    radial-gradient(circle at 100% 100%, rgba(255, 61, 99, 0.08) 0%, transparent 45%),
-    radial-gradient(circle at 0% 100%, rgba(91, 140, 255, 0.1) 0%, transparent 45%),
+    radial-gradient(70% 45% at 50% -10%, rgba(212, 175, 106, 0.12), transparent 60%),
+    radial-gradient(90% 60% at 50% 110%, rgba(0, 0, 0, 0.6), transparent 55%),
     var(--bg);
   background-attachment: fixed;
   color: var(--text);
@@ -81,17 +84,22 @@ body::before {
 }
 
 h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-style: italic;
   font-size: 1.9rem;
   margin: 0 0 4px;
   text-align: center;
   letter-spacing: 0.3px;
-  text-shadow: 0 0 24px rgba(91, 140, 255, 0.35);
 }
 
 .back-link {
   display: inline-block;
+  font-family: var(--font-label);
+  text-transform: uppercase;
+  letter-spacing: 1px;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.78rem;
   text-decoration: none;
   margin-bottom: 4px;
 }
@@ -101,6 +109,8 @@ h1 {
 }
 
 h2 {
+  font-family: var(--font-display);
+  font-weight: 700;
   font-size: 1.5rem;
   margin: 0 0 4px;
   text-align: center;
@@ -115,7 +125,7 @@ h2 {
 }
 
 .field {
-  background: linear-gradient(180deg, var(--panel), #131829);
+  background: linear-gradient(180deg, var(--panel), #100d0a);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
@@ -125,11 +135,12 @@ h2 {
 }
 
 .field label {
-  font-size: 0.78rem;
+  font-family: var(--font-label);
+  font-size: 0.75rem;
   color: var(--muted);
   text-transform: uppercase;
-  letter-spacing: 0.6px;
-  font-weight: 600;
+  letter-spacing: 0.8px;
+  font-weight: 500;
 }
 
 .checkbox-field-label {
@@ -169,10 +180,10 @@ h2 {
 }
 
 .cat-btn.active {
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  background: var(--accent);
   border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 18px rgba(91, 140, 255, 0.4);
+  color: var(--bg);
+  box-shadow: 0 4px 18px rgba(212, 175, 106, 0.35);
 }
 
 .cat-btn:active, .subcat-btn:active {
@@ -199,10 +210,10 @@ h2 {
 }
 
 .subcat-btn.active {
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  background: var(--accent);
   border-color: transparent;
-  color: white;
-  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.35);
+  color: var(--bg);
+  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.3);
 }
 
 input[type="text"], input[type="number"] {
@@ -231,13 +242,13 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .primary-btn {
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
-  color: white;
-  box-shadow: 0 8px 24px rgba(91, 140, 255, 0.3);
+  background: var(--accent);
+  color: var(--bg);
+  box-shadow: 0 8px 24px rgba(212, 175, 106, 0.25);
 }
 
 .primary-btn:hover {
-  box-shadow: 0 8px 28px rgba(91, 140, 255, 0.45);
+  box-shadow: 0 8px 28px rgba(212, 175, 106, 0.4);
 }
 
 .secondary-btn {
@@ -296,9 +307,9 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .avatar-btn.active {
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  background: var(--accent);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.4);
+  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.35);
 }
 
 .avatar-btn:active {
@@ -335,7 +346,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 /* Room code */
 .room-code-box {
-  background: linear-gradient(160deg, var(--panel), #10142280);
+  background: linear-gradient(160deg, var(--panel), #0c0a0880);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 24px;
@@ -347,21 +358,20 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .room-code-label {
+  font-family: var(--font-label);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
-  letter-spacing: 1px;
-  font-weight: 600;
+  letter-spacing: 1.2px;
+  font-weight: 500;
 }
 
 .room-code {
+  font-family: var(--font-display);
   font-size: 2.4rem;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 6px;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  color: var(--gold);
 }
 
 .copy-link-btn {
@@ -415,8 +425,8 @@ input[type="text"]:focus, input[type="number"]:focus {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
-  color: white;
+  background: var(--accent);
+  color: var(--bg);
   font-size: 0.68rem;
   font-weight: 700;
   display: inline-flex;
@@ -455,9 +465,10 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .vote-option-btn.selected {
-  background: linear-gradient(135deg, var(--accent), #7b5bff);
+  background: var(--accent);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(91, 140, 255, 0.4);
+  color: var(--bg);
+  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.35);
 }
 
 .vote-option-btn:active {
@@ -499,18 +510,19 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .role-card.spy {
-  background: linear-gradient(160deg, #3d0f1f, var(--panel) 65%);
-  border: 1px solid #6e2338;
-  box-shadow: 0 0 40px rgba(255, 61, 99, 0.18), inset 0 0 60px rgba(255, 61, 99, 0.06);
+  background: linear-gradient(160deg, #331410, var(--panel) 65%);
+  border: 1px solid #5c2620;
+  box-shadow: 0 0 40px rgba(224, 72, 63, 0.16), inset 0 0 60px rgba(224, 72, 63, 0.05);
 }
 
 .role-card.normal {
-  background: linear-gradient(160deg, #0f3324, var(--panel) 65%);
-  border: 1px solid #1f5c3f;
-  box-shadow: 0 0 40px rgba(47, 224, 143, 0.14), inset 0 0 60px rgba(47, 224, 143, 0.05);
+  background: linear-gradient(160deg, #16281e, var(--panel) 65%);
+  border: 1px solid #2c4c37;
+  box-shadow: 0 0 40px rgba(95, 174, 122, 0.12), inset 0 0 60px rgba(95, 174, 122, 0.04);
 }
 
 .role-title {
+  font-family: var(--font-display);
   font-size: 2rem;
   margin: 0;
   letter-spacing: 0.5px;
@@ -538,7 +550,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 /* Discuss */
 .timer-block {
-  background: linear-gradient(180deg, var(--panel), #131829);
+  background: linear-gradient(180deg, var(--panel), #100d0a);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 28px 24px;
@@ -554,17 +566,17 @@ input[type="text"]:focus, input[type="number"]:focus {
   width: 170px;
   height: 170px;
   border-radius: 50%;
-  background: conic-gradient(var(--ring-color) calc(var(--progress) * 360deg), #262f48 0deg);
+  background: conic-gradient(var(--ring-color) calc(var(--progress) * 360deg), #241f19 0deg);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-image 0.4s linear;
-  box-shadow: 0 0 30px rgba(91, 140, 255, 0.2);
+  box-shadow: 0 0 30px rgba(212, 175, 106, 0.18);
 }
 
 .timer-ring.warning {
   --ring-color: var(--accent-2);
-  box-shadow: 0 0 30px rgba(255, 61, 99, 0.28);
+  box-shadow: 0 0 30px rgba(224, 72, 63, 0.28);
 }
 
 .timer-ring-inner {
@@ -578,6 +590,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 }
 
 .timer-display {
+  font-family: var(--font-display);
   font-size: 2.3rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
@@ -592,7 +605,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 .end-line {
   text-align: center;
   font-size: 1.1rem;
-  background: linear-gradient(180deg, var(--panel), #131829);
+  background: linear-gradient(180deg, var(--panel), #100d0a);
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px;
@@ -608,33 +621,26 @@ input[type="text"]:focus, input[type="number"]:focus {
   position: fixed;
   bottom: 14px;
   right: 14px;
-  background: linear-gradient(135deg, rgba(91, 140, 255, 0.16), rgba(255, 61, 99, 0.16));
-  border: 1px solid rgba(123, 91, 255, 0.4);
+  background: rgba(11, 9, 7, 0.75);
+  border: 1px solid var(--border);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   padding: 6px 14px;
   border-radius: 999px;
-  font-size: 0.72rem;
+  font-family: var(--font-label);
+  font-size: 0.68rem;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
   color: var(--muted);
-  letter-spacing: 0.2px;
   z-index: 50;
   pointer-events: none;
-  animation: creditGlow 3.5s ease-in-out infinite;
   white-space: nowrap;
 }
 
 .credit b {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  font-weight: 800;
-}
-
-@keyframes creditGlow {
-  0%, 100% { box-shadow: 0 0 10px rgba(91, 140, 255, 0.15); }
-  50% { box-shadow: 0 0 22px rgba(255, 61, 99, 0.3); }
+  color: var(--gold);
+  font-weight: 700;
 }
 
 @media (max-width: 380px) {
