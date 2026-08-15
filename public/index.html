@@ -3,17 +3,35 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Игротека</title>
+<title>Игротека — мини-игры для компании друзей онлайн</title>
+<meta name="description" content="Игротека — мини-игры для дружеской компании: Шпион, Тайная миссия, Кодовые имена, Мафия. Заходите с телефона по коду комнаты и играйте вместе, без установки приложений.">
+<meta name="theme-color" content="#f4ecda">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Игротека">
+<meta property="og:locale" content="ru_RU">
+<meta property="og:title" content="Игротека — мини-игры для компании друзей">
+<meta property="og:description" content="Шпион, Тайная миссия, Кодовые имена, Мафия — играйте вместе онлайн с телефона, без установки приложений.">
+
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Игротека — мини-игры для компании друзей">
+<meta name="twitter:description" content="Играйте вместе онлайн с телефона: Шпион, Тайная миссия, Кодовые имена, Мафия.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
 <div id="app">
-  <h1>🎉 Игротека</h1>
-  <p class="subtitle">4 мини-игры для компании друзей — заходите с телефонов и играйте вместе.</p>
+  <span class="hero-badge">🎉 Играем компанией</span>
+  <h1>Игротека</h1>
+  <p class="subtitle">Мини-игры для дружеской компании — заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.</p>
 
   <div class="game-grid">
-    <a class="game-card" href="/spy/">
+    <a class="game-card game-card--spy" href="/spy/">
       <div class="game-card-icon">🕵️</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Шпион</h2>
@@ -23,7 +41,7 @@
       <span class="game-card-status status-live">Играть</span>
     </a>
 
-    <a class="game-card" href="/mission/">
+    <a class="game-card game-card--mission" href="/mission/">
       <div class="game-card-icon">🎭</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Тайная миссия</h2>
@@ -33,7 +51,7 @@
       <span class="game-card-status status-live">Играть</span>
     </a>
 
-    <a class="game-card" href="/codenames/">
+    <a class="game-card game-card--codenames" href="/codenames/">
       <div class="game-card-icon">🔤</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Кодовые имена</h2>
@@ -43,7 +61,7 @@
       <span class="game-card-status status-live">Играть</span>
     </a>
 
-    <a class="game-card" href="/mafia/">
+    <a class="game-card game-card--mafia" href="/mafia/">
       <div class="game-card-icon">🌙</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Мафия</h2>
