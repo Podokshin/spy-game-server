@@ -254,6 +254,39 @@ body {
   content: '';
 }
 
+.footer-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 30px;
+  font-size: 0.76rem;
+  color: var(--ink-faint);
+}
+
+.footer-links a {
+  color: var(--ink-faint);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.footer-links a:hover {
+  color: var(--ink-soft);
+}
+
+.footer-dot {
+  opacity: 0.5;
+}
+
+.age-badge {
+  border: 1px solid var(--panel-border);
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-weight: 700;
+  color: var(--ink-faint);
+}
+
 .credit {
   position: fixed;
   bottom: 16px;

@@ -123,6 +123,12 @@ h2 {
   margin: 0;
 }
 
+.hint a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .field {
   background: linear-gradient(180deg, var(--panel), #0a0a10);
   border: 2px solid var(--border);

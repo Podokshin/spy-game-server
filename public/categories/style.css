@@ -119,6 +119,12 @@ h2 {
   margin: 0;
 }
 
+.hint a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .field {
   background: var(--panel);
   border: 2px solid var(--border);
