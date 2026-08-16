@@ -1,18 +1,18 @@
 :root {
-  --bg: #0b0907;
-  --panel: #17130f;
-  --panel-2: #1e1712;
-  --border: rgba(212, 175, 106, 0.2);
-  --text: #f3ecdd;
-  --muted: #a89a86;
-  --accent: #d4af6a;
-  --accent-2: #e0483f;
-  --good: #5fae7c;
-  --gold: #d4af6a;
-  --radius: 16px;
+  --bg: #0a0a10;
+  --panel: #131218;
+  --panel-2: #191822;
+  --border: rgba(255, 255, 255, 0.13);
+  --text: #f7f6fb;
+  --muted: rgba(247, 246, 251, 0.62);
+  --accent: #3aa7ff;
+  --accent-2: #ff3b30;
+  --good: #34d399;
+  --gold: #3aa7ff;
+  --radius: 18px;
 
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-label: 'Oswald', 'Nunito', sans-serif;
+  --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
+  --font-label: 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
@@ -26,7 +26,7 @@ html, body {
 body {
   font-family: var(--font-body);
   background:
-    radial-gradient(70% 45% at 50% -10%, rgba(212, 175, 106, 0.12), transparent 60%),
+    radial-gradient(70% 45% at 50% -10%, color-mix(in srgb, var(--accent) 12%, transparent), transparent 60%),
     radial-gradient(90% 60% at 50% 110%, rgba(0, 0, 0, 0.6), transparent 55%),
     var(--bg);
   background-attachment: fixed;
@@ -85,8 +85,7 @@ body::before {
 
 h1 {
   font-family: var(--font-display);
-  font-weight: 700;
-  font-style: italic;
+  font-weight: 800;
   font-size: 1.9rem;
   margin: 0 0 4px;
   text-align: center;
@@ -125,8 +124,8 @@ h2 {
 }
 
 .field {
-  background: linear-gradient(180deg, var(--panel), #100d0a);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 14px 16px;
   display: flex;
@@ -170,7 +169,7 @@ h2 {
   flex: 1;
   padding: 12px 8px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--panel-2);
   color: var(--text);
   cursor: pointer;
@@ -183,7 +182,7 @@ h2 {
   background: var(--accent);
   border-color: transparent;
   color: var(--bg);
-  box-shadow: 0 4px 18px rgba(212, 175, 106, 0.35);
+  box-shadow: 0 4px 18px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .cat-btn:active, .subcat-btn:active {
@@ -199,7 +198,7 @@ h2 {
 .subcat-btn {
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--panel-2);
   color: var(--text);
   cursor: pointer;
@@ -213,12 +212,12 @@ h2 {
   background: var(--accent);
   border-color: transparent;
   color: var(--bg);
-  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.3);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 30%, transparent);
 }
 
 input[type="text"], input[type="number"] {
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 10px;
   color: var(--text);
   padding: 10px 12px;
@@ -244,17 +243,17 @@ input[type="text"]:focus, input[type="number"]:focus {
 .primary-btn {
   background: var(--accent);
   color: var(--bg);
-  box-shadow: 0 8px 24px rgba(212, 175, 106, 0.25);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 25%, transparent);
 }
 
 .primary-btn:hover {
-  box-shadow: 0 8px 28px rgba(212, 175, 106, 0.4);
+  box-shadow: 0 8px 28px color-mix(in srgb, var(--accent) 40%, transparent);
 }
 
 .secondary-btn {
   background: var(--panel-2);
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
 }
 
 .primary-btn:active, .secondary-btn:active {
@@ -295,7 +294,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   width: 44px;
   height: 44px;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   background: var(--panel-2);
   font-size: 1.4rem;
   display: flex;
@@ -309,7 +308,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 .avatar-btn.active {
   background: var(--accent);
   border-color: transparent;
-  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.35);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .avatar-btn:active {
@@ -346,8 +345,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 /* Room code */
 .room-code-box {
-  background: linear-gradient(160deg, var(--panel), #0c0a0880);
-  border: 1px solid var(--border);
+  background: linear-gradient(160deg, var(--panel), #0a0a10cc);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 24px;
   display: flex;
@@ -393,7 +392,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   align-items: center;
   gap: 6px;
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 999px;
   padding: 6px 12px;
   font-size: 0.85rem;
@@ -455,7 +454,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   align-items: center;
   gap: 6px;
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 999px;
   padding: 8px 16px;
   font-size: 0.9rem;
@@ -468,7 +467,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   background: var(--accent);
   border-color: transparent;
   color: var(--bg);
-  box-shadow: 0 4px 14px rgba(212, 175, 106, 0.35);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
 }
 
 .vote-option-btn:active {
@@ -485,7 +484,7 @@ input[type="text"]:focus, input[type="number"]:focus {
   align-items: center;
   justify-content: center;
   background: var(--panel-2);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: 999px;
   padding: 6px 14px;
   font-size: 0.85rem;
@@ -496,7 +495,7 @@ input[type="text"]:focus, input[type="number"]:focus {
 /* Role card (reused from local game) */
 .role-card {
   background: var(--panel);
-  border: 1px solid var(--border);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 40px 24px;
   display: flex;
@@ -512,13 +511,13 @@ input[type="text"]:focus, input[type="number"]:focus {
 .role-card.spy {
   background: linear-gradient(160deg, #331410, var(--panel) 65%);
   border: 1px solid #5c2620;
-  box-shadow: 0 0 40px rgba(224, 72, 63, 0.16), inset 0 0 60px rgba(224, 72, 63, 0.05);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--accent-2) 16%, transparent), inset 0 0 60px color-mix(in srgb, var(--accent-2) 5%, transparent);
 }
 
 .role-card.normal {
   background: linear-gradient(160deg, #16281e, var(--panel) 65%);
   border: 1px solid #2c4c37;
-  box-shadow: 0 0 40px rgba(95, 174, 122, 0.12), inset 0 0 60px rgba(95, 174, 122, 0.04);
+  box-shadow: 0 0 40px color-mix(in srgb, var(--good) 12%, transparent), inset 0 0 60px color-mix(in srgb, var(--good) 4%, transparent);
 }
 
 .role-title {
@@ -550,8 +549,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 
 /* Discuss */
 .timer-block {
-  background: linear-gradient(180deg, var(--panel), #100d0a);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 28px 24px;
   display: flex;
@@ -566,17 +565,17 @@ input[type="text"]:focus, input[type="number"]:focus {
   width: 170px;
   height: 170px;
   border-radius: 50%;
-  background: conic-gradient(var(--ring-color) calc(var(--progress) * 360deg), #241f19 0deg);
+  background: conic-gradient(var(--ring-color) calc(var(--progress) * 360deg), #201f2a 0deg);
   display: flex;
   align-items: center;
   justify-content: center;
   transition: background-image 0.4s linear;
-  box-shadow: 0 0 30px rgba(212, 175, 106, 0.18);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
 .timer-ring.warning {
   --ring-color: var(--accent-2);
-  box-shadow: 0 0 30px rgba(224, 72, 63, 0.28);
+  box-shadow: 0 0 30px color-mix(in srgb, var(--accent-2) 28%, transparent);
 }
 
 .timer-ring-inner {
@@ -605,8 +604,8 @@ input[type="text"]:focus, input[type="number"]:focus {
 .end-line {
   text-align: center;
   font-size: 1.1rem;
-  background: linear-gradient(180deg, var(--panel), #100d0a);
-  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  border: 2px solid var(--border);
   border-radius: 12px;
   padding: 14px;
   margin: 0;
@@ -621,10 +620,8 @@ input[type="text"]:focus, input[type="number"]:focus {
   position: fixed;
   bottom: 14px;
   right: 14px;
-  background: rgba(11, 9, 7, 0.75);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: var(--panel);
+  border: 2px solid var(--border);
   padding: 6px 14px;
   border-radius: 999px;
   font-family: var(--font-label);

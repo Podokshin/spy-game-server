@@ -4,37 +4,44 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Игротека — мини-игры для компании друзей онлайн</title>
-<meta name="description" content="Игротека — мини-игры для дружеской компании: Шпион, Тайная миссия, Кодовые имена, Мафия. Заходите с телефона по коду комнаты и играйте вместе, без установки приложений.">
-<meta name="theme-color" content="#0b0907">
+<meta name="description" content="Игротека — 8 мини-игр для дружеской компании: Шпион, Тайная миссия, Кодовые имена, Мафия, Волна, Кто я, Эмоджи-шарады, Категории. Заходите с телефона по коду комнаты и играйте вместе, без установки приложений.">
+<meta name="theme-color" content="#0a0a10">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Игротека">
 <meta property="og:locale" content="ru_RU">
 <meta property="og:title" content="Игротека — мини-игры для компании друзей">
-<meta property="og:description" content="Шпион, Тайная миссия, Кодовые имена, Мафия — играйте вместе онлайн с телефона, без установки приложений.">
+<meta property="og:description" content="8 мини-игр — играйте вместе онлайн с телефона, без установки приложений.">
 
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Игротека — мини-игры для компании друзей">
-<meta name="twitter:description" content="Играйте вместе онлайн с телефона: Шпион, Тайная миссия, Кодовые имена, Мафия.">
+<meta name="twitter:description" content="8 мини-игр — играйте вместе онлайн с телефона.">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Oswald:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<div class="mesh" aria-hidden="true">
+  <span></span>
+  <span></span>
+  <span></span>
+  <span></span>
+</div>
+<div class="grain" aria-hidden="true"></div>
+
 <div id="app">
   <div class="hero">
-    <span class="hero-eyebrow">Досье игр</span>
-    <h1>Игротека</h1>
+    <div class="hero-mark"><img src="/favicon.svg" alt="" width="34" height="34"></div>
+    <h1 class="wordmark">Игр<span class="accent-letter">о</span>тека</h1>
     <p class="subtitle">Мини-игры для дружеской компании — заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.</p>
   </div>
 
   <div class="game-grid">
     <a class="game-card game-card--spy" href="/spy/">
-      <span class="game-card-index">01</span>
       <div class="game-card-icon">🕵️</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Шпион</h2>
@@ -45,7 +52,6 @@
     </a>
 
     <a class="game-card game-card--mission" href="/mission/">
-      <span class="game-card-index">02</span>
       <div class="game-card-icon">🎭</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Тайная миссия</h2>
@@ -56,7 +62,6 @@
     </a>
 
     <a class="game-card game-card--codenames" href="/codenames/">
-      <span class="game-card-index">03</span>
       <div class="game-card-icon">🔤</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Кодовые имена</h2>
@@ -67,12 +72,51 @@
     </a>
 
     <a class="game-card game-card--mafia" href="/mafia/">
-      <span class="game-card-index">04</span>
       <div class="game-card-icon">🌙</div>
       <div class="game-card-body">
         <h2 class="game-card-title">Мафия</h2>
         <p class="game-card-desc">Ночью мафия тайно выбирает жертву, днём город обсуждает и голосует, кому не доверять. Есть шериф и доктор.</p>
         <span class="game-card-meta">от 4 игроков · роли и голосование</span>
+      </div>
+      <span class="game-card-status status-live">Играть</span>
+    </a>
+
+    <a class="game-card game-card--wavelength" href="/wavelength/">
+      <div class="game-card-icon">🌊</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Волна</h2>
+        <p class="game-card-desc">Капитан даёт подсказку, где на скрытой шкале спряталась точка — команда угадывает позицию слайдером. Чем точнее, тем больше очков.</p>
+        <span class="game-card-meta">от 4 игроков · 2 команды</span>
+      </div>
+      <span class="game-card-status status-live">Играть</span>
+    </a>
+
+    <a class="game-card game-card--whoami" href="/whoami/">
+      <div class="game-card-icon">❓</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Кто я?</h2>
+        <p class="game-card-desc">Все видят вашу секретную личность, кроме вас самих — угадайте её вопросами вслух быстрее остальных.</p>
+        <span class="game-card-meta">от 3 игроков · онлайн</span>
+      </div>
+      <span class="game-card-status status-live">Играть</span>
+    </a>
+
+    <a class="game-card game-card--charades" href="/charades/">
+      <div class="game-card-icon">🤪</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Эмоджи-шарады</h2>
+        <p class="game-card-desc">По очереди зашифруйте фильм или фразу одними эмодзи — остальные выкрикивают ответ вслух наперегонки.</p>
+        <span class="game-card-meta">от 3 игроков · онлайн</span>
+      </div>
+      <span class="game-card-status status-live">Играть</span>
+    </a>
+
+    <a class="game-card game-card--categories" href="/categories/">
+      <div class="game-card-icon">⚡</div>
+      <div class="game-card-body">
+        <h2 class="game-card-title">Категории</h2>
+        <p class="game-card-desc">Буква и 5 категорий — на скорость придумайте слова, начинающиеся на неё. Очки за уникальные ответы считаются автоматически.</p>
+        <span class="game-card-meta">от 2 игроков · онлайн</span>
       </div>
       <span class="game-card-status status-live">Играть</span>
     </a>

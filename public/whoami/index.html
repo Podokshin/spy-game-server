@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Тайная миссия</title>
+<title>Кто я</title>
 <meta name="theme-color" content="#0a0a10">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,8 +18,8 @@
   <!-- ===== Меню: создать/присоединиться ===== -->
   <section id="screen-menu" class="screen active">
     <a class="back-link" href="/">← Все игры</a>
-    <h1>🎭 Тайная миссия</h1>
-    <p class="subtitle" id="menuSubtitle">У каждого своя секретная задача на раунд — выполните её незаметно, а потом угадайте чужие.</p>
+    <h1>❓ Кто я?</h1>
+    <p class="subtitle" id="menuSubtitle">Каждому достаётся секретная личность, которую видят все, кроме него самого. Задавайте вопросы «да/нет» и угадывайте, кто вы!</p>
 
     <div class="room-code-box hidden" id="inviteBanner">
       <span class="room-code-label">Вас пригласили в комнату</span>
@@ -64,13 +64,13 @@
     <div class="field">
       <label class="checkbox-field-label">
         <input type="checkbox" id="lobbyTimerEnabled" checked>
-        Таймер на выполнение миссий
+        Таймер на игру
       </label>
     </div>
 
     <div class="field" id="lobbyTimerMinutesField">
       <label for="lobbyTimerMinutes">Минут на раунд</label>
-      <input type="number" id="lobbyTimerMinutes" min="1" max="30" value="6">
+      <input type="number" id="lobbyTimerMinutes" min="1" max="30" value="12">
     </div>
 
     <div class="field">
@@ -86,71 +86,57 @@
     <p class="error hidden" id="lobbyError"></p>
   </section>
 
-  <!-- ===== Показ своей миссии ===== -->
-  <section id="screen-mission" class="screen">
-    <div class="role-card normal" id="missionCard">
-      <p class="role-title">🎭 Твоя секретная миссия</p>
-      <p class="role-location" id="missionText"></p>
-      <p class="role-hint">Выполни это незаметно во время обычного разговора — так, чтобы никто не догадался, что это специальное задание.</p>
-      <button id="missionReadyBtn" class="primary-btn">Я запомнил(а), готов(а)</button>
+  <!-- ===== Личности розданы ===== -->
+  <section id="screen-assigned" class="screen">
+    <h2>🎭 Личности розданы!</h2>
+    <p class="subtitle">Каждый видит личности всех, кроме своей. Посмотрите на список — свою строку вы узнаете по маске «❓❓❓».</p>
+
+    <div class="field">
+      <label>Кто есть кто</label>
+      <div id="assignedList" class="identity-list"></div>
     </div>
-    <p class="hint hidden" id="readyHint"></p>
-    <button id="forceStartBtn" class="secondary-btn hidden">Начать раунд, не дожидаясь всех</button>
+
+    <button id="assignedReadyBtn" class="primary-btn">Готов(а)!</button>
+    <p class="hint hidden" id="assignedReadyHint"></p>
+    <button id="forceStartPlayingBtn" class="secondary-btn hidden">Начать раунд, не дожидаясь всех</button>
   </section>
 
-  <!-- ===== Обсуждение ===== -->
-  <section id="screen-discussion" class="screen">
-    <h2>Раунд начался!</h2>
-    <p class="discuss-hint">Общайтесь как обычно и постарайтесь незаметно выполнить свою миссию.</p>
+  <!-- ===== Игра: угадывание ===== -->
+  <section id="screen-playing" class="screen">
+    <h2>🕹️ Раунд начался!</h2>
+    <p class="discuss-hint">Спрашивайте у других игроков «да/нет» вопросы, чтобы понять, кто вы. Подсказки — в списке ниже.</p>
 
     <div id="timerBlock" class="timer-block hidden">
       <div id="timerRing" class="timer-ring">
         <div class="timer-ring-inner">
-          <span id="timerDisplay" class="timer-display">06:00</span>
+          <span id="timerDisplay" class="timer-display">12:00</span>
         </div>
       </div>
       <button id="pauseBtn" class="secondary-btn hidden">Пауза</button>
     </div>
 
-    <button id="endDiscussionBtn" class="primary-btn hidden">Завершить и раскрыть миссии</button>
-    <p class="hint hidden" id="discussionWaitHint">Решение о завершении принимает хост.</p>
-  </section>
-
-  <!-- ===== Угадывание миссий ===== -->
-  <section id="screen-guessing" class="screen">
-    <h2>🔍 Раскрытие миссий</h2>
-    <p class="hint" id="guessProgress">Миссия 1 из 5</p>
+    <button id="iGuessedBtn" class="primary-btn">🎉 Я угадал(а), кто я!</button>
 
     <div class="field">
-      <label>Миссия</label>
-      <p class="role-location" id="guessMissionText"></p>
+      <label>Уже угадали (<span id="finishedCountLabel">0</span> из <span id="finishedTotalLabel">0</span>)</label>
+      <div id="finishedList" class="chip-list"></div>
     </div>
 
-    <div class="field hidden" id="guessVoteField">
-      <label>Кто её выполнил?</label>
-      <div class="vote-options" id="guessOptions"></div>
+    <div class="field">
+      <label>Кто есть кто</label>
+      <div id="playingList" class="identity-list"></div>
     </div>
 
-    <button id="submitGuessBtn" class="primary-btn" disabled>Ответить</button>
-    <p class="hint hidden" id="guessWaitHint"></p>
-    <button id="forceFinishGuessBtn" class="secondary-btn hidden">Показать ответ сейчас</button>
-
-    <div class="field hidden" id="guessResultField">
-      <label>Ответ</label>
-      <p class="end-line" id="guessResultLine"></p>
-      <p class="end-line" id="guessResultCatchLine"></p>
-    </div>
-
-    <button id="nextGuessBtn" class="primary-btn hidden">Следующая миссия</button>
-    <p class="hint hidden" id="waitNextHint">Хост переключит на следующую миссию…</p>
+    <button id="forceEndPlayingBtn" class="secondary-btn hidden">Завершить раньше времени</button>
   </section>
 
   <!-- ===== Итоги ===== -->
   <section id="screen-end" class="screen">
     <h2>🏆 Итоги игры</h2>
+    <p class="hint hidden" id="timeUpHint">⏰ Время вышло!</p>
 
     <div class="field">
-      <label>Счёт</label>
+      <label>Результаты и настоящие личности</label>
       <div class="chip-list" id="scoreboardList"></div>
     </div>
 

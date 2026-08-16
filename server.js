@@ -6,6 +6,10 @@ const { registerSpyGame } = require('./lib/spy-game');
 const { registerMissionGame } = require('./lib/mission-game');
 const { registerCodenamesGame } = require('./lib/codenames-game');
 const { registerMafiaGame } = require('./lib/mafia-game');
+const { registerWavelengthGame } = require('./lib/wavelength-game');
+const { registerWhoamiGame } = require('./lib/whoami-game');
+const { registerCharadesGame } = require('./lib/charades-game');
+const { registerCategoriesGame } = require('./lib/categories-game');
 
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
@@ -19,6 +23,10 @@ registerSpyGame(io); // корневой namespace "/" — использует�
 registerMissionGame(io.of('/mission')); // отдельный namespace — используется страницей /mission/
 registerCodenamesGame(io.of('/codenames')); // отдельный namespace — используется страницей /codenames/
 registerMafiaGame(io.of('/mafia')); // отдельный namespace — используется страницей /mafia/
+registerWavelengthGame(io.of('/wavelength')); // отдельный namespace — используется страницей /wavelength/
+registerWhoamiGame(io.of('/whoami')); // отдельный namespace — используется страницей /whoami/
+registerCharadesGame(io.of('/charades')); // отдельный namespace — используется страницей /charades/
+registerCategoriesGame(io.of('/categories')); // отдельный namespace — используется страницей /categories/
 
 server.listen(PORT, () => {
   console.log(`Игротека запущена: http://localhost:${PORT}`);
