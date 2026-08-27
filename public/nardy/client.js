@@ -107,6 +107,71 @@
     return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
+  // ---------- Sound (generated, same approach as other games — no audio files) ----------
+  let audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      audioCtx = Ctx ? new Ctx() : null;
+    }
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+    return audioCtx;
+  }
+
+  function tone(ctx, freq, startTime, duration, peakGain, type) {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = type || 'sine';
+    osc.frequency.value = freq;
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    gain.gain.setValueAtTime(0, startTime);
+    gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.005);
+    gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+    osc.start(startTime);
+    osc.stop(startTime + duration + 0.02);
+  }
+
+  // Лёгкий "тук" — будто приподняли шашку пальцами.
+  function playPickupSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    tone(ctx, 640, ctx.currentTime, 0.05, 0.14, 'triangle');
+  }
+
+  // Более весомый стук — шашка встала на точку. Для выхода с доски — светлый звон.
+  function playPlaceSound(bearOff) {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    if (bearOff) {
+      tone(ctx, 520, now, 0.09, 0.2, 'triangle');
+      tone(ctx, 780, now + 0.05, 0.16, 0.18, 'triangle');
+    } else {
+      tone(ctx, 150, now, 0.09, 0.3, 'sine');
+      tone(ctx, 360, now, 0.05, 0.14, 'triangle');
+    }
+  }
+
+  // Глухой "нет" — сброс не туда, шашка вернулась на место.
+  function playInvalidSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    tone(ctx, 220, now, 0.09, 0.16, 'sawtooth');
+    tone(ctx, 150, now + 0.06, 0.13, 0.14, 'sawtooth');
+  }
+
+  // Дробь костей при броске.
+  function playDiceSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    for (let i = 0; i < 5; i++) {
+      tone(ctx, 260 + Math.random() * 520, now + i * 0.04, 0.03, 0.12, 'square');
+    }
+  }
+
   // ---------- Session persistence (for reconnect) ----------
   function saveSession() {
     if (!currentRoom || !myPlayerId) return;
@@ -186,6 +251,7 @@
 
   // ---------- Menu ----------
   el.createRoomBtn.addEventListener('click', () => {
+    getAudioCtx();
     el.menuError.classList.add('hidden');
     socket.emit('create_room', { name: el.playerName.value, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return showMenuError('Не удалось создать комнату');
@@ -196,6 +262,7 @@
   });
 
   el.joinRoomBtn.addEventListener('click', () => {
+    getAudioCtx();
     el.menuError.classList.add('hidden');
     socket.emit('join_room', { code: el.joinCode.value, name: el.playerName.value, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return showMenuError(res.error || 'Не удалось присоединиться');
@@ -501,6 +568,7 @@
     checkerEl.style.height = rect.height + 'px';
     checkerEl.style.margin = '0';
     checkerEl.classList.add('dragging');
+    playPickupSound();
 
     highlightDestinations(destinations, true);
 
@@ -523,6 +591,7 @@
 
       let matchedDie = null;
       let targetRect = null;
+      let isBearOff = false;
 
       if (target && target.type === 'point' && destinations.has('p' + target.point)) {
         matchedDie = destinations.get('p' + target.point);
@@ -530,15 +599,18 @@
       } else if (target && target.type === 'tray' && target.color === myColor && destinations.has('off')) {
         matchedDie = destinations.get('off');
         targetRect = getAnchorRect(null, myColor);
+        isBearOff = true;
       }
 
       if (matchedDie != null) {
         const currentRect = checkerEl.getBoundingClientRect();
         checkerEl.remove();
         selfAnimInFlight = true;
+        playPlaceSound(isBearOff);
         flyGhost(myColor, currentRect, targetRect, finishSelfAnim);
         socket.emit('move_checker', { from: fromPoint, die: matchedDie });
       } else {
+        playInvalidSound();
         checkerEl.classList.remove('dragging');
         checkerEl.classList.add('snap-back');
         requestAnimationFrame(() => {
@@ -617,6 +689,7 @@
     const fromRect = getAnchorRect(data.from, null);
     const toRect = data.bearOff ? getAnchorRect(null, data.color) : getAnchorRect(data.to, null);
     flyGhost(data.color, fromRect, toRect, () => {
+      playPlaceSound(!!data.bearOff);
       applyBoardState(data);
       renderAll();
     });
@@ -708,6 +781,7 @@
   });
 
   socket.on('dice_rolled', ({ dice: rolled, movesLeft: ml }) => {
+    playDiceSound();
     dice = rolled;
     movesLeft = ml;
     hasRolled = true;

@@ -69,7 +69,7 @@ body::before {
 }
 
 #app.wide {
-  max-width: 760px;
+  max-width: 960px;
 }
 
 .screen {
@@ -457,12 +457,12 @@ input[type="text"]:focus {
 .board-frame {
   display: flex;
   align-items: stretch;
-  gap: 6px;
-  min-width: 640px;
+  gap: 8px;
+  min-width: 800px;
 }
 
 .off-tray {
-  width: 46px;
+  width: 58px;
   flex-shrink: 0;
   background: var(--panel);
   border: 2px solid var(--border);
@@ -514,13 +514,13 @@ input[type="text"]:focus {
 .board {
   flex: 1;
   display: grid;
-  grid-template-columns: repeat(6, 1fr) 16px repeat(6, 1fr);
+  grid-template-columns: repeat(6, 1fr) 22px repeat(6, 1fr);
   grid-template-rows: 1fr 1fr;
-  gap: 3px;
+  gap: 4px;
   background: linear-gradient(180deg, #1b1926, #121017);
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 10px;
+  padding: 12px;
 }
 
 .bar {
@@ -532,7 +532,7 @@ input[type="text"]:focus {
 
 .point {
   position: relative;
-  min-height: clamp(220px, 34vh, 320px);
+  min-height: clamp(260px, 40vh, 380px);
   display: flex;
   cursor: default;
 }
@@ -591,7 +591,7 @@ input[type="text"]:focus {
 .point[data-row="bottom"] .point-stack { bottom: 6px; }
 
 .checker {
-  --checker-size: clamp(18px, 5.6vw, 27px);
+  --checker-size: clamp(22px, 6.4vw, 34px);
   position: absolute;
   left: 50%;
   width: var(--checker-size);
