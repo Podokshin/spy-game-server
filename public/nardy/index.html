@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Длинные нарды Online</title>
+<meta name="theme-color" content="#0a0a10">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/shorts.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🎲 Длинные нарды</h1>
+    <p class="subtitle" id="menuSubtitle">Классические длинные нарды один на один — без взятия шашек соперника. Создайте комнату или присоединитесь по коду.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <p class="hint">Продолжая, вы соглашаетесь с <a href="/privacy/">политикой обработки данных</a> и <a href="/terms/">правилами сайта</a>.</p>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите другу</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="field">
+      <label>Игроки (<span id="playerCountLabel">0</span> из 2)</label>
+      <div id="lobbyPlayersList" class="chip-list"></div>
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать партию</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт партию…</p>
+    <p class="hint hidden" id="needSecondPlayerHint">Ждём второго игрока…</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Партия ===== -->
+  <section id="screen-board" class="screen">
+    <div class="players-bar">
+      <div class="player-badge" id="whitePlayerBadge">
+        <span class="color-dot dot-white"></span>
+        <span class="player-badge-name" id="whitePlayerName">—</span>
+        <span class="player-badge-score" id="whitePlayerScore">0</span>
+      </div>
+      <div class="cube-box" id="cubeBox">
+        <span class="cube-label">Куб</span>
+        <span class="cube-value" id="cubeValueDisplay">1</span>
+      </div>
+      <div class="player-badge" id="blackPlayerBadge">
+        <span class="color-dot dot-black"></span>
+        <span class="player-badge-name" id="blackPlayerName">—</span>
+        <span class="player-badge-score" id="blackPlayerScore">0</span>
+      </div>
+    </div>
+
+    <div class="turn-banner" id="turnBanner">
+      <span class="turn-team-dot" id="turnDot"></span>
+      <span id="turnBannerText">Ход белых</span>
+    </div>
+
+    <div class="board-scroll">
+      <div class="board" id="board"></div>
+    </div>
+
+    <div class="dice-row" id="diceRow">
+      <div class="dice-faces" id="diceFaces"></div>
+      <div class="dice-chips" id="diceChips"></div>
+    </div>
+
+    <div class="action-row">
+      <button id="rollDiceBtn" class="primary-btn hidden">🎲 Бросить кости</button>
+      <button id="offerDoubleBtn" class="secondary-btn hidden">×2 Предложить куб</button>
+    </div>
+
+    <p class="hint hidden" id="waitTurnHint">Ход соперника…</p>
+
+    <div class="double-offer-box hidden" id="doubleOfferBox">
+      <p id="doubleOfferText">Соперник предлагает удвоить куб</p>
+      <div class="double-offer-actions">
+        <button id="acceptDoubleBtn" class="primary-btn">Принять</button>
+        <button id="declineDoubleBtn" class="secondary-btn">Отказаться</button>
+      </div>
+    </div>
+
+    <button id="leaveRoomBtnBoard" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+  <!-- ===== Итоги партии ===== -->
+  <section id="screen-end" class="screen">
+    <h2 id="endTitle">🏆 Партия окончена</h2>
+    <p class="end-line" id="endResultLine"></p>
+
+    <div class="field">
+      <label>Счёт</label>
+      <div class="chip-list" id="scoreboardList"></div>
+    </div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая партия</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую партию…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shorts.js" defer></script>
+<script src="rules-client.js"></script>
+<script src="client.js"></script>
+</body>
+</html>

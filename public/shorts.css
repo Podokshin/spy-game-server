@@ -1,0 +1,75 @@
+/* Боковые "шортсы" для десктопа — общий блок, подключается на всех страницах */
+
+/* Надпись-креатор становится кликабельным тумблером для видео */
+.credit[data-shorts-toggle] {
+  pointer-events: auto !important;
+  cursor: pointer;
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+
+.credit[data-shorts-toggle]:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.credit[data-shorts-toggle].active {
+  border-color: #34d399;
+  box-shadow: 0 8px 24px -8px rgba(52, 211, 153, 0.5);
+}
+
+.shorts-indicator {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 7px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  transition: background .15s ease, box-shadow .15s ease;
+  vertical-align: middle;
+}
+
+.credit[data-shorts-toggle].active .shorts-indicator {
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.shorts-rail {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 280px;
+  aspect-ratio: 9 / 16;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.13);
+  background: #131218;
+  z-index: 40;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .35s ease;
+  box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
+}
+
+.shorts-rail.visible {
+  opacity: 1;
+}
+
+.shorts-rail--left {
+  left: 24px;
+}
+
+.shorts-rail--right {
+  right: 24px;
+}
+
+.shorts-rail video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+@media (max-width: 1399px), (max-height: 720px) {
+  .shorts-rail {
+    display: none !important;
+  }
+}

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Мафия</title>
+<meta name="theme-color" content="#0a0a10">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/shorts.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🌙 Мафия</h1>
+    <p class="subtitle" id="menuSubtitle">Мафия ночью выбирает жертву, город днём ищет, кому не доверять. Выживут либо все мирные, либо мафия сравняется числом.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <p class="hint">Продолжая, вы соглашаетесь с <a href="/privacy/">политикой обработки данных</a> и <a href="/terms/">правилами сайта</a>.</p>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="field">
+      <label>Игроки (<span id="playerCount">0</span>)</label>
+      <div class="chip-list" id="playersList"></div>
+      <p class="hint">Роли: 1 мафия на каждые ~4 игроков, шериф с 5 игроков, доктор с 6. Минимум 4 игрока.</p>
+    </div>
+
+    <div class="field">
+      <label for="nightSecondsInput">Время на ночь (сек)</label>
+      <input type="number" id="nightSecondsInput" min="15" max="120" value="45">
+    </div>
+    <div class="field">
+      <label for="discussionSecondsInput">Время на обсуждение днём (сек)</label>
+      <input type="number" id="discussionSecondsInput" min="30" max="300" value="90">
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needMorePlayersHint">Нужно минимум 4 игрока</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Показ роли ===== -->
+  <section id="screen-role" class="screen">
+    <div class="role-card" id="roleCard">
+      <p class="role-title" id="roleTitle">—</p>
+      <p class="role-hint" id="roleHint"></p>
+      <div id="roleTeammates"></div>
+    </div>
+    <button id="roleContinueBtn" class="primary-btn">Понятно, начинаем</button>
+  </section>
+
+  <!-- ===== Ночь ===== -->
+  <section id="screen-night" class="screen">
+    <h2>🌙 Ночь <span id="nightRound"></span></h2>
+    <div class="timer-block">
+      <span class="timer-display" id="nightTimerDisplay">—</span>
+    </div>
+
+    <div id="nightActionArea"></div>
+
+    <p class="hint" id="nightWaitHint">Город спит. Дождитесь утра…</p>
+
+    <button id="forceEndNightBtn" class="secondary-btn hidden">⚠️ Завершить ночь досрочно (хост)</button>
+  </section>
+
+  <!-- ===== День (обсуждение) ===== -->
+  <section id="screen-day" class="screen">
+    <h2>☀️ День <span id="dayRound"></span></h2>
+    <p class="end-line" id="dayVictimLine"></p>
+
+    <div class="timer-block">
+      <span class="timer-display" id="dayTimerDisplay">—</span>
+    </div>
+
+    <p class="hint">Обсудите, кто похож на мафию, — потом будет голосование.</p>
+
+    <button id="forceEndDiscussionBtn" class="secondary-btn hidden">Перейти к голосованию (хост)</button>
+  </section>
+
+  <!-- ===== Голосование ===== -->
+  <section id="screen-voting" class="screen">
+    <h2>🗳️ Голосование</h2>
+    <p class="hint">Кого подозреваем? Можно воздержаться.</p>
+
+    <div class="vote-options" id="voteOptions"></div>
+    <p class="hint" id="voteStatusHint"></p>
+
+    <button id="forceFinishVoteBtn" class="secondary-btn hidden">Досрочно завершить голосование (хост)</button>
+  </section>
+
+  <!-- ===== Итоги ===== -->
+  <section id="screen-end" class="screen">
+    <h2 id="endTitle">🏆 Итоги игры</h2>
+    <div class="field">
+      <label>Роли всех игроков</label>
+      <div id="rolesRevealList" class="chip-list"></div>
+    </div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shorts.js" defer></script>
+<script src="client.js"></script>
+</body>
+</html>

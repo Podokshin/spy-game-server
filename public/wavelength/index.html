@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Волна</title>
+<meta name="theme-color" content="#0a0a10">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/shorts.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🌊 Волна</h1>
+    <p class="subtitle" id="menuSubtitle">Две команды по очереди дают подсказку к секретной точке на шкале — угадайте её точнее соперников.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <p class="hint">Продолжая, вы соглашаетесь с <a href="/privacy/">политикой обработки данных</a> и <a href="/terms/">правилами сайта</a>.</p>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби: команды и настройки ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="teams-grid">
+      <div class="team-panel team-red">
+        <h3>🔴 Команда А</h3>
+        <div class="chip-list" id="redPlayersList"></div>
+        <div class="team-actions" id="redTeamActions"></div>
+      </div>
+      <div class="team-panel team-blue">
+        <h3>🔵 Команда Б</h3>
+        <div class="chip-list" id="bluePlayersList"></div>
+        <div class="team-actions" id="blueTeamActions"></div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="unassignedField">
+      <label>Без команды</label>
+      <div class="chip-list" id="unassignedList"></div>
+    </div>
+
+    <div class="field" id="lobbyRoundsField">
+      <label for="lobbyRounds">Раундов в игре (по очереди каждой команде)</label>
+      <input type="number" id="lobbyRounds" min="4" max="20" step="2" value="8">
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needTeamsHint">В каждой команде нужно минимум 2 игрока</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Фаза подсказки ===== -->
+  <section id="screen-clue" class="screen">
+    <h2>💡 Подсказка</h2>
+    <p class="hint" id="clueRoundLabel">Раунд 1 из 8</p>
+
+    <div class="field">
+      <div class="wave-bar" id="clueWaveBar">
+        <div class="wave-bar-track" id="clueWaveTrack"></div>
+        <div class="wave-bar-labels">
+          <span class="wave-bar-label-left" id="clueLeftLabel">—</span>
+          <span class="wave-bar-label-right" id="clueRightLabel">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="clueGiverField">
+      <label for="clueInput">Ваша подсказка (одна фраза)</label>
+      <input type="text" id="clueInput" maxlength="40" placeholder="Например: «почти как отпуск»">
+    </div>
+    <button id="clueSubmitBtn" class="primary-btn hidden">Дать подсказку</button>
+
+    <p class="hint hidden" id="clueWaitGiverHint"></p>
+    <p class="hint hidden" id="clueSpectatorHint"></p>
+  </section>
+
+  <!-- ===== Фаза угадывания ===== -->
+  <section id="screen-guess" class="screen">
+    <h2>🎯 Угадайте позицию</h2>
+    <p class="hint" id="guessRoundLabel">Раунд 1 из 8</p>
+
+    <div class="clue-box" id="guessClueBox">
+      <span class="clue-label">Подсказка</span>
+      <span class="clue-text" id="guessClueText">—</span>
+    </div>
+
+    <div class="field">
+      <div class="wave-bar" id="guessWaveBar">
+        <div class="wave-bar-track" id="guessWaveTrack"></div>
+        <div class="wave-bar-labels">
+          <span class="wave-bar-label-left" id="guessLeftLabel">—</span>
+          <span class="wave-bar-label-right" id="guessRightLabel">—</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="guessSliderField">
+      <input type="range" id="guessSlider" min="0" max="100" value="50">
+      <button id="guessSubmitBtn" class="primary-btn">Ответить</button>
+    </div>
+
+    <div class="timer-block hidden" id="guessTimerBlock">
+      <div class="timer-ring" id="guessTimerRing">
+        <div class="timer-ring-inner">
+          <span class="timer-display" id="guessTimerDisplay">00:45</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="hint hidden" id="guessProgressHint"></p>
+    <button id="forceFinalizeBtn" class="secondary-btn hidden">Показать результат сейчас</button>
+  </section>
+
+  <!-- ===== Результат раунда ===== -->
+  <section id="screen-reveal" class="screen">
+    <h2>📊 Результат раунда</h2>
+    <p class="hint" id="revealRoundLabel">Раунд 1 из 8</p>
+
+    <div class="field">
+      <div class="wave-bar" id="revealWaveBar">
+        <div class="wave-bar-track" id="revealWaveTrack"></div>
+        <div class="wave-bar-labels">
+          <span class="wave-bar-label-left" id="revealLeftLabel">—</span>
+          <span class="wave-bar-label-right" id="revealRightLabel">—</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="end-line" id="revealPointsLine">Команда получила 0 очков</p>
+
+    <div class="score-row">
+      <span class="score-pill score-red" id="revealScoreRed">🔴 0</span>
+      <span class="score-pill score-blue" id="revealScoreBlue">🔵 0</span>
+    </div>
+
+    <div class="field">
+      <label>Кто как ответил</label>
+      <div class="chip-list" id="revealGuessList"></div>
+    </div>
+
+    <button id="nextRoundBtn" class="primary-btn hidden">Следующий раунд</button>
+    <p class="hint hidden" id="revealWaitHint">Хост переключит на следующий раунд…</p>
+  </section>
+
+  <!-- ===== Итоги ===== -->
+  <section id="screen-end" class="screen">
+    <h2>🏆 Итоги игры</h2>
+    <p class="end-line" id="endWinnerLine">—</p>
+
+    <div class="score-row">
+      <span class="score-pill score-red" id="endScoreRed">🔴 0</span>
+      <span class="score-pill score-blue" id="endScoreBlue">🔵 0</span>
+    </div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра (в лобби)</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/shorts.js" defer></script>
+<script src="client.js"></script>
+</body>
+</html>
