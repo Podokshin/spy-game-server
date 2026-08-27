@@ -36,7 +36,7 @@
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 280px;
+  width: 320px;
   aspect-ratio: 9 / 16;
   border-radius: 22px;
   overflow: hidden;
@@ -45,7 +45,7 @@
   z-index: 40;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .35s ease;
+  transition: opacity .35s ease, left .25s ease, right .25s ease;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
 }
 
@@ -53,23 +53,9 @@
   opacity: 1;
 }
 
-.shorts-rail--left {
-  left: 24px;
-}
-
-.shorts-rail--right {
-  right: 24px;
-}
-
 .shorts-rail video {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-}
-
-@media (max-width: 1399px), (max-height: 720px) {
-  .shorts-rail {
-    display: none !important;
-  }
 }
