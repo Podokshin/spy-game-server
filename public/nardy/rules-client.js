@@ -47,8 +47,16 @@ window.NardyRules = (function () {
     return true;
   }
 
-  function describeMove(board, color, from, die) {
+  // headState = { used, max } — см. комментарий в lib/nardy-rules.js.
+  function isHeadMoveBlocked(color, from, headState) {
+    if (!headState) return false;
+    if (from !== START[color]) return false;
+    return headState.used >= headState.max;
+  }
+
+  function describeMove(board, color, from, die, headState) {
     if (board[color][from] <= 0) return { legal: false };
+    if (isHeadMoveBlocked(color, from, headState)) return { legal: false };
     const idx = pathIndex(color, from);
     const newIdx = idx + die;
     if (newIdx < POINTS) {
@@ -60,10 +68,10 @@ window.NardyRules = (function () {
     return { legal: false };
   }
 
-  function listLegalSources(board, color, die) {
+  function listLegalSources(board, color, die, headState) {
     const sources = [];
     for (let point = 0; point < POINTS; point++) {
-      if (board[color][point] > 0 && describeMove(board, color, point, die).legal) {
+      if (board[color][point] > 0 && describeMove(board, color, point, die, headState).legal) {
         sources.push(point);
       }
     }

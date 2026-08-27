@@ -91,6 +91,8 @@
   let hasRolled = false;
   let cube = { value: 1, ownerColor: null };
   let doubleOffer = null;
+  let headMovesUsed = 0;
+  let headMovesMax = 1;
 
   // Анимация ходов: пока летит "призрак" собственного хода, ждём его
   // завершения перед тем, как применить пришедшее с сервера состояние.
@@ -387,8 +389,9 @@
     if (!canInteract()) return map;
     if (board[myColor][fromPoint] <= 0) return map;
     const uniqueDice = Array.from(new Set(movesLeft));
+    const headState = { used: headMovesUsed, max: headMovesMax };
     uniqueDice.forEach(die => {
-      const move = window.NardyRules.describeMove(board, myColor, fromPoint, die);
+      const move = window.NardyRules.describeMove(board, myColor, fromPoint, die, headState);
       if (!move.legal) return;
       if (move.bearOff) {
         if (!map.has('off')) map.set('off', die);
@@ -683,6 +686,8 @@
   function applyBoardState(data) {
     board = data.board;
     movesLeft = data.movesLeft || [];
+    if (data.headMovesUsed != null) headMovesUsed = data.headMovesUsed;
+    if (data.headMovesMax != null) headMovesMax = data.headMovesMax;
   }
 
   function animateOpponentMove(data) {
@@ -709,6 +714,14 @@
         chip.textContent = String(value);
         el.diceChips.appendChild(chip);
       });
+    }
+
+    const headPoint = myColor && window.NardyRules ? window.NardyRules.START[myColor] : null;
+    if (canInteract() && headPoint != null && board[myColor][headPoint] > 0 && headMovesUsed >= headMovesMax) {
+      const hint = document.createElement('span');
+      hint.className = 'dice-chips-label';
+      hint.textContent = 'Голова закрыта до конца хода';
+      el.diceChips.appendChild(hint);
     }
   }
 
@@ -769,6 +782,8 @@
     hasRolled = !!state.hasRolled;
     cube = state.cube || { value: 1, ownerColor: null };
     doubleOffer = state.doubleOffer || null;
+    headMovesUsed = state.headMovesUsed || 0;
+    headMovesMax = state.headMovesMax || 1;
   }
 
   socket.on('round_started', (data) => {
@@ -780,11 +795,13 @@
     renderAll();
   });
 
-  socket.on('dice_rolled', ({ dice: rolled, movesLeft: ml }) => {
+  socket.on('dice_rolled', ({ dice: rolled, movesLeft: ml, headMovesUsed: hmu, headMovesMax: hmm }) => {
     playDiceSound();
     dice = rolled;
     movesLeft = ml;
     hasRolled = true;
+    headMovesUsed = hmu || 0;
+    headMovesMax = hmm || 1;
     renderAll();
   });
 
