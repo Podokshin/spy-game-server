@@ -52,23 +52,59 @@ body {
   position: absolute;
   border-radius: 50%;
   filter: blur(90px);
-  opacity: 0.38;
+  opacity: 0.32;
+  will-change: transform;
 }
 
 .mesh span:nth-child(1) { width: 380px; height: 380px; top: -140px; left: -120px; background: var(--spy); }
 .mesh span:nth-child(2) { width: 340px; height: 340px; top: -100px; right: -140px; background: var(--mission); }
-.mesh span:nth-child(3) { width: 360px; height: 360px; bottom: -180px; left: 0%; background: var(--codenames); opacity: 0.24; }
-.mesh span:nth-child(4) { width: 320px; height: 320px; bottom: -150px; right: -110px; background: var(--mafia); opacity: 0.3; }
+.mesh span:nth-child(3) { width: 360px; height: 360px; bottom: -180px; left: 0%; background: var(--codenames); opacity: 0.22; }
+.mesh span:nth-child(4) { width: 320px; height: 320px; bottom: -150px; right: -110px; background: var(--mafia); opacity: 0.28; }
+.mesh span:nth-child(5) { width: 300px; height: 300px; top: 28%; left: -150px; background: var(--wavelength); opacity: 0.24; }
+.mesh span:nth-child(6) { width: 300px; height: 300px; top: 18%; right: -160px; background: var(--whoami); opacity: 0.24; }
+.mesh span:nth-child(7) { width: 280px; height: 280px; bottom: 6%; left: 32%; background: var(--nardy); opacity: 0.2; }
+.mesh span:nth-child(8) { width: 280px; height: 280px; top: -130px; left: 46%; background: var(--categories); opacity: 0.2; }
 
-@keyframes meshDrift {
-  0%, 100% { transform: translate(0, 0) scale(1); }
-  50% { transform: translate(26px, -20px) scale(1.08); }
+/* Каждый огонёк летает по своей петле — разные пути, длительности и
+   отрицательные задержки, чтобы не двигались синхронно "маятником". */
+@keyframes floatA {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(14vw, 9vh) scale(1.14); }
+  50%  { transform: translate(5vw, 19vh) scale(0.92); }
+  75%  { transform: translate(-11vw, 7vh) scale(1.07); }
+  100% { transform: translate(0, 0) scale(1); }
 }
 
-.mesh span { animation: meshDrift 15s ease-in-out infinite; }
-.mesh span:nth-child(2) { animation-duration: 18s; animation-delay: 1s; }
-.mesh span:nth-child(3) { animation-duration: 20s; animation-delay: 2s; }
-.mesh span:nth-child(4) { animation-duration: 17s; animation-delay: .5s; }
+@keyframes floatB {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(-17vw, 11vh) scale(0.9); }
+  50%  { transform: translate(-8vw, -13vh) scale(1.12); }
+  75%  { transform: translate(11vw, -5vh) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatC {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(11vw, -15vh) scale(1.1); }
+  66%  { transform: translate(-13vw, -6vh) scale(0.93); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatD {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(-10vw, -11vh) scale(1.12); }
+  66%  { transform: translate(14vw, 10vh) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.mesh span:nth-child(1) { animation: floatA 26s ease-in-out infinite; }
+.mesh span:nth-child(2) { animation: floatB 32s ease-in-out infinite; animation-delay: -4s; }
+.mesh span:nth-child(3) { animation: floatC 29s ease-in-out infinite; animation-delay: -12s; }
+.mesh span:nth-child(4) { animation: floatD 24s ease-in-out infinite; animation-delay: -7s; }
+.mesh span:nth-child(5) { animation: floatB 30s ease-in-out infinite; animation-delay: -18s; }
+.mesh span:nth-child(6) { animation: floatA 34s ease-in-out infinite; animation-delay: -9s; }
+.mesh span:nth-child(7) { animation: floatD 27s ease-in-out infinite; animation-delay: -3s; }
+.mesh span:nth-child(8) { animation: floatC 22s ease-in-out infinite; animation-delay: -15s; }
 
 .grain {
   position: fixed;
@@ -311,5 +347,5 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mesh span { animation: none; }
+  .mesh span { animation: none !important; }
 }

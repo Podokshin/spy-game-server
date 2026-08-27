@@ -1,0 +1,87 @@
+/* Плавающее радио (Lofi Girl, YouTube live) — общий виджет для всех страниц */
+
+.radio-widget {
+  position: fixed;
+  left: 14px;
+  bottom: 14px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(19, 18, 24, 0.92);
+  border: 2px solid rgba(255, 255, 255, 0.13);
+  border-radius: 999px;
+  padding: 7px 14px 7px 7px;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.radio-play-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f7f6fb;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+  transition: background .15s ease, transform .12s ease, color .15s ease;
+}
+
+.radio-play-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.radio-play-btn:active {
+  transform: scale(0.92);
+}
+
+.radio-widget.loading .radio-play-btn {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.radio-widget.playing .radio-play-btn {
+  background: #8b5cf6;
+  color: #0a0a10;
+}
+
+.radio-volume {
+  width: 64px;
+  height: 4px;
+  accent-color: #8b5cf6;
+  cursor: pointer;
+}
+
+.radio-player-mount {
+  position: fixed;
+  left: -9999px;
+  bottom: 0;
+  width: 2px;
+  height: 2px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 420px) {
+  .radio-widget {
+    left: 8px;
+    bottom: 8px;
+    padding: 6px 10px 6px 6px;
+    gap: 6px;
+  }
+  .radio-play-btn {
+    width: 28px;
+    height: 28px;
+    font-size: 0.9rem;
+  }
+  .radio-volume {
+    width: 46px;
+  }
+}
