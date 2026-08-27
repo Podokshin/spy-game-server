@@ -54,7 +54,7 @@
     turnBanner: document.getElementById('turnBanner'),
     turnDot: document.getElementById('turnDot'),
     turnBannerText: document.getElementById('turnBannerText'),
-    board: document.getElementById('board'),
+    boardFrame: document.getElementById('boardFrame'),
     diceFaces: document.getElementById('diceFaces'),
     diceChips: document.getElementById('diceChips'),
     rollDiceBtn: document.getElementById('rollDiceBtn'),
@@ -91,12 +91,20 @@
   let hasRolled = false;
   let cube = { value: 1, ownerColor: null };
   let doubleOffer = null;
-  let selectedDie = null;
+
+  // Анимация ходов: пока летит "призрак" собственного хода, ждём его
+  // завершения перед тем, как применить пришедшее с сервера состояние.
+  let selfAnimInFlight = false;
+  let pendingSelfState = null;
 
   function escapeHtml(str) {
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
+  }
+
+  function prefersReducedMotion() {
+    return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   }
 
   // ---------- Session persistence (for reconnect) ----------
@@ -215,8 +223,9 @@
     hasRolled = false;
     cube = { value: 1, ownerColor: null };
     doubleOffer = null;
-    selectedDie = null;
     myColor = null;
+    selfAnimInFlight = false;
+    pendingSelfState = null;
   }
 
   function leaveRoom() {
@@ -291,6 +300,8 @@
   // ---------- Board rendering ----------
   const TOP_ROW = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   const BOTTOM_ROW = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
+  const MAX_VISIBLE_CHECKERS = 5;
+  const STACK_OVERLAP = 0.6; // доля размера шашки, на которую следующая перекрывает предыдущую
 
   function pointHomeClass(point) {
     if (point >= 18 && point <= 23) return 'home-white';
@@ -298,94 +309,322 @@
     return '';
   }
 
-  function legalSourcesForDie(die) {
-    if (!board || !myColor || die == null) return new Set();
-    return new Set(window.NardyRules.listLegalSources(board, myColor, die));
+  function canInteract() {
+    return !!(board && myColor && turnColor === myColor && hasRolled && !doubleOffer);
   }
 
-  function canInteract() {
-    return board && myColor && turnColor === myColor && hasRolled && !doubleOffer;
+  // Считает, куда можно сходить с точки `fromPoint` оставшимися кубиками.
+  // Возвращает Map: 'p<point>' | 'off'  ->  значение кубика, которым это достигается.
+  function computeDestinations(fromPoint) {
+    const map = new Map();
+    if (!canInteract()) return map;
+    if (board[myColor][fromPoint] <= 0) return map;
+    const uniqueDice = Array.from(new Set(movesLeft));
+    uniqueDice.forEach(die => {
+      const move = window.NardyRules.describeMove(board, myColor, fromPoint, die);
+      if (!move.legal) return;
+      if (move.bearOff) {
+        if (!map.has('off')) map.set('off', die);
+      } else {
+        const key = 'p' + move.to;
+        if (!map.has(key)) map.set(key, die);
+      }
+    });
+    return map;
   }
 
   function renderBoard() {
-    el.board.innerHTML = '';
+    el.boardFrame.innerHTML = '';
     if (!board) return;
 
-    const legalSet = canInteract() && selectedDie != null ? legalSourcesForDie(selectedDie) : new Set();
+    el.boardFrame.appendChild(buildOffTray('white'));
+    el.boardFrame.appendChild(buildBoardGrid());
+    el.boardFrame.appendChild(buildOffTray('black'));
+  }
 
-    const buildRow = (pointsInRow) => {
-      pointsInRow.forEach(point => {
+  function buildBoardGrid() {
+    const boardEl = document.createElement('div');
+    boardEl.className = 'board';
+
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    boardEl.appendChild(bar);
+
+    const buildRow = (pointsInRow, rowName) => {
+      pointsInRow.forEach((point, colIdx) => {
         const cell = document.createElement('div');
         const homeClass = pointHomeClass(point);
-        cell.className = 'point' + (homeClass ? ' ' + homeClass : '') + (point === 0 || point === 12 ? ' start-point' : '');
+        cell.className = 'point tri-' + (colIdx % 2 === 0 ? 'a' : 'b') +
+          (homeClass ? ' ' + homeClass : '') +
+          (point === 0 || point === 12 ? ' start-point' : '');
         cell.dataset.point = String(point);
+        cell.dataset.row = rowName;
 
-        const whiteCount = board.white[point];
-        const blackCount = board.black[point];
+        const tri = document.createElement('div');
+        tri.className = 'point-tri';
+        cell.appendChild(tri);
 
-        const checkersWrap = document.createElement('div');
-        checkersWrap.className = 'point-checkers';
-        if (whiteCount > 0) checkersWrap.appendChild(makeCheckerPill('white', whiteCount));
-        if (blackCount > 0) checkersWrap.appendChild(makeCheckerPill('black', blackCount));
-        cell.appendChild(checkersWrap);
+        const stack = document.createElement('div');
+        stack.className = 'point-stack';
+        renderStackInto(stack, point, rowName);
+        cell.appendChild(stack);
 
         const label = document.createElement('span');
         label.className = 'point-label';
         label.textContent = String(point + 1);
         cell.appendChild(label);
 
-        if (legalSet.has(point)) {
-          cell.classList.add('selectable');
-          cell.addEventListener('click', () => onPointClick(point));
-        }
-
-        el.board.appendChild(cell);
+        boardEl.appendChild(cell);
       });
     };
 
-    buildRow(TOP_ROW);
-    buildRow(BOTTOM_ROW);
+    buildRow(TOP_ROW, 'top');
+    buildRow(BOTTOM_ROW, 'bottom');
+    return boardEl;
   }
 
-  function makeCheckerPill(color, count) {
-    const pill = document.createElement('span');
-    pill.className = 'checker-pill';
-    const dot = document.createElement('span');
-    dot.className = 'checker-dot ' + color;
-    pill.appendChild(dot);
-    if (count > 1) {
-      const countEl = document.createElement('span');
-      countEl.className = 'checker-count';
-      countEl.textContent = String(count);
-      pill.appendChild(countEl);
+  function buildOffTray(color) {
+    const tray = document.createElement('div');
+    tray.className = 'off-tray';
+    tray.dataset.color = color;
+
+    const label = document.createElement('div');
+    label.className = 'off-tray-label';
+    label.textContent = 'Выход';
+    tray.appendChild(label);
+
+    const stack = document.createElement('div');
+    stack.className = 'off-tray-stack';
+    const count = (board.borneOff && board.borneOff[color]) || 0;
+    const visible = Math.min(count, MAX_VISIBLE_CHECKERS);
+    for (let i = 0; i < visible; i++) {
+      const c = document.createElement('div');
+      c.className = 'checker checker-' + color;
+      if (i === visible - 1 && count > 1) c.textContent = String(count);
+      c.style.top = 'calc(var(--checker-size) * ' + (i * STACK_OVERLAP) + ')';
+      stack.appendChild(c);
     }
-    return pill;
+    tray.appendChild(stack);
+
+    const countEl = document.createElement('div');
+    countEl.className = 'off-tray-count';
+    countEl.textContent = String(count);
+    tray.appendChild(countEl);
+
+    return tray;
   }
 
-  function onPointClick(point) {
-    if (!canInteract() || selectedDie == null) return;
-    const move = window.NardyRules.describeMove(board, myColor, point, selectedDie);
-    if (!move.legal) return;
-    socket.emit('move_checker', { from: point, die: selectedDie });
+  function renderStackInto(stackEl, point, rowName) {
+    const counts = { white: board.white[point], black: board.black[point] };
+    const colorsPresent = Object.keys(counts).filter(c => counts[c] > 0);
+    if (colorsPresent.length === 0) return;
+    const bothPresent = colorsPresent.length === 2;
+    const destinations = computeDestinations(point);
+
+    colorsPresent.forEach(color => {
+      const count = counts[color];
+      const visible = Math.min(count, MAX_VISIBLE_CHECKERS);
+      const interactive = color === myColor && destinations.size > 0;
+      const leftPct = bothPresent ? (color === 'white' ? 30 : 70) : 50;
+
+      for (let i = 0; i < visible; i++) {
+        const c = document.createElement('div');
+        c.className = 'checker checker-' + color;
+        c.style.left = leftPct + '%';
+        if (i === visible - 1 && count > 1) c.textContent = String(count);
+        const offsetPx = 'calc(var(--checker-size) * ' + (i * STACK_OVERLAP) + ')';
+        if (rowName === 'top') c.style.top = offsetPx;
+        else c.style.bottom = offsetPx;
+
+        if (i === visible - 1 && interactive) {
+          c.classList.add('draggable');
+          attachDragHandlers(c, point, destinations);
+        }
+        stackEl.appendChild(c);
+      }
+    });
+  }
+
+  // ---------- Drag & drop ----------
+  function attachDragHandlers(checkerEl, fromPoint, destinations) {
+    checkerEl.addEventListener('pointerdown', (e) => startDrag(e, checkerEl, fromPoint, destinations));
+  }
+
+  function highlightDestinations(destinations, on) {
+    destinations.forEach((die, key) => {
+      if (key === 'off') {
+        const tray = el.boardFrame.querySelector('.off-tray[data-color="' + myColor + '"]');
+        if (tray) tray.classList.toggle('valid-target', on);
+      } else {
+        const point = key.slice(1);
+        const cell = el.boardFrame.querySelector('.point[data-point="' + point + '"]');
+        if (cell) cell.classList.toggle('selectable', on);
+      }
+    });
+  }
+
+  function startDrag(e, checkerEl, fromPoint, destinations) {
+    if (e.button != null && e.button !== 0) return;
+    if (!destinations || destinations.size === 0) return;
+    e.preventDefault();
+
+    const rect = checkerEl.getBoundingClientRect();
+    const originLeft = rect.left;
+    const originTop = rect.top;
+
+    try { checkerEl.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+
+    checkerEl.style.position = 'fixed';
+    checkerEl.style.left = rect.left + 'px';
+    checkerEl.style.top = rect.top + 'px';
+    checkerEl.style.width = rect.width + 'px';
+    checkerEl.style.height = rect.height + 'px';
+    checkerEl.style.margin = '0';
+    checkerEl.style.pointerEvents = 'none';
+    checkerEl.classList.add('dragging');
+
+    highlightDestinations(destinations, true);
+
+    const yOffset = e.pointerType === 'touch' ? 46 : 0;
+
+    function onMove(ev) {
+      checkerEl.style.left = ev.clientX + 'px';
+      checkerEl.style.top = (ev.clientY - yOffset) + 'px';
+    }
+
+    function onUp(ev) {
+      checkerEl.removeEventListener('pointermove', onMove);
+      checkerEl.removeEventListener('pointerup', onUp);
+      checkerEl.removeEventListener('pointercancel', onUp);
+      highlightDestinations(destinations, false);
+
+      checkerEl.style.pointerEvents = '';
+      const dropX = ev.clientX;
+      const dropY = ev.clientY - yOffset;
+      const under = document.elementFromPoint(dropX, dropY);
+      const pointEl = under && under.closest('.point[data-point]');
+      const trayEl = under && under.closest('.off-tray[data-color]');
+
+      let matchedDie = null;
+      let targetRect = null;
+
+      if (pointEl) {
+        const toPoint = parseInt(pointEl.dataset.point, 10);
+        const key = 'p' + toPoint;
+        if (destinations.has(key)) {
+          matchedDie = destinations.get(key);
+          targetRect = getAnchorRect(toPoint, null);
+        }
+      } else if (trayEl && trayEl.dataset.color === myColor && destinations.has('off')) {
+        matchedDie = destinations.get('off');
+        targetRect = getAnchorRect(null, myColor);
+      }
+
+      if (matchedDie != null) {
+        const currentRect = checkerEl.getBoundingClientRect();
+        checkerEl.remove();
+        selfAnimInFlight = true;
+        flyGhost(myColor, currentRect, targetRect, finishSelfAnim);
+        socket.emit('move_checker', { from: fromPoint, die: matchedDie });
+      } else {
+        checkerEl.classList.remove('dragging');
+        checkerEl.classList.add('snap-back');
+        requestAnimationFrame(() => {
+          checkerEl.style.left = originLeft + 'px';
+          checkerEl.style.top = originTop + 'px';
+        });
+        setTimeout(renderAll, prefersReducedMotion() ? 0 : 240);
+      }
+    }
+
+    checkerEl.addEventListener('pointermove', onMove);
+    checkerEl.addEventListener('pointerup', onUp);
+    checkerEl.addEventListener('pointercancel', onUp);
+  }
+
+  // ---------- Move animation ----------
+  const FALLBACK_CHECKER_SIZE = 26;
+
+  function getAnchorRect(point, trayColor) {
+    if (trayColor) {
+      const tray = el.boardFrame.querySelector('.off-tray[data-color="' + trayColor + '"]');
+      if (!tray) return null;
+      const r = tray.getBoundingClientRect();
+      const size = FALLBACK_CHECKER_SIZE;
+      return { left: r.left + r.width / 2 - size / 2, top: r.top + 12, width: size, height: size };
+    }
+    const cell = el.boardFrame.querySelector('.point[data-point="' + point + '"]');
+    if (!cell) return null;
+    const r = cell.getBoundingClientRect();
+    const existing = cell.querySelector('.checker');
+    const size = existing ? existing.getBoundingClientRect().width : FALLBACK_CHECKER_SIZE;
+    return { left: r.left + r.width / 2 - size / 2, top: r.top + r.height / 2 - size / 2, width: size, height: size };
+  }
+
+  function flyGhost(color, fromRect, toRect, onDone) {
+    if (!fromRect || !toRect || prefersReducedMotion()) { onDone(); return; }
+    const ghost = document.createElement('div');
+    ghost.className = 'checker ghost checker-' + color;
+    const w = fromRect.width || FALLBACK_CHECKER_SIZE;
+    const h = fromRect.height || FALLBACK_CHECKER_SIZE;
+    document.body.appendChild(ghost);
+    Object.assign(ghost.style, {
+      position: 'fixed',
+      left: fromRect.left + 'px',
+      top: fromRect.top + 'px',
+      width: w + 'px',
+      height: h + 'px',
+      margin: '0',
+      transition: 'left .22s cubic-bezier(.25,.6,.3,1.05), top .22s cubic-bezier(.25,.6,.3,1.05)'
+    });
+    requestAnimationFrame(() => {
+      ghost.style.left = (toRect.left + (toRect.width - w) / 2) + 'px';
+      ghost.style.top = (toRect.top + (toRect.height - h) / 2) + 'px';
+    });
+    setTimeout(() => {
+      ghost.remove();
+      onDone();
+    }, 230);
+  }
+
+  function finishSelfAnim() {
+    selfAnimInFlight = false;
+    if (pendingSelfState) {
+      applyBoardState(pendingSelfState);
+      pendingSelfState = null;
+    }
+    renderAll();
+  }
+
+  function applyBoardState(data) {
+    board = data.board;
+    movesLeft = data.movesLeft || [];
+  }
+
+  function animateOpponentMove(data) {
+    const fromRect = getAnchorRect(data.from, null);
+    const toRect = data.bearOff ? getAnchorRect(null, data.color) : getAnchorRect(data.to, null);
+    flyGhost(data.color, fromRect, toRect, () => {
+      applyBoardState(data);
+      renderAll();
+    });
   }
 
   function renderDice() {
     el.diceFaces.innerHTML = (dice || []).map(d => `<span class="die-face">${d}</span>`).join('');
-
     el.diceChips.innerHTML = '';
-    movesLeft.forEach((value, idx) => {
-      const chip = document.createElement('button');
-      chip.type = 'button';
-      chip.className = 'die-chip' + (selectedDie === value ? ' selected' : '');
-      chip.textContent = String(value);
-      chip.disabled = !canInteract();
-      chip.addEventListener('click', () => {
-        selectedDie = selectedDie === value ? null : value;
-        renderDice();
-        renderBoard();
+    if (movesLeft.length) {
+      const label = document.createElement('span');
+      label.className = 'dice-chips-label';
+      label.textContent = 'Осталось ходов:';
+      el.diceChips.appendChild(label);
+      movesLeft.forEach(value => {
+        const chip = document.createElement('span');
+        chip.className = 'die-chip';
+        chip.textContent = String(value);
+        el.diceChips.appendChild(chip);
       });
-      el.diceChips.appendChild(chip);
-    });
+    }
   }
 
   function renderTurnAndControls() {
@@ -445,7 +684,6 @@
     hasRolled = !!state.hasRolled;
     cube = state.cube || { value: 1, ownerColor: null };
     doubleOffer = state.doubleOffer || null;
-    selectedDie = movesLeft.length ? movesLeft[0] : null;
   }
 
   socket.on('round_started', (data) => {
@@ -461,14 +699,20 @@
     dice = rolled;
     movesLeft = ml;
     hasRolled = true;
-    selectedDie = movesLeft.length ? movesLeft[0] : null;
     renderAll();
   });
 
-  socket.on('checker_moved', ({ board: b, movesLeft: ml }) => {
-    board = b;
-    movesLeft = ml;
-    selectedDie = movesLeft.length ? movesLeft[0] : null;
+  socket.on('checker_moved', (data) => {
+    const isMine = data.color === myColor;
+    if (isMine && selfAnimInFlight) {
+      pendingSelfState = data;
+      return;
+    }
+    if (!isMine) {
+      animateOpponentMove(data);
+      return;
+    }
+    applyBoardState(data);
     renderAll();
   });
 
@@ -477,7 +721,6 @@
     dice = null;
     movesLeft = [];
     hasRolled = false;
-    selectedDie = null;
     renderAll();
   });
 
