@@ -1,3 +1,8 @@
 node_modules/
 npm-debug.log*
 .env
+
+# Видео для фонового виджета — грузятся на сервер напрямую (scp/rsync),
+# не через git: они большие и часто меняются, репозиторий не место для них.
+public/videos/*
+!public/videos/.gitkeep

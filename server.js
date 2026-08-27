@@ -1,4 +1,5 @@
 const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -13,6 +14,14 @@ const { registerNardyGame } = require('./lib/nardy-game');
 
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
+
+const VIDEO_EXT = /\.(mp4|webm|mov)$/i;
+app.get('/api/videos', (req, res) => {
+  fs.readdir(path.join(__dirname, 'public', 'videos'), (err, files) => {
+    if (err) return res.json([]);
+    res.json(files.filter(f => VIDEO_EXT.test(f)).sort());
+  });
+});
 
 const server = http.createServer(app);
 const io = new Server(server);

@@ -36,21 +36,22 @@
   position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  width: 320px;
+  width: 440px;
   aspect-ratio: 9 / 16;
-  border-radius: 22px;
+  border-radius: 26px;
   overflow: hidden;
   border: 2px solid rgba(255, 255, 255, 0.13);
   background: #131218;
   z-index: 40;
   opacity: 0;
   pointer-events: none;
-  transition: opacity .35s ease, left .25s ease, right .25s ease;
+  transition: opacity .35s ease, left .25s ease, right .25s ease, transform .2s ease;
   box-shadow: 0 24px 60px -20px rgba(0, 0, 0, 0.65);
 }
 
 .shorts-rail.visible {
   opacity: 1;
+  pointer-events: auto;
 }
 
 .shorts-rail video {
@@ -58,4 +59,14 @@
   height: 100%;
   object-fit: cover;
   display: block;
+  cursor: pointer;
 }
+
+.shorts-rail.visible:hover {
+  transform: translateY(-50%) scale(1.015);
+}
+
+@media (max-width: 1600px) {
+  .shorts-rail { width: 360px; }
+}
+
