@@ -300,8 +300,8 @@
   // ---------- Board rendering ----------
   const TOP_ROW = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   const BOTTOM_ROW = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
-  const MAX_VISIBLE_CHECKERS = 5;
-  const STACK_OVERLAP = 0.6; // доля размера шашки, на которую следующая перекрывает предыдущую
+  const MAX_VISIBLE_CHECKERS = 15; // столько шашек максимум может быть на одной точке — показываем все, без "+N"
+  const STACK_OVERLAP = 0.4; // доля размера шашки, на которую следующая перекрывает предыдущую
 
   function pointHomeClass(point) {
     if (point >= 18 && point <= 23) return 'home-white';
@@ -463,6 +463,28 @@
     });
   }
 
+  // Определяем цель сброса сравнением координат с прямоугольниками клеток —
+  // не используем elementFromPoint/pointer-events:none, потому что в связке
+  // с setPointerCapture их поведение отличается между браузерами и на реальных
+  // устройствах перетаскивание could silently stop working.
+  function findDropTarget(x, y) {
+    const points = el.boardFrame.querySelectorAll('.point[data-point]');
+    for (let i = 0; i < points.length; i++) {
+      const r = points[i].getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return { type: 'point', point: parseInt(points[i].dataset.point, 10) };
+      }
+    }
+    const trays = el.boardFrame.querySelectorAll('.off-tray[data-color]');
+    for (let i = 0; i < trays.length; i++) {
+      const r = trays[i].getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return { type: 'tray', color: trays[i].dataset.color };
+      }
+    }
+    return null;
+  }
+
   function startDrag(e, checkerEl, fromPoint, destinations) {
     if (e.button != null && e.button !== 0) return;
     if (!destinations || destinations.size === 0) return;
@@ -472,15 +494,12 @@
     const originLeft = rect.left;
     const originTop = rect.top;
 
-    try { checkerEl.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
-
     checkerEl.style.position = 'fixed';
     checkerEl.style.left = rect.left + 'px';
     checkerEl.style.top = rect.top + 'px';
     checkerEl.style.width = rect.width + 'px';
     checkerEl.style.height = rect.height + 'px';
     checkerEl.style.margin = '0';
-    checkerEl.style.pointerEvents = 'none';
     checkerEl.classList.add('dragging');
 
     highlightDestinations(destinations, true);
@@ -493,29 +512,22 @@
     }
 
     function onUp(ev) {
-      checkerEl.removeEventListener('pointermove', onMove);
-      checkerEl.removeEventListener('pointerup', onUp);
-      checkerEl.removeEventListener('pointercancel', onUp);
+      document.removeEventListener('pointermove', onMove);
+      document.removeEventListener('pointerup', onUp);
+      document.removeEventListener('pointercancel', onUp);
       highlightDestinations(destinations, false);
 
-      checkerEl.style.pointerEvents = '';
       const dropX = ev.clientX;
       const dropY = ev.clientY - yOffset;
-      const under = document.elementFromPoint(dropX, dropY);
-      const pointEl = under && under.closest('.point[data-point]');
-      const trayEl = under && under.closest('.off-tray[data-color]');
+      const target = findDropTarget(dropX, dropY);
 
       let matchedDie = null;
       let targetRect = null;
 
-      if (pointEl) {
-        const toPoint = parseInt(pointEl.dataset.point, 10);
-        const key = 'p' + toPoint;
-        if (destinations.has(key)) {
-          matchedDie = destinations.get(key);
-          targetRect = getAnchorRect(toPoint, null);
-        }
-      } else if (trayEl && trayEl.dataset.color === myColor && destinations.has('off')) {
+      if (target && target.type === 'point' && destinations.has('p' + target.point)) {
+        matchedDie = destinations.get('p' + target.point);
+        targetRect = getAnchorRect(target.point, null);
+      } else if (target && target.type === 'tray' && target.color === myColor && destinations.has('off')) {
         matchedDie = destinations.get('off');
         targetRect = getAnchorRect(null, myColor);
       }
@@ -537,9 +549,9 @@
       }
     }
 
-    checkerEl.addEventListener('pointermove', onMove);
-    checkerEl.addEventListener('pointerup', onUp);
-    checkerEl.addEventListener('pointercancel', onUp);
+    document.addEventListener('pointermove', onMove);
+    document.addEventListener('pointerup', onUp);
+    document.addEventListener('pointercancel', onUp);
   }
 
   // ---------- Move animation ----------
