@@ -311,11 +311,17 @@
 
   socket.on('identities_assigned', renderAssignedScreen);
 
-  el.assignedReadyBtn.addEventListener('click', () => {
-    socket.emit('player_ready');
+  function showWaitingForReady(readyCount, total) {
     el.assignedReadyBtn.classList.add('hidden');
     el.assignedReadyHint.classList.remove('hidden');
-    el.assignedReadyHint.textContent = 'Ждём остальных игроков…';
+    el.assignedReadyHint.textContent = (typeof readyCount === 'number' && typeof total === 'number')
+      ? `Готовы: ${readyCount} из ${total}`
+      : 'Ждём остальных игроков…';
+  }
+
+  el.assignedReadyBtn.addEventListener('click', () => {
+    socket.emit('player_ready');
+    showWaitingForReady();
   });
 
   socket.on('ready_update', ({ readyCount, total }) => {
@@ -407,6 +413,7 @@
 
       if (res.phase === 'assigned') {
         if (res.identities) renderAssignedScreen(res.identities);
+        if (res.alreadyReady) showWaitingForReady(res.readyCount, res.total);
       } else if (res.phase === 'playing') {
         if (res.identities) latestIdentities = res.identities;
         finishedOrder = (res.finished && res.finished.finishedOrder) || [];

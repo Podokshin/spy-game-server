@@ -92,6 +92,22 @@
     leaveRoomBtn2: document.getElementById('leaveRoomBtn2')
   };
 
+  // Аварийная кнопка хоста для фазы подсказки: раньше её не было вообще, и
+  // если подсказчик отключался/зависал в фазе clue, игра стопорилась навсегда
+  // без единого способа продолжить. В HTML для экрана подсказки такой кнопки
+  // нет, поэтому создаём и вставляем её здесь же, аналогично forceFinalizeBtn
+  // на экране угадывания — тот же socket-запрос force_finalize_round, сервер
+  // сам решает, что делать в зависимости от текущей фазы.
+  const forceSkipClueBtn = document.createElement('button');
+  forceSkipClueBtn.type = 'button';
+  forceSkipClueBtn.id = 'forceSkipClueBtn';
+  forceSkipClueBtn.className = 'secondary-btn hidden';
+  forceSkipClueBtn.textContent = 'Пропустить раунд (подсказчик пропал)';
+  forceSkipClueBtn.addEventListener('click', () => {
+    socket.emit('force_finalize_round');
+  });
+  screens.clue.appendChild(forceSkipClueBtn);
+
   const socket = io('/wavelength');
 
   let currentRoom = null;
@@ -348,6 +364,36 @@
       resetRoundState();
       renderLobby(room);
       showScreen('lobby');
+    }
+
+    // isHost выше пересчитывается на каждое обновление комнаты (в т.ч. когда
+    // хост меняется из-за отключения игрока), но кнопки хоста в игровых фазах
+    // раньше обновлялись только внутри рендеров конкретных фаз, которые
+    // приходят отдельными событиями (your_clue_turn, round_result, и т.д.).
+    // Освежаем их видимость всегда, чтобы новый хост увидел свои кнопки без
+    // ожидания следующего игрового события.
+    refreshHostControls();
+  }
+
+  function refreshHostControls() {
+    if (!currentRoom) return;
+    switch (currentRoom.phase) {
+      case 'clue':
+        forceSkipClueBtn.classList.toggle('hidden', !isHost);
+        break;
+      case 'guess':
+        el.forceFinalizeBtn.classList.toggle('hidden', !isHost);
+        break;
+      case 'reveal':
+        el.nextRoundBtn.classList.toggle('hidden', !isHost);
+        el.revealWaitHint.classList.toggle('hidden', isHost);
+        break;
+      case 'end':
+        el.playAgainBtn.classList.toggle('hidden', !isHost);
+        el.waitPlayAgainHint.classList.toggle('hidden', isHost);
+        break;
+      default:
+        break;
     }
   }
 

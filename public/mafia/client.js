@@ -257,6 +257,24 @@
       renderLobby(room);
       showScreen('lobby');
     }
+
+    refreshHostControls(room.phase);
+  }
+
+  // Пере-применяет видимость host-only кнопок для текущего экрана — нужно,
+  // например, после миграции хоста (room_update может прийти вне обычных
+  // переходов фаз, и у нового хоста должны сразу появиться его кнопки).
+  function refreshHostControls(phase) {
+    if (phase === 'night') {
+      el.forceEndNightBtn.classList.toggle('hidden', !isHost);
+    } else if (phase === 'day') {
+      el.forceEndDiscussionBtn.classList.toggle('hidden', !isHost);
+    } else if (phase === 'voting') {
+      el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
+    } else if (phase === 'end') {
+      el.playAgainBtn.classList.toggle('hidden', !isHost);
+      el.waitPlayAgainHint.classList.toggle('hidden', isHost);
+    }
   }
 
   socket.on('room_update', (room) => applyRoomUpdate(room));
@@ -407,11 +425,12 @@
   el.forceEndDiscussionBtn.addEventListener('click', () => socket.emit('force_end_discussion'));
 
   // ---------- Voting ----------
-  socket.on('voting_started', (data) => {
-    stopTicking();
+  // Общая отрисовка кандидатов для голосования — используется и при обычном
+  // старте голосования, и при восстановлении экрана после реконнекта.
+  function renderVoteOptions(aliveList) {
     selectedVoteTarget = undefined;
     el.voteOptions.innerHTML = '';
-    data.alive.forEach(p => {
+    aliveList.forEach(p => {
       if (p.id === myPlayerId) return;
       const btn = document.createElement('button');
       btn.type = 'button';
@@ -436,7 +455,11 @@
       socket.emit('cast_vote', { targetId: null });
     });
     el.voteOptions.appendChild(abstainBtn);
+  }
 
+  socket.on('voting_started', (data) => {
+    stopTicking();
+    renderVoteOptions(data.alive);
     el.voteStatusHint.textContent = '';
     el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
     showScreen('voting');
@@ -495,7 +518,10 @@
         el.forceEndDiscussionBtn.classList.toggle('hidden', !isHost);
         showScreen('day');
       } else if (res.phase === 'voting' && res.voting) {
-        socket.emit('_noop'); // экран голосования восстановится по следующему broadcast, если что
+        stopTicking();
+        renderVoteOptions(res.voting.alive);
+        el.voteStatusHint.textContent = '';
+        el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
         showScreen('voting');
       } else if (res.phase === 'end' && res.gameOver) {
         el.endTitle.textContent = res.gameOver.winner === 'mafia' ? '🔪 Победила мафия' : '🕊️ Победили мирные жители';

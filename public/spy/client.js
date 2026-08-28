@@ -364,6 +364,36 @@
       renderLobby(room);
       showScreen('lobby');
     }
+    refreshHostControls();
+  }
+
+  // Re-evaluates host-only button visibility for whichever screen is currently
+  // showing, using the up-to-date `isHost` value. Needed because host migration
+  // (e.g. the host disconnecting mid-round) arrives via a generic room_update
+  // that otherwise only re-renders the lobby screen.
+  function refreshHostControls() {
+    if (screens.role.classList.contains('active')) {
+      el.forceStartBtn.classList.toggle('hidden', !isHost);
+    }
+    if (screens.discussion.classList.contains('active')) {
+      el.pauseBtn.classList.toggle('hidden', !isHost);
+      el.endDiscussionBtn.classList.toggle('hidden', !isHost);
+      el.discussionWaitHint.classList.toggle('hidden', isHost);
+    }
+    if (screens.voting.classList.contains('active')) {
+      el.forceFinishVoteBtn.classList.toggle('hidden', !isHost);
+    }
+    if (screens.end.classList.contains('active')) {
+      if (el.spyRevealField.classList.contains('hidden')) {
+        el.revealSpyStageBtn.classList.toggle('hidden', !isHost);
+        el.waitSpyHint.classList.toggle('hidden', isHost);
+      } else if (el.topicLine.classList.contains('hidden')) {
+        el.revealTopicStageBtn.classList.toggle('hidden', !isHost);
+      } else {
+        el.playAgainBtn.classList.toggle('hidden', !isHost);
+        el.waitPlayAgainHint.classList.toggle('hidden', isHost);
+      }
+    }
   }
 
   function renderLobby(room) {

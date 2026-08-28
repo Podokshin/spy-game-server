@@ -333,6 +333,24 @@
       // их прямо на любое обновление комнаты, а не только вместе с board-состоянием.
       renderBoardTeams(room.players, latestGameState);
     }
+
+    // isHost выше пересчитывается на каждое обновление комнаты (в т.ч. когда
+    // хост меняется из-за отключения игрока), но кнопки хоста иначе
+    // обновлялись только внутри рендеров конкретных фаз (game_state/end).
+    // Освежаем их видимость всегда, чтобы новый хост увидел свои кнопки без
+    // ожидания следующего игрового события.
+    refreshHostControls();
+  }
+
+  function refreshHostControls() {
+    if (!currentRoom) return;
+    if ((currentRoom.phase === 'clue' || currentRoom.phase === 'guess') && latestGameState) {
+      el.forceEndTurnBtn.classList.toggle('hidden', !isHost);
+    }
+    if (currentRoom.phase === 'end' && latestGameState) {
+      el.playAgainBtn.classList.toggle('hidden', !isHost);
+      el.waitPlayAgainHint.classList.toggle('hidden', isHost);
+    }
   }
 
   function renderBoardTeams(players, gs) {
