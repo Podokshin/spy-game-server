@@ -468,6 +468,12 @@ input[type="text"]:focus {
   gap: 22px;
   pointer-events: none;
   background: radial-gradient(60% 60% at 50% 50%, rgba(0, 0, 0, 0.35), transparent 70%);
+  opacity: 1;
+  transition: opacity .25s ease;
+}
+
+.dice-throw-overlay.fading {
+  opacity: 0;
 }
 
 .dice-throw-overlay.hidden {
@@ -504,10 +510,6 @@ input[type="text"]:focus {
   animation: diceSettle 0.32s cubic-bezier(.3, .9, .4, 1.3) forwards;
 }
 
-.throw-die.flying-away {
-  animation: diceFlyAway 0.4s cubic-bezier(.5, 0, .75, .5) forwards;
-}
-
 @keyframes diceDrop {
   0% { opacity: 0; transform: translateY(-160px) scale(0.7) rotate(0deg); }
   60% { opacity: 1; }
@@ -526,14 +528,12 @@ input[type="text"]:focus {
   100% { transform: scale(1) rotate(0deg); }
 }
 
-@keyframes diceFlyAway {
-  0% { opacity: 1; transform: translateY(0) scale(1); }
-  100% { opacity: 0; transform: translateY(120px) scale(0.35); }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .throw-die.dropping, .throw-die.tumbling, .throw-die.settled, .throw-die.flying-away {
+  .throw-die.dropping, .throw-die.tumbling, .throw-die.settled {
     animation: none !important;
+  }
+  .dice-throw-overlay {
+    transition: none !important;
   }
 }
 

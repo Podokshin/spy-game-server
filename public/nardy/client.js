@@ -168,7 +168,7 @@
     tone(ctx, 150, now + 0.06, 0.13, 0.14, 'sawtooth');
   }
 
-  // Дробь костей при броске.
+  // Дробь костей при броске (треск во время кручения).
   function playDiceSound() {
     const ctx = getAudioCtx();
     if (!ctx) return;
@@ -176,6 +176,15 @@
     for (let i = 0; i < 5; i++) {
       tone(ctx, 260 + Math.random() * 520, now + i * 0.04, 0.03, 0.12, 'square');
     }
+  }
+
+  // Глухой двойной стук — кости приземлились на доску.
+  function playDiceLandSound() {
+    const ctx = getAudioCtx();
+    if (!ctx) return;
+    const now = ctx.currentTime;
+    tone(ctx, 180, now, 0.08, 0.28, 'sine');
+    tone(ctx, 90, now + 0.03, 0.14, 0.24, 'sine');
   }
 
   // ---------- Session persistence (for reconnect) ----------
@@ -782,6 +791,7 @@
 
     window.setTimeout(() => {
       throwDieEls.forEach(dieEl => { dieEl.className = 'throw-die tumbling'; });
+      playDiceSound();
       flickerHandle = window.setInterval(() => {
         throwDieEls.forEach(dieEl => { dieEl.textContent = String(1 + Math.floor(Math.random() * 6)); });
       }, 90);
@@ -793,19 +803,20 @@
         dieEl.textContent = String(rolled[i] != null ? rolled[i] : 1);
         dieEl.className = 'throw-die settled';
       });
-      playDiceSound();
+      playDiceLandSound();
     }, 960);
 
     window.setTimeout(() => {
-      throwDieEls.forEach(dieEl => { dieEl.className = 'throw-die flying-away'; });
-    }, 1320);
+      el.diceThrowOverlay.classList.add('fading');
+    }, 1300);
 
     window.setTimeout(() => {
       el.diceThrowOverlay.classList.add('hidden');
+      el.diceThrowOverlay.classList.remove('fading');
       el.diceRow.classList.remove('hidden');
       diceAnimInFlight = false;
       onDone();
-    }, 1720);
+    }, 1550);
   }
 
   el.rollDiceBtn.addEventListener('click', () => {
