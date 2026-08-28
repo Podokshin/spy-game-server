@@ -565,6 +565,36 @@ input[type="text"]:focus, input[type="number"]:focus {
   font-weight: 700;
 }
 
+/* «Вечер игр» — общий счёт и переход к следующей игре на экране итогов */
+.party-game-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.party-game-btn {
+  flex: 1 1 calc(50% - 8px);
+  min-width: 130px;
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color .15s ease, transform .1s ease;
+}
+
+.party-game-btn:hover {
+  border-color: var(--accent);
+}
+
+.party-game-btn:active {
+  transform: scale(0.97);
+}
+
 @media (max-width: 380px) {
   .timer-ring { width: 100px; height: 100px; }
   .timer-ring-inner { width: 80px; height: 80px; }
