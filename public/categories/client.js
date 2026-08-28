@@ -434,7 +434,10 @@
     showScreen('end');
   }
 
-  socket.on('game_finished', ({ players }) => renderEndScreen(players));
+  socket.on('game_finished', ({ players }) => {
+    renderEndScreen(players);
+    if (window.fireConfetti) window.fireConfetti();
+  });
 
   el.playAgainBtn.addEventListener('click', () => {
     socket.emit('play_again');

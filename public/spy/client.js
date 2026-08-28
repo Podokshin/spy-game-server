@@ -617,6 +617,7 @@
     renderTally(tally);
     resetEndScreen();
     showScreen('end');
+    if (window.fireConfetti) window.fireConfetti();
   });
 
   function voteWord(n) {

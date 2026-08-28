@@ -487,6 +487,7 @@
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
     showScreen('end');
+    if (window.fireConfetti) window.fireConfetti();
   });
 
   el.playAgainBtn.addEventListener('click', () => socket.emit('play_again'));

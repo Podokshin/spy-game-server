@@ -458,8 +458,10 @@
 
   socket.on('game_state', (gs) => {
     if (gs.winner) {
+      const isNewWin = !latestGameState || !latestGameState.winner;
       renderEndScreen(gs);
       showScreen('end');
+      if (isNewWin && window.fireConfetti) window.fireConfetti();
     } else {
       renderBoardScreen(gs);
       showScreen('board');
