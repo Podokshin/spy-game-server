@@ -13,12 +13,14 @@
     night: document.getElementById('screen-night'),
     day: document.getElementById('screen-day'),
     voting: document.getElementById('screen-voting'),
-    end: document.getElementById('screen-end')
+    end: document.getElementById('screen-end'),
+    skipped: document.getElementById('screen-skipped')
   };
 
   function showScreen(name) {
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
+    el.skipVoteBtn.classList.toggle('hidden', ['role', 'night', 'day', 'voting'].indexOf(name) === -1);
   }
 
   const el = {
@@ -72,7 +74,12 @@
     rolesRevealList: document.getElementById('rolesRevealList'),
     playAgainBtn: document.getElementById('playAgainBtn'),
     waitPlayAgainHint: document.getElementById('waitPlayAgainHint'),
-    leaveRoomBtn2: document.getElementById('leaveRoomBtn2')
+    leaveRoomBtn2: document.getElementById('leaveRoomBtn2'),
+
+    skipVoteBtn: document.getElementById('skipVoteBtn'),
+    skipVoteCount: document.getElementById('skipVoteCount'),
+    skipVoteNeeded: document.getElementById('skipVoteNeeded'),
+    leaveRoomBtnSkip: document.getElementById('leaveRoomBtnSkip')
   };
 
   const socket = io('/mafia');
@@ -280,6 +287,7 @@
 
   el.leaveRoomBtn.addEventListener('click', leaveRoom);
   el.leaveRoomBtn2.addEventListener('click', leaveRoom);
+  el.leaveRoomBtnSkip.addEventListener('click', leaveRoom);
   function leaveRoom() {
     socket.emit('leave_room');
     clearSession();
@@ -547,6 +555,37 @@
 
   el.playAgainBtn.addEventListener('click', () => socket.emit('play_again'));
 
+  // ---------- Голосование за пропуск игры ----------
+  function updateSkipVoteUI(votes, needed, voterIds) {
+    el.skipVoteCount.textContent = votes;
+    el.skipVoteNeeded.textContent = needed;
+    el.skipVoteBtn.classList.toggle('voted', Array.isArray(voterIds) && voterIds.includes(myPlayerId));
+  }
+
+  el.skipVoteBtn.addEventListener('click', () => {
+    socket.emit('vote_skip');
+  });
+
+  socket.on('skip_vote_update', ({ votes, needed, voterIds }) => {
+    updateSkipVoteUI(votes, needed, voterIds);
+  });
+
+  function renderSkippedScreen(players, partyStandings) {
+    showScreen('skipped');
+    if (window.PartyHub) {
+      window.PartyHub.renderPartySection(document.getElementById('skippedPartySection'), {
+        currentKey: 'mafia',
+        standings: partyStandings || [],
+        isHost,
+        onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
+      });
+    }
+  }
+
+  socket.on('game_skipped', ({ players, partyStandings }) => {
+    renderSkippedScreen(players, partyStandings);
+  });
+
   // ---------- Reconnect ----------
   function attemptRejoin() {
     const saved = loadSession();
@@ -595,6 +634,12 @@
             onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
           });
         }
+      } else if (res.phase === 'skipped' && res.skipped) {
+        renderSkippedScreen(res.skipped.players, res.skipped.partyStandings);
+      }
+
+      if (res.skipVotes) {
+        updateSkipVoteUI(res.skipVotes.votes, res.skipVotes.needed, res.skipVotes.voterIds);
       }
     });
   }

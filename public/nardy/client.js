@@ -10,7 +10,8 @@
     menu: document.getElementById('screen-menu'),
     lobby: document.getElementById('screen-lobby'),
     board: document.getElementById('screen-board'),
-    end: document.getElementById('screen-end')
+    end: document.getElementById('screen-end'),
+    skipped: document.getElementById('screen-skipped')
   };
   const appEl = document.getElementById('app');
 
@@ -18,6 +19,7 @@
     Object.values(screens).forEach(s => s.classList.remove('active'));
     screens[name].classList.add('active');
     appEl.classList.toggle('wide', name === 'board');
+    el.skipVoteBtn.classList.toggle('hidden', name !== 'board');
   }
 
   const el = {
@@ -75,7 +77,12 @@
     scoreboardList: document.getElementById('scoreboardList'),
     playAgainBtn: document.getElementById('playAgainBtn'),
     waitPlayAgainHint: document.getElementById('waitPlayAgainHint'),
-    leaveRoomBtn2: document.getElementById('leaveRoomBtn2')
+    leaveRoomBtn2: document.getElementById('leaveRoomBtn2'),
+
+    skipVoteBtn: document.getElementById('skipVoteBtn'),
+    skipVoteCount: document.getElementById('skipVoteCount'),
+    skipVoteNeeded: document.getElementById('skipVoteNeeded'),
+    leaveRoomBtnSkip: document.getElementById('leaveRoomBtnSkip')
   };
 
   const socket = io('/nardy');
@@ -360,6 +367,7 @@
   el.leaveRoomBtn.addEventListener('click', leaveRoom);
   el.leaveRoomBtn2.addEventListener('click', leaveRoom);
   el.leaveRoomBtnBoard.addEventListener('click', leaveRoom);
+  el.leaveRoomBtnSkip.addEventListener('click', leaveRoom);
 
   function applyRoomUpdate(room) {
     currentRoom = room;
@@ -984,6 +992,38 @@
     socket.emit('play_again');
   });
 
+  // ---------- Голосование за пропуск игры ----------
+  function updateSkipVoteUI(votes, needed, voterIds) {
+    el.skipVoteCount.textContent = votes;
+    el.skipVoteNeeded.textContent = needed;
+    el.skipVoteBtn.classList.toggle('voted', Array.isArray(voterIds) && voterIds.includes(myPlayerId));
+  }
+
+  el.skipVoteBtn.addEventListener('click', () => {
+    socket.emit('vote_skip');
+  });
+
+  socket.on('skip_vote_update', ({ votes, needed, voterIds }) => {
+    updateSkipVoteUI(votes, needed, voterIds);
+  });
+
+  function renderSkippedScreen(players, partyStandings) {
+    if (players && currentRoom) currentRoom.players = players;
+    showScreen('skipped');
+    if (window.PartyHub) {
+      window.PartyHub.renderPartySection(document.getElementById('skippedPartySection'), {
+        currentKey: 'nardy',
+        standings: partyStandings || [],
+        isHost,
+        onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
+      });
+    }
+  }
+
+  socket.on('game_skipped', ({ players, partyStandings }) => {
+    renderSkippedScreen(players, partyStandings);
+  });
+
   // ---------- Room-wide updates ----------
   socket.on('room_update', (room) => {
     applyRoomUpdate(Object.assign({ playerId: myPlayerId }, room));
@@ -1006,6 +1046,12 @@
         renderAll();
       } else if (res.phase === 'end' && res.result) {
         renderEndScreen(Object.assign({ players: res.players }, res.result));
+      } else if (res.phase === 'skipped' && res.skipped) {
+        renderSkippedScreen(res.skipped.players, res.skipped.partyStandings);
+      }
+
+      if (res.skipVotes) {
+        updateSkipVoteUI(res.skipVotes.votes, res.skipVotes.needed, res.skipVotes.voterIds);
       }
     });
   }

@@ -682,3 +682,30 @@ input[type="text"]:focus, input[type="number"]:focus {
   .timer-display { font-size: 2rem; }
   .room-code { font-size: 2rem; letter-spacing: 4px; }
 }
+
+/* Голосование за пропуск текущей игры */
+.skip-vote-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 40;
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .12s ease, background .15s ease, border-color .15s ease;
+}
+
+.skip-vote-btn:active {
+  transform: scale(0.95);
+}
+
+.skip-vote-btn.voted {
+  background: var(--accent);
+  border-color: transparent;
+  color: var(--bg);
+}

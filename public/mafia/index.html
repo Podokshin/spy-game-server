@@ -15,6 +15,8 @@
 </head>
 <body>
 
+<button type="button" id="skipVoteBtn" class="skip-vote-btn hidden">⏭️ Скип (<span id="skipVoteCount">0</span>/<span id="skipVoteNeeded">0</span>)</button>
+
 <div id="app">
 
   <!-- ===== Меню: создать/присоединиться ===== -->
@@ -151,6 +153,16 @@
     <div id="partySection"></div>
 
     <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+  <!-- ===== Игра пропущена голосованием ===== -->
+  <section id="screen-skipped" class="screen">
+    <h2>⏭️ Игра пропущена</h2>
+    <p class="hint">Большинство игроков проголосовало пропустить эту игру.</p>
+
+    <div id="skippedPartySection"></div>
+
+    <button id="leaveRoomBtnSkip" class="secondary-btn">Выйти из комнаты</button>
   </section>
 
 </div>
