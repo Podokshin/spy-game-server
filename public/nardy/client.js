@@ -55,8 +55,12 @@
     turnDot: document.getElementById('turnDot'),
     turnBannerText: document.getElementById('turnBannerText'),
     boardFrame: document.getElementById('boardFrame'),
+    diceRow: document.getElementById('diceRow'),
     diceFaces: document.getElementById('diceFaces'),
     diceChips: document.getElementById('diceChips'),
+    diceThrowOverlay: document.getElementById('diceThrowOverlay'),
+    throwDie1: document.getElementById('throwDie1'),
+    throwDie2: document.getElementById('throwDie2'),
     rollDiceBtn: document.getElementById('rollDiceBtn'),
     offerDoubleBtn: document.getElementById('offerDoubleBtn'),
     waitTurnHint: document.getElementById('waitTurnHint'),
@@ -731,6 +735,7 @@
     updatePlayerBadges(currentRoom ? currentRoom.players : []);
 
     const myTurn = turnColor === myColor;
+    el.rollDiceBtn.disabled = false;
     el.rollDiceBtn.classList.toggle('hidden', !myTurn || hasRolled || !!doubleOffer);
     el.waitTurnHint.classList.toggle('hidden', myTurn);
 
@@ -758,7 +763,54 @@
     renderTurnAndControls();
   }
 
+  // ---------- Анимация броска костей ----------
+  const throwDieEls = [el.throwDie1, el.throwDie2];
+  let diceAnimInFlight = false;
+
+  function playDiceRollAnimation(rolled, onDone) {
+    diceAnimInFlight = true;
+    el.diceRow.classList.add('hidden');
+    el.diceThrowOverlay.classList.remove('hidden');
+
+    throwDieEls.forEach((dieEl, i) => {
+      dieEl.className = 'throw-die dropping';
+      dieEl.textContent = String(rolled[i] != null ? rolled[i] : 1);
+      dieEl.style.animationDelay = (i * 60) + 'ms';
+    });
+
+    let flickerHandle = null;
+
+    window.setTimeout(() => {
+      throwDieEls.forEach(dieEl => { dieEl.className = 'throw-die tumbling'; });
+      flickerHandle = window.setInterval(() => {
+        throwDieEls.forEach(dieEl => { dieEl.textContent = String(1 + Math.floor(Math.random() * 6)); });
+      }, 90);
+    }, 460);
+
+    window.setTimeout(() => {
+      clearInterval(flickerHandle);
+      throwDieEls.forEach((dieEl, i) => {
+        dieEl.textContent = String(rolled[i] != null ? rolled[i] : 1);
+        dieEl.className = 'throw-die settled';
+      });
+      playDiceSound();
+    }, 960);
+
+    window.setTimeout(() => {
+      throwDieEls.forEach(dieEl => { dieEl.className = 'throw-die flying-away'; });
+    }, 1320);
+
+    window.setTimeout(() => {
+      el.diceThrowOverlay.classList.add('hidden');
+      el.diceRow.classList.remove('hidden');
+      diceAnimInFlight = false;
+      onDone();
+    }, 1720);
+  }
+
   el.rollDiceBtn.addEventListener('click', () => {
+    if (diceAnimInFlight) return;
+    el.rollDiceBtn.disabled = true;
     socket.emit('roll_dice');
   });
 
@@ -796,13 +848,14 @@
   });
 
   socket.on('dice_rolled', ({ dice: rolled, movesLeft: ml, headMovesUsed: hmu, headMovesMax: hmm }) => {
-    playDiceSound();
-    dice = rolled;
-    movesLeft = ml;
-    hasRolled = true;
-    headMovesUsed = hmu || 0;
-    headMovesMax = hmm || 1;
-    renderAll();
+    playDiceRollAnimation(rolled, () => {
+      dice = rolled;
+      movesLeft = ml;
+      hasRolled = true;
+      headMovesUsed = hmu || 0;
+      headMovesMax = hmm || 1;
+      renderAll();
+    });
   });
 
   socket.on('checker_moved', (data) => {
