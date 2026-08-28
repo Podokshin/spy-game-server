@@ -11,6 +11,7 @@ const { registerWavelengthGame } = require('./lib/wavelength-game');
 const { registerWhoamiGame } = require('./lib/whoami-game');
 const { registerCategoriesGame } = require('./lib/categories-game');
 const { registerNardyGame } = require('./lib/nardy-game');
+const { registerCrocodileGame } = require('./lib/crocodile-game');
 
 const app = express();
 app.use(express.static(path.join(__dirname, 'public')));
@@ -36,6 +37,7 @@ registerWavelengthGame(io.of('/wavelength')); // отдельный namespace �
 registerWhoamiGame(io.of('/whoami')); // отдельный namespace — используется страницей /whoami/
 registerCategoriesGame(io.of('/categories')); // отдельный namespace — используется страницей /categories/
 registerNardyGame(io.of('/nardy')); // отдельный namespace — используется страницей /nardy/
+registerCrocodileGame(io.of('/crocodile')); // отдельный namespace — используется страницей /crocodile/
 
 server.listen(PORT, () => {
   console.log(`Игротека запущена: http://localhost:${PORT}`);

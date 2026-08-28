@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Крокодил Online</title>
+<meta name="theme-color" content="#0a0a10">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="/shorts.css">
+<link rel="stylesheet" href="/radio.css">
+</head>
+<body>
+
+<div id="app">
+
+  <!-- ===== Меню: создать/присоединиться ===== -->
+  <section id="screen-menu" class="screen active">
+    <a class="back-link" href="/">← Все игры</a>
+    <h1>🐊 Крокодил</h1>
+    <p class="subtitle" id="menuSubtitle">Один рисует слово на общем холсте, остальные угадывают текстом наперегонки. Создайте комнату или присоединитесь по коду.</p>
+
+    <div class="room-code-box hidden" id="inviteBanner">
+      <span class="room-code-label">Вас пригласили в комнату</span>
+      <span class="room-code" id="inviteCodeDisplay">—</span>
+    </div>
+
+    <div class="field">
+      <label for="playerName">Ваше имя</label>
+      <input type="text" id="playerName" maxlength="20" placeholder="Введите имя">
+    </div>
+
+    <div class="field">
+      <label>Аватар</label>
+      <div class="avatar-grid" id="avatarGrid"></div>
+    </div>
+
+    <button id="createRoomBtn" class="primary-btn">Создать комнату</button>
+
+    <p class="hint">Продолжая, вы соглашаетесь с <a href="/privacy/">политикой обработки данных</a> и <a href="/terms/">правилами сайта</a>.</p>
+
+    <div class="divider" id="menuDivider">или</div>
+
+    <div class="field" id="joinCodeField">
+      <label for="joinCode">Код комнаты</label>
+      <input type="text" id="joinCode" maxlength="5" placeholder="ABCDE">
+    </div>
+    <button id="joinRoomBtn" class="secondary-btn">Присоединиться</button>
+
+    <p class="link-toggle hidden" id="switchModeLink">Хотите создать свою комнату вместо этого?</p>
+
+    <p class="error hidden" id="menuError"></p>
+  </section>
+
+  <!-- ===== Лобби ===== -->
+  <section id="screen-lobby" class="screen">
+    <h2>Лобби</h2>
+
+    <div class="room-code-box">
+      <span class="room-code-label">Код комнаты — скажите друзьям</span>
+      <span class="room-code" id="roomCodeDisplay">—</span>
+      <button id="copyLinkBtn" type="button" class="secondary-btn copy-link-btn">🔗 Скопировать ссылку-приглашение</button>
+    </div>
+
+    <div class="field">
+      <label for="totalRoundsInput">Раундов</label>
+      <input type="number" id="totalRoundsInput" min="1" max="20" value="6">
+    </div>
+
+    <div class="field">
+      <label for="roundSecondsInput">Секунд на раунд</label>
+      <input type="number" id="roundSecondsInput" min="30" max="180" value="80">
+    </div>
+
+    <div class="field">
+      <label>Игроки (<span id="playerCountLabel">0</span>)</label>
+      <div id="lobbyPlayersList" class="chip-list"></div>
+    </div>
+
+    <button id="startGameBtn" class="primary-btn hidden">Начать игру</button>
+    <p class="hint hidden" id="waitingHostHint">Ожидаем, когда хост начнёт игру…</p>
+    <p class="hint hidden" id="needMorePlayersHint">Нужно минимум 3 игрока</p>
+
+    <button id="leaveRoomBtn" class="secondary-btn">Выйти из комнаты</button>
+    <p class="error hidden" id="lobbyError"></p>
+  </section>
+
+  <!-- ===== Выбор слова ===== -->
+  <section id="screen-choosing" class="screen">
+    <p class="subtitle" id="choosingRoundLabel">Раунд 1 из 6</p>
+    <h2 id="choosingTitle">🎨 Выберите слово</h2>
+
+    <div class="word-choice-grid hidden" id="wordChoiceGrid"></div>
+    <p class="hint hidden" id="waitingArtistHint">✏️ <span id="artistNameLabel">Игрок</span> выбирает слово…</p>
+  </section>
+
+  <!-- ===== Рисование ===== -->
+  <section id="screen-drawing" class="screen">
+    <div class="draw-top-bar">
+      <span class="draw-artist-badge" id="drawArtistBadge">✏️ Игрок рисует</span>
+      <span class="draw-timer" id="drawTimer">1:20</span>
+      <span class="draw-progress" id="drawProgress">0/0 угадали</span>
+    </div>
+
+    <div class="word-hint hidden" id="wordHintRow"></div>
+
+    <div class="canvas-wrap">
+      <canvas id="drawCanvas"></canvas>
+    </div>
+
+    <div class="tool-row hidden" id="toolRow">
+      <div class="color-swatches" id="colorSwatches"></div>
+      <div class="tool-buttons">
+        <button type="button" class="tool-btn active" id="brushThinBtn" title="Тонкая кисть">●</button>
+        <button type="button" class="tool-btn" id="brushThickBtn" title="Толстая кисть">⬤</button>
+        <button type="button" class="tool-btn" id="eraserBtn" title="Ластик">🧹</button>
+        <button type="button" class="tool-btn" id="clearCanvasBtn" title="Очистить холст">🗑️</button>
+      </div>
+    </div>
+
+    <div class="guess-chat" id="guessChat"></div>
+
+    <form class="guess-form hidden" id="guessForm">
+      <input type="text" id="guessInput" maxlength="60" placeholder="Ваш ответ…" autocomplete="off">
+      <button type="submit" class="primary-btn">➤</button>
+    </form>
+    <p class="hint hidden" id="alreadyGuessedHint">✅ Вы угадали! Ждём остальных…</p>
+
+    <button id="leaveRoomBtnDraw" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+  <!-- ===== Итог раунда ===== -->
+  <section id="screen-reveal" class="screen">
+    <h2>🔤 Слово было: <span id="revealWord">—</span></h2>
+    <p class="hint" id="revealTimeUpHint"></p>
+
+    <div class="field">
+      <label>Кто угадал</label>
+      <div class="chip-list" id="revealGuessersList"></div>
+    </div>
+
+    <div class="field">
+      <label>Общий счёт</label>
+      <div class="chip-list" id="revealScoreList"></div>
+    </div>
+
+    <button id="nextRoundBtn" class="primary-btn hidden">Следующий раунд</button>
+    <p class="hint hidden" id="waitNextRoundHint">Ждите, хост начнёт следующий раунд…</p>
+  </section>
+
+  <!-- ===== Итоги игры ===== -->
+  <section id="screen-end" class="screen">
+    <h2>🏆 Игра окончена</h2>
+
+    <div class="field">
+      <label>Итоговый счёт</label>
+      <div class="chip-list" id="scoreboardList"></div>
+    </div>
+
+    <button id="playAgainBtn" class="primary-btn hidden">Новая игра</button>
+    <p class="hint hidden" id="waitPlayAgainHint">Ждите, пока хост начнёт новую игру…</p>
+    <button id="leaveRoomBtn2" class="secondary-btn">Выйти из комнаты</button>
+  </section>
+
+</div>
+
+<div class="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="/confetti.js"></script>
+<script src="/shorts.js" defer></script>
+<script src="/radio.js" defer></script>
+<script src="client.js"></script>
+</body>
+</html>
