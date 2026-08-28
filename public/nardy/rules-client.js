@@ -8,6 +8,10 @@ window.NardyRules = (function () {
   const HOME_SIZE = 6;
   const START = { white: 0, black: 12 };
 
+  function otherColor(color) {
+    return color === 'white' ? 'black' : 'white';
+  }
+
   function pathIndex(color, point) {
     return (point - START[color] + POINTS) % POINTS;
   }
@@ -60,7 +64,9 @@ window.NardyRules = (function () {
     const idx = pathIndex(color, from);
     const newIdx = idx + die;
     if (newIdx < POINTS) {
-      return { legal: true, bearOff: false, to: pointFromPath(color, newIdx) };
+      const to = pointFromPath(color, newIdx);
+      if (board[otherColor(color)][to] > 0) return { legal: false };
+      return { legal: true, bearOff: false, to };
     }
     if (canBearOffFrom(board, color, from, die)) {
       return { legal: true, bearOff: true };
