@@ -3,7 +3,7 @@
 
   const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
   const SESSION_KEY = 'crocodile_online_session_v1';
-  const COLORS = ['#1a1a1a', '#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#8d6e63'];
+  const COLORS = ['#1a1a1a', '#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#8d6e63', '#ec4899', '#14b8a6', '#757575', '#1e3a5f'];
 
   const screens = {
     menu: document.getElementById('screen-menu'),
@@ -60,8 +60,10 @@
     toolRow: document.getElementById('toolRow'),
     colorSwatches: document.getElementById('colorSwatches'),
     brushThinBtn: document.getElementById('brushThinBtn'),
+    brushMediumBtn: document.getElementById('brushMediumBtn'),
     brushThickBtn: document.getElementById('brushThickBtn'),
     eraserBtn: document.getElementById('eraserBtn'),
+    undoBtn: document.getElementById('undoBtn'),
     clearCanvasBtn: document.getElementById('clearCanvasBtn'),
     guessChat: document.getElementById('guessChat'),
     guessForm: document.getElementById('guessForm'),
@@ -106,7 +108,7 @@
   let remoteLastPoint = null;
   let currentColor = COLORS[0];
   let currentWidth = 4;
-  const THIN = 4, THICK = 12, ERASER_WIDTH = 26, ERASER_COLOR = '#f7f6fb';
+  const THIN = 3, MEDIUM = 8, THICK = 16, ERASER_WIDTH = 28, ERASER_COLOR = '#f7f6fb';
 
   function escapeHtml(str) {
     const div = document.createElement('div');
@@ -373,7 +375,12 @@
     el.canvas.width = rect.width * dpr;
     el.canvas.height = rect.height * dpr;
     ctx = el.canvas.getContext('2d');
-    ctx.scale(dpr, dpr);
+    // setTransform, а не scale — scale накапливается поверх текущей
+    // трансформации при каждом повторном вызове (например, на resize),
+    // из-за чего масштаб постепенно "уезжал" и точки рисования всё сильнее
+    // расходились с курсором к правому нижнему углу. setTransform всегда
+    // задаёт трансформацию заново, а не домножает её.
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     redrawAll();
@@ -425,7 +432,7 @@
   el.canvas.addEventListener('pointerdown', (e) => {
     if (!isArtist) return;
     myDrawing = true;
-    el.canvas.setPointerCapture(e.pointerId);
+    try { el.canvas.setPointerCapture(e.pointerId); } catch (err) { /* редкий edge case, не критично — рисование продолжает работать и без захвата */ }
     const p = toNormalized(e.clientX, e.clientY);
     myLastPoint = p;
     localStrokes.push({ color: currentColor, width: currentWidth, points: [[p.x, p.y]] });
@@ -472,33 +479,51 @@
   });
 
   // ---------- Инструменты (только художник) ----------
+  const brushButtons = [
+    [THIN, el.brushThinBtn],
+    [MEDIUM, el.brushMediumBtn],
+    [THICK, el.brushThickBtn]
+  ];
+
+  function refreshToolButtons() {
+    const isEraser = currentColor === ERASER_COLOR;
+    brushButtons.forEach(([width, btn]) => btn.classList.toggle('active', !isEraser && currentWidth === width));
+    el.eraserBtn.classList.toggle('active', isEraser);
+    el.colorSwatches.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('active', !isEraser && b.dataset.color === currentColor));
+  }
+
   el.colorSwatches.innerHTML = COLORS.map((c, i) => `<button type="button" class="color-swatch${i === 0 ? ' active' : ''}" style="background:${c}" data-color="${c}" aria-label="Цвет ${c}"></button>`).join('');
   el.colorSwatches.querySelectorAll('.color-swatch').forEach(btn => {
     btn.addEventListener('click', () => {
       currentColor = btn.dataset.color;
-      el.colorSwatches.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('active', b === btn));
-      el.eraserBtn.classList.remove('active');
-      (currentWidth === THICK ? el.brushThickBtn : el.brushThinBtn).classList.add('active');
-      el.brushThinBtn.classList.toggle('active', currentWidth === THIN);
-      el.brushThickBtn.classList.toggle('active', currentWidth === THICK);
+      refreshToolButtons();
     });
   });
-  function setBrush(width, btn) {
+
+  function setBrush(width) {
     currentWidth = width;
     if (currentColor === ERASER_COLOR) currentColor = COLORS[0];
-    [el.brushThinBtn, el.brushThickBtn, el.eraserBtn].forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    el.colorSwatches.querySelectorAll('.color-swatch').forEach(b => b.classList.toggle('active', b.dataset.color === currentColor));
+    refreshToolButtons();
   }
-  el.brushThinBtn.addEventListener('click', () => setBrush(THIN, el.brushThinBtn));
-  el.brushThickBtn.addEventListener('click', () => setBrush(THICK, el.brushThickBtn));
+  brushButtons.forEach(([width, btn]) => btn.addEventListener('click', () => setBrush(width)));
+
   el.eraserBtn.addEventListener('click', () => {
     currentColor = ERASER_COLOR;
     currentWidth = ERASER_WIDTH;
-    [el.brushThinBtn, el.brushThickBtn, el.eraserBtn].forEach(b => b.classList.remove('active'));
-    el.eraserBtn.classList.add('active');
-    el.colorSwatches.querySelectorAll('.color-swatch').forEach(b => b.classList.remove('active'));
+    refreshToolButtons();
   });
+
+  el.undoBtn.addEventListener('click', () => {
+    if (localStrokes.length === 0) return;
+    localStrokes.pop();
+    redrawAll();
+    socket.emit('undo_stroke');
+  });
+  socket.on('undo_stroke', () => {
+    localStrokes.pop();
+    redrawAll();
+  });
+
   el.clearCanvasBtn.addEventListener('click', () => {
     localStrokes = [];
     if (ctx) { const rect = el.canvas.getBoundingClientRect(); ctx.clearRect(0, 0, rect.width, rect.height); }
