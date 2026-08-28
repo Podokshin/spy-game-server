@@ -161,11 +161,52 @@
     el.menuError.classList.add('hidden');
   }
 
+  // ---------- «Вечер игр»: пришли сюда по кнопке "Следующая игра" ----------
+  const partyParams = window.PartyHub ? window.PartyHub.getPartyParams() : null;
+  if (partyParams) {
+    if (partyParams.name) el.playerName.value = partyParams.name;
+    if (partyParams.avatar) {
+      selectedAvatar = partyParams.avatar;
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+    }
+    if (partyParams.isHost) {
+      socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
+        if (!res || !res.ok) return showMenuError((res && res.error) || 'Не удалось создать комнату');
+        myPlayerId = res.playerId;
+        currentRoom = res;
+        isHost = true;
+        saveSession();
+        applyRoomUpdate(res);
+      });
+    } else {
+      let attemptsLeft = 10;
+      const tryJoin = () => {
+        socket.emit('join_room', { code: partyParams.code, name: partyParams.name, avatar: partyParams.avatar }, (res) => {
+          if (res && res.ok) {
+            myPlayerId = res.playerId;
+            currentRoom = res;
+            isHost = false;
+            saveSession();
+            applyRoomUpdate(res);
+            return;
+          }
+          attemptsLeft -= 1;
+          if (attemptsLeft > 0) {
+            setTimeout(tryJoin, 500);
+          } else {
+            showMenuError((res && res.error) || 'Не удалось присоединиться к следующей игре — попробуйте войти по коду вручную');
+          }
+        });
+      };
+      tryJoin();
+    }
+  }
+
   el.createRoomBtn.addEventListener('click', () => {
     clearMenuError();
     const name = el.playerName.value.trim();
     if (!name) return showMenuError('Введите имя');
-    socket.emit('create_room', { name, avatar: selectedAvatar }, (res) => {
+    socket.emit('create_room', { name, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res || !res.ok) return showMenuError((res && res.error) || 'Не удалось создать комнату');
       myPlayerId = res.playerId;
       currentRoom = res;
@@ -478,16 +519,30 @@
   });
 
   // ---------- End ----------
-  socket.on('game_over', (data) => {
+  socket.on('game_over', ({ winner, roles, partyStandings }) => {
     stopTicking();
-    el.endTitle.textContent = data.winner === 'mafia' ? '🔪 Победила мафия' : '🕊️ Победили мирные жители';
-    el.rolesRevealList.innerHTML = data.roles.map(p => `
+    el.endTitle.textContent = winner === 'mafia' ? '🔪 Победила мафия' : '🕊️ Победили мирные жители';
+    el.rolesRevealList.innerHTML = roles.map(p => `
       <span class="player-chip${!p.alive ? ' dead' : ''}">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="role-tag">${escapeHtml(p.role)}</span></span>
     `).join('');
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
     showScreen('end');
     if (window.fireConfetti) window.fireConfetti();
+    if (window.PartyHub) {
+      window.PartyHub.renderPartySection(document.getElementById('partySection'), {
+        currentKey: 'mafia',
+        standings: partyStandings || [],
+        isHost,
+        onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
+      });
+    }
+  });
+
+  socket.on('next_game_selected', ({ gameKey }) => {
+    if (window.PartyHub && currentRoom) {
+      window.PartyHub.goToGame(gameKey, currentRoom.code, el.playerName.value, selectedAvatar, isHost);
+    }
   });
 
   el.playAgainBtn.addEventListener('click', () => socket.emit('play_again'));
@@ -532,6 +587,14 @@
         el.playAgainBtn.classList.toggle('hidden', !isHost);
         el.waitPlayAgainHint.classList.toggle('hidden', isHost);
         showScreen('end');
+        if (window.PartyHub) {
+          window.PartyHub.renderPartySection(document.getElementById('partySection'), {
+            currentKey: 'mafia',
+            standings: res.gameOver.partyStandings || [],
+            isHost,
+            onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
+          });
+        }
       }
     });
   }

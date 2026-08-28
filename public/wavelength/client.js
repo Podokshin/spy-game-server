@@ -196,6 +196,43 @@
     applyInviteMode(roomFromUrl.toUpperCase());
   }
 
+  // ---------- «Вечер игр»: пришли сюда по кнопке "Следующая игра" ----------
+  const partyParams = window.PartyHub ? window.PartyHub.getPartyParams() : null;
+  if (partyParams) {
+    if (partyParams.name) el.playerName.value = partyParams.name;
+    if (partyParams.avatar) {
+      selectedAvatar = partyParams.avatar;
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+    }
+    if (partyParams.isHost) {
+      socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
+        if (!res.ok) return showMenuError('Не удалось создать комнату');
+        applyRoomUpdate(res);
+        saveSession();
+        showScreen('lobby');
+      });
+    } else {
+      let attemptsLeft = 10;
+      const tryJoin = () => {
+        socket.emit('join_room', { code: partyParams.code, name: partyParams.name, avatar: partyParams.avatar }, (res) => {
+          if (res.ok) {
+            applyRoomUpdate(res);
+            saveSession();
+            showScreen('lobby');
+            return;
+          }
+          attemptsLeft -= 1;
+          if (attemptsLeft > 0) {
+            setTimeout(tryJoin, 500);
+          } else {
+            showMenuError(res.error || 'Не удалось присоединиться к следующей игре — попробуйте войти по коду вручную');
+          }
+        });
+      };
+      tryJoin();
+    }
+  }
+
   el.copyLinkBtn.addEventListener('click', () => {
     if (!currentRoom) return;
     const link = window.location.origin + window.location.pathname + '?room=' + currentRoom.code;
@@ -247,7 +284,7 @@
   el.createRoomBtn.addEventListener('click', () => {
     getAudioCtx();
     el.menuError.classList.add('hidden');
-    socket.emit('create_room', { name: el.playerName.value, avatar: selectedAvatar }, (res) => {
+    socket.emit('create_room', { name: el.playerName.value, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return showMenuError('Не удалось создать комнату');
       applyRoomUpdate(res);
       saveSession();
@@ -661,11 +698,26 @@
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
     showScreen('end');
+
+    if (window.PartyHub) {
+      window.PartyHub.renderPartySection(document.getElementById('partySection'), {
+        currentKey: 'wavelength',
+        standings: data.partyStandings || [],
+        isHost,
+        onSelect: (gameKey) => socket.emit('select_next_game', { gameKey })
+      });
+    }
   }
 
   socket.on('game_finished', (data) => {
     renderEndScreen(data);
     if (window.fireConfetti) window.fireConfetti();
+  });
+
+  socket.on('next_game_selected', ({ gameKey }) => {
+    if (window.PartyHub && currentRoom) {
+      window.PartyHub.goToGame(gameKey, currentRoom.code, el.playerName.value, selectedAvatar, isHost);
+    }
   });
 
   el.playAgainBtn.addEventListener('click', () => {
