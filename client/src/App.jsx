@@ -13,7 +13,7 @@ export default function App() {
       </div>
       <div className="grain" aria-hidden="true" />
 
-      <div className="relative z-[2] mx-auto w-full max-w-[600px] px-5 pt-10 pb-20">
+      <div id="app" className="relative z-[2] mx-auto w-full max-w-[600px] px-5 pt-10 pb-20">
         <div className="mb-8 text-center">
           <div className="mx-auto mb-5 flex size-[60px] items-center justify-center rounded-md border-2 border-border bg-card shadow-[0_0_0_1px_rgba(0,0,0,0.3),0_12px_30px_-10px_rgba(255,95,176,0.35)]">
             <img src="/favicon.svg" alt="" width="34" height="34" />
@@ -57,7 +57,7 @@ export default function App() {
         </div>
       </div>
 
-      <div className="fixed right-4 bottom-4 z-50 rounded-full border-2 border-border bg-card px-[15px] py-[7px] font-heading text-[0.68rem] font-semibold whitespace-nowrap text-muted-foreground">
+      <div className="credit fixed right-4 bottom-4 z-50 rounded-full border-2 border-border bg-card px-[15px] py-[7px] font-heading text-[0.68rem] font-semibold whitespace-nowrap text-muted-foreground">
         ✨ Навайбкодил <b className="font-bold text-foreground">Papaluha</b> ✨
       </div>
     </MotionConfig>
