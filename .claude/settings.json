@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node .claude/hooks/lint-client.js",
+            "timeout": 30
+          },
+          {
+            "type": "command",
+            "command": "node .claude/hooks/remind-rebuild.js",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
