@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
   const SESSION_KEY = 'crocodile_online_session_v1';
   const COLORS = ['#1a1a1a', '#e53935', '#fb8c00', '#fdd835', '#43a047', '#1e88e5', '#8e24aa', '#8d6e63', '#ec4899', '#14b8a6', '#757575', '#1e3a5f'];
 
@@ -143,8 +143,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -193,7 +194,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -369,7 +370,7 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCountLabel.textContent = room.players.length;
     el.lobbyPlayersList.innerHTML = room.players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${window.avatarIcon(p.avatar)}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     if (room.settings) {
@@ -672,7 +673,7 @@
     el.revealWord.textContent = data.word;
     el.revealTimeUpHint.textContent = data.timeUp ? '⏰ Время вышло!' : '🎉 Все угадали!';
     el.revealGuessersList.innerHTML = data.correctGuessers.length
-      ? data.correctGuessers.map(g => `<span class="player-chip correct-guesser">#${g.rank} ${escapeHtml(g.avatar || '🙂')} ${escapeHtml(g.name)} <span class="score-value">+${g.points}</span></span>`).join('')
+      ? data.correctGuessers.map(g => `<span class="player-chip correct-guesser">#${g.rank} ${window.avatarIcon(g.avatar)} ${escapeHtml(g.name)} <span class="score-value">+${g.points}</span></span>`).join('')
       : '<span class="player-chip">Никто не угадал</span>';
     updateScoreboard(data.players, el.revealScoreList);
     showScreen('reveal');
@@ -681,7 +682,7 @@
 
   function updateScoreboard(players, targetEl) {
     const sorted = players.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
-    const html = sorted.map(p => `<span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>`).join('');
+    const html = sorted.map(p => `<span class="player-chip">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>`).join('');
     (targetEl || el.scoreboardList).innerHTML = html;
   }
 
@@ -806,7 +807,7 @@
         el.revealWord.textContent = res.reveal.word;
         el.revealTimeUpHint.textContent = '';
         el.revealGuessersList.innerHTML = res.reveal.correctGuessers.length
-          ? res.reveal.correctGuessers.map(g => `<span class="player-chip correct-guesser">#${g.rank} ${escapeHtml(g.avatar || '🙂')} ${escapeHtml(g.name)} <span class="score-value">+${g.points}</span></span>`).join('')
+          ? res.reveal.correctGuessers.map(g => `<span class="player-chip correct-guesser">#${g.rank} ${window.avatarIcon(g.avatar)} ${escapeHtml(g.name)} <span class="score-value">+${g.points}</span></span>`).join('')
           : '<span class="player-chip">Никто не угадал</span>';
         updateScoreboard(res.players, el.revealScoreList);
         showScreen('reveal');

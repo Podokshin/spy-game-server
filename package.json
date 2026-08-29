@@ -5,7 +5,8 @@
   "description": "Онлайн-сервер для игры «Шпион» — комнаты, лобби, синхронная игра в реальном времени",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "build:client": "cd client && npm install && npm run build"
   },
   "dependencies": {
     "express": "^4.19.2",

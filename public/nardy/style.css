@@ -10,6 +10,9 @@
   --good: #34d399;
   --gold: #fb923c;
   --radius: 18px;
+
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-8: 32px; --sp-10: 40px;
   --white-checker: #f2ead9;
   --white-checker-border: #b8a97e;
   --black-checker: #211f2a;
@@ -139,7 +142,7 @@ h2 {
   background: linear-gradient(180deg, var(--panel), #0a0a10);
   border: 2px solid var(--border);
   border-radius: var(--radius);
-  padding: 14px 16px;
+  padding: var(--sp-4);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -226,28 +229,28 @@ input[type="text"]:focus {
 .avatar-grid {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px;
 }
 
 .avatar-btn {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
   border: 2px solid var(--border);
   background: var(--panel-2);
-  font-size: 1.4rem;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: transform .12s ease, box-shadow .15s ease;
+  transition: transform .12s ease, box-shadow .15s ease, border-color .15s ease;
   padding: 0;
 }
 
 .avatar-btn.active {
-  background: var(--accent);
-  border-color: transparent;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--accent) 35%, transparent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 25%, transparent), 0 6px 16px color-mix(in srgb, var(--accent) 40%, transparent);
+  transform: scale(1.06);
 }
 
 .avatar-btn:active {
@@ -465,7 +468,7 @@ input[type="text"]:focus {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 22px;
+  gap: var(--sp-6);
   pointer-events: none;
   background: radial-gradient(60% 60% at 50% 50%, rgba(0, 0, 0, 0.35), transparent 70%);
   opacity: 1;

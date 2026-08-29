@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
   const SESSION_KEY = 'wavelength_online_session_v1';
   const GUESS_TIME_MS = 45 * 1000;
 
@@ -159,8 +159,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -209,7 +210,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -319,7 +320,7 @@
   function renderTeamChips(players) {
     if (players.length === 0) return '<span class="hint">пусто</span>';
     return players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
   }
 
@@ -673,7 +674,7 @@
     el.revealScoreBlue.textContent = `🔵 ${data.teamScores.blue}`;
 
     el.revealGuessList.innerHTML = (data.guessDetail || []).map(g => `
-      <span class="player-chip">${escapeHtml(g.avatar || '🙂')} ${escapeHtml(g.name)} <span class="guess-value">${g.position}</span></span>
+      <span class="player-chip">${window.avatarIcon(g.avatar)} ${escapeHtml(g.name)} <span class="guess-value">${g.position}</span></span>
     `).join('') || '<span class="hint">Никто не успел ответить</span>';
 
     const isLast = data.round >= data.totalRounds;

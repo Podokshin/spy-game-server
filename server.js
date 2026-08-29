@@ -14,6 +14,10 @@ const { registerNardyGame } = require('./lib/nardy-game');
 const { registerCrocodileGame } = require('./lib/crocodile-game');
 
 const app = express();
+// Собранный React-хаб (client/) имеет приоритет; всё, чего в нём нет
+// (немигрированные игры, /radio.js, /shorts.js, /videos и т.д.), продолжает
+// отдаваться из public/ как раньше.
+app.use(express.static(path.join(__dirname, 'client', 'dist')));
 app.use(express.static(path.join(__dirname, 'public')));
 
 const VIDEO_EXT = /\.(mp4|webm|mov)$/i;

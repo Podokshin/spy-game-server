@@ -22,7 +22,7 @@
     return category === 'characters' ? CHARACTER_CATEGORY_META : PLACE_CATEGORY_META;
   }
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
 
   const DISCUSS_HINTS = {
     places: 'Игроки по очереди рассказывают, что они «видят» на локации. Найдите шпиона.',
@@ -162,8 +162,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -212,7 +213,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -445,7 +446,7 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCountLabel.textContent = room.players.length;
     el.lobbyPlayersList.innerHTML = room.players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${window.avatarIcon(p.avatar)}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     lobbyCategory = room.settings.category;
@@ -529,7 +530,7 @@
     showScreen('discussion');
     el.discussHint.textContent = DISCUSS_HINTS[data.category] || DISCUSS_HINTS.places;
     el.turnOrderList.innerHTML = (data.turnOrder || []).map((p, i) => `
-      <span class="player-chip"><span class="turn-num">${i + 1}</span> ${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}</span>
+      <span class="player-chip"><span class="turn-num">${i + 1}</span> ${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}</span>
     `).join('');
     timerState = {
       endsAt: data.endsAt,
@@ -614,7 +615,7 @@
       btn.type = 'button';
       btn.className = 'vote-option-btn';
       btn.dataset.targetId = p.id;
-      btn.textContent = `${p.avatar || '🙂'} ${p.name}`;
+      btn.innerHTML = `${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}`;
       btn.addEventListener('click', () => {
         selectedVoteTarget = p.id;
         el.voteOptions.querySelectorAll('.vote-option-btn').forEach(b => b.classList.toggle('selected', b === btn));
@@ -653,7 +654,7 @@
 
   function renderTally(tally) {
     el.voteTallyList.innerHTML = tally.map(p => `
-      <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="vote-count">${p.votes} ${voteWord(p.votes)}</span></span>
+      <span class="player-chip">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="vote-count">${p.votes} ${voteWord(p.votes)}</span></span>
     `).join('');
     el.voteTallyField.classList.remove('hidden');
   }
@@ -695,7 +696,7 @@
       let tag = '';
       if (sp.caught === true) tag = '<span class="caught-tag">🎉 поймали</span>';
       else if (sp.caught === false) tag = '<span class="escaped-tag">🕵️ сбежал(а)</span>';
-      return `<span class="player-chip">${escapeHtml(sp.avatar || '🙂')} ${escapeHtml(sp.name)} ${tag}</span>`;
+      return `<span class="player-chip">${window.avatarIcon(sp.avatar)} ${escapeHtml(sp.name)} ${tag}</span>`;
     }).join('');
     el.spyRevealField.classList.remove('hidden');
     el.revealSpyStageBtn.classList.add('hidden');
@@ -718,7 +719,7 @@
 
     const sorted = latestPlayers.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
     el.scoreboardList.innerHTML = sorted.map(p => `
-      <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>
+      <span class="player-chip">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>
     `).join('');
     el.scoreboardField.classList.remove('hidden');
 

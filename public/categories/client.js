@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
   const SESSION_KEY = 'categories_online_session_v1';
 
   const screens = {
@@ -109,8 +109,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -159,7 +160,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -313,7 +314,7 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCountLabel.textContent = room.players.length;
     el.lobbyPlayersList.innerHTML = room.players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${window.avatarIcon(p.avatar)}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     el.lobbyTotalRounds.value = room.settings.totalRounds;
@@ -441,7 +442,7 @@
         const answerText = e.answer && e.answer.length ? escapeHtml(e.answer) : '—';
         const ptsClass = e.points === 2 ? ' pts-2' : (e.points === 1 ? ' pts-1' : '');
         return `<div class="result-entry${e.valid ? '' : ' invalid'}">
-          <span class="result-entry-name"><span>${escapeHtml(e.avatar || '🙂')}</span><span class="rn-name">${escapeHtml(e.name)}</span></span>
+          <span class="result-entry-name"><span>${window.avatarIcon(e.avatar)}</span><span class="rn-name">${escapeHtml(e.name)}</span></span>
           <span class="result-entry-answer">${answerText}</span>
           <span class="points-badge${ptsClass}">${e.points}</span>
         </div>`;
@@ -472,7 +473,7 @@
     el.scoreboardList.innerHTML = sorted.map((p, i) => {
       const medalClass = i === 0 ? ' medal-1' : i === 1 ? ' medal-2' : i === 2 ? ' medal-3' : '';
       const medal = i === 0 ? '🥇 ' : i === 1 ? '🥈 ' : i === 2 ? '🥉 ' : '';
-      return `<span class="player-chip${medalClass}">${medal}${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>`;
+      return `<span class="player-chip${medalClass}">${medal}${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>`;
     }).join('');
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);

@@ -30,7 +30,7 @@
   justify-content: center;
   flex-shrink: 0;
   padding: 0;
-  transition: background .15s ease, transform .12s ease, color .15s ease;
+  transition: background .15s ease, transform .16s cubic-bezier(0.23, 1, 0.32, 1), color .15s ease;
 }
 
 .radio-play-btn:hover {
@@ -38,7 +38,8 @@
 }
 
 .radio-play-btn:active {
-  transform: scale(0.92);
+  transform: scale(0.94);
+  transition-duration: .08s;
 }
 
 .radio-widget.loading .radio-play-btn {

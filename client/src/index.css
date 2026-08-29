@@ -1,0 +1,187 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@theme inline {
+    --font-heading: 'Bricolage Grotesque', 'Inter', sans-serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+    --color-spy: #3aa7ff;
+    --color-mission: #ff5fb0;
+    --color-codenames: #ffc94a;
+    --color-mafia: #ff5a68;
+    --color-wavelength: #8b5cf6;
+    --color-whoami: #22d3ee;
+    --color-nardy: #fb923c;
+    --color-categories: #34d399;
+    --color-crocodile: #4ade80;
+
+    --color-sidebar-ring: var(--sidebar-ring);
+    --color-sidebar-border: var(--sidebar-border);
+    --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+    --color-sidebar-accent: var(--sidebar-accent);
+    --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+    --color-sidebar-primary: var(--sidebar-primary);
+    --color-sidebar-foreground: var(--sidebar-foreground);
+    --color-sidebar: var(--sidebar);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+  Игротека — тёмный сайт без переключения темы (как и все 9 игровых страниц),
+  поэтому семантические токены shadcn заданы сразу под тёмную палитру проекта
+  без отдельного .dark-варианта.
+*/
+:root {
+    --background: #0a0a10;
+    --foreground: #f7f6fb;
+    --card: #131218;
+    --card-foreground: #f7f6fb;
+    --popover: #131218;
+    --popover-foreground: #f7f6fb;
+    --primary: #f7f6fb;
+    --primary-foreground: #0a0a10;
+    --secondary: #191822;
+    --secondary-foreground: #f7f6fb;
+    --muted: #191822;
+    --muted-foreground: rgba(247, 246, 251, 0.62);
+    --accent: #191822;
+    --accent-foreground: #f7f6fb;
+    --destructive: #ff5a68;
+    --border: rgba(255, 255, 255, 0.13);
+    --input: rgba(255, 255, 255, 0.13);
+    --ring: rgba(247, 246, 251, 0.5);
+    --radius: 24px;
+    --sidebar: #131218;
+    --sidebar-foreground: #f7f6fb;
+    --sidebar-primary: #f7f6fb;
+    --sidebar-primary-foreground: #0a0a10;
+    --sidebar-accent: #191822;
+    --sidebar-accent-foreground: #f7f6fb;
+    --sidebar-border: rgba(255, 255, 255, 0.13);
+    --sidebar-ring: rgba(247, 246, 251, 0.5);
+
+    /* Кривые из emil-design-eng, используются и в Motion-конфигах */
+    --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+    --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  html {
+    @apply font-sans;
+    }
+}
+
+/* Плавающий цветной фон хаба — декоративный, поэтому на непрерывных CSS
+   keyframes, а не на Motion (дешевле для браузера, не требует JS-тика). */
+.mesh {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.mesh span {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.32;
+  will-change: transform;
+}
+
+.mesh span:nth-child(1) { width: 380px; height: 380px; top: -140px; left: -120px; background: var(--color-spy); }
+.mesh span:nth-child(2) { width: 340px; height: 340px; top: -100px; right: -140px; background: var(--color-mission); }
+.mesh span:nth-child(3) { width: 360px; height: 360px; bottom: -180px; left: 0%; background: var(--color-codenames); opacity: 0.22; }
+.mesh span:nth-child(4) { width: 320px; height: 320px; bottom: -150px; right: -110px; background: var(--color-mafia); opacity: 0.28; }
+.mesh span:nth-child(5) { width: 300px; height: 300px; top: 28%; left: -150px; background: var(--color-wavelength); opacity: 0.24; }
+.mesh span:nth-child(6) { width: 300px; height: 300px; top: 18%; right: -160px; background: var(--color-whoami); opacity: 0.24; }
+.mesh span:nth-child(7) { width: 280px; height: 280px; bottom: 6%; left: 32%; background: var(--color-nardy); opacity: 0.2; }
+.mesh span:nth-child(8) { width: 280px; height: 280px; top: -130px; left: 46%; background: var(--color-categories); opacity: 0.2; }
+
+@keyframes floatA {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(14vw, 9vh) scale(1.14); }
+  50%  { transform: translate(5vw, 19vh) scale(0.92); }
+  75%  { transform: translate(-11vw, 7vh) scale(1.07); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatB {
+  0%   { transform: translate(0, 0) scale(1); }
+  25%  { transform: translate(-17vw, 11vh) scale(0.9); }
+  50%  { transform: translate(-8vw, -13vh) scale(1.12); }
+  75%  { transform: translate(11vw, -5vh) scale(0.97); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatC {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(11vw, -15vh) scale(1.1); }
+  66%  { transform: translate(-13vw, -6vh) scale(0.93); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+@keyframes floatD {
+  0%   { transform: translate(0, 0) scale(1); }
+  33%  { transform: translate(-10vw, -11vh) scale(1.12); }
+  66%  { transform: translate(14vw, 10vh) scale(0.9); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+
+.mesh span:nth-child(1) { animation: floatA 26s ease-in-out infinite; }
+.mesh span:nth-child(2) { animation: floatB 32s ease-in-out infinite; animation-delay: -4s; }
+.mesh span:nth-child(3) { animation: floatC 29s ease-in-out infinite; animation-delay: -12s; }
+.mesh span:nth-child(4) { animation: floatD 24s ease-in-out infinite; animation-delay: -7s; }
+.mesh span:nth-child(5) { animation: floatB 30s ease-in-out infinite; animation-delay: -18s; }
+.mesh span:nth-child(6) { animation: floatA 34s ease-in-out infinite; animation-delay: -9s; }
+.mesh span:nth-child(7) { animation: floatD 27s ease-in-out infinite; animation-delay: -3s; }
+.mesh span:nth-child(8) { animation: floatC 22s ease-in-out infinite; animation-delay: -15s; }
+
+.grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mesh span { animation: none !important; }
+}
+
+@media (max-width: 420px) {
+  .mesh span { filter: blur(60px); }
+}

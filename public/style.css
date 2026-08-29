@@ -22,6 +22,19 @@
 
   --radius-lg: 24px;
   --radius-pill: 999px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+
+  /* Шкала отступов — 4px-модуль, всё в макете кратно ей */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
 }
 
 * { box-sizing: border-box; }
@@ -37,7 +50,7 @@ body {
   color: var(--ink);
   min-height: 100vh;
   overflow-x: hidden;
-  padding: 40px 20px 80px;
+  padding: var(--sp-10) var(--sp-5) 80px;
   position: relative;
 }
 
@@ -127,13 +140,13 @@ body {
 
 .hero {
   text-align: center;
-  margin-bottom: 36px;
+  margin-bottom: var(--sp-8);
 }
 
 .hero-mark {
   width: 60px;
   height: 60px;
-  margin: 0 auto 20px;
+  margin: 0 auto var(--sp-5);
   border-radius: 18px;
   background: var(--panel);
   border: 2px solid var(--panel-border);
@@ -148,7 +161,7 @@ body {
   font-weight: 800;
   font-size: 2.7rem;
   letter-spacing: -1.5px;
-  margin: 0 0 14px;
+  margin: 0 0 var(--sp-3);
   color: var(--ink);
 }
 
@@ -176,43 +189,58 @@ body {
 .game-grid {
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--sp-4);
 }
 
 .game-card {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: var(--sp-4);
   background: var(--panel);
   border: 2px solid var(--panel-border);
   border-radius: var(--radius-lg);
-  padding: 18px 20px;
+  padding: var(--sp-5);
   text-decoration: none;
   color: var(--ink);
   cursor: pointer;
-  transform: translateY(0);
-  transition: transform .2s cubic-bezier(.2,.8,.2,1), border-color .2s ease, box-shadow .2s ease;
+  transform: translateY(0) scale(1);
+  transition: transform .2s var(--ease-out), border-color .2s ease, box-shadow .2s ease;
+  opacity: 0;
+  animation: cardEnter .5s var(--ease-out) forwards;
 }
 
-.game-card--spy { --accent: var(--spy); }
-.game-card--mission { --accent: var(--mission); }
-.game-card--codenames { --accent: var(--codenames); }
-.game-card--mafia { --accent: var(--mafia); }
-.game-card--wavelength { --accent: var(--wavelength); }
-.game-card--whoami { --accent: var(--whoami); }
-.game-card--nardy { --accent: var(--nardy); }
-.game-card--categories { --accent: var(--categories); }
-.game-card--crocodile { --accent: var(--crocodile); }
+.game-card--spy { --accent: var(--spy); animation-delay: 0ms; }
+.game-card--mission { --accent: var(--mission); animation-delay: 45ms; }
+.game-card--codenames { --accent: var(--codenames); animation-delay: 90ms; }
+.game-card--mafia { --accent: var(--mafia); animation-delay: 135ms; }
+.game-card--wavelength { --accent: var(--wavelength); animation-delay: 180ms; }
+.game-card--whoami { --accent: var(--whoami); animation-delay: 225ms; }
+.game-card--nardy { --accent: var(--nardy); animation-delay: 270ms; }
+.game-card--crocodile { --accent: var(--crocodile); animation-delay: 315ms; }
+.game-card--categories { --accent: var(--categories); animation-delay: 360ms; }
+
+@keyframes cardEnter {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
 
 .game-card:not(.disabled):hover {
-  transform: translateY(-4px);
+  transform: translateY(-4px) scale(1);
   border-color: var(--accent);
   box-shadow: 0 16px 40px -18px var(--accent);
 }
 
 .game-card:not(.disabled):active {
-  transform: translateY(-1px) scale(0.99);
+  transform: translateY(-1px) scale(0.97);
+  transition-duration: .1s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-card {
+    opacity: 1;
+    animation: none;
+  }
 }
 
 .game-card.disabled {
@@ -242,7 +270,7 @@ body {
   font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.08rem;
-  margin: 0 0 4px;
+  margin: 0 0 var(--sp-1);
   color: var(--ink);
 }
 
@@ -250,7 +278,7 @@ body {
   font-size: 0.83rem;
   font-weight: 400;
   color: var(--ink-soft);
-  margin: 0 0 7px;
+  margin: 0 0 var(--sp-2);
   line-height: 1.42;
 }
 
@@ -281,7 +309,7 @@ body {
   line-height: 1;
   color: var(--accent);
   transform: translateY(-1px);
-  transition: transform .18s ease;
+  transition: transform .18s var(--ease-out);
 }
 
 .game-card:not(.disabled):hover .game-card-status::after {
@@ -297,8 +325,8 @@ body {
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 30px;
+  gap: var(--sp-2);
+  margin-top: var(--sp-8);
   font-size: 0.76rem;
   color: var(--ink-faint);
 }
@@ -307,6 +335,7 @@ body {
   color: var(--ink-faint);
   text-decoration: underline;
   text-underline-offset: 2px;
+  transition: color .15s ease;
 }
 
 .footer-links a:hover {

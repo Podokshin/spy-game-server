@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
   const SESSION_KEY = 'mission_online_session_v1';
 
   const screens = {
@@ -122,8 +122,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -172,7 +173,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -357,7 +358,7 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCountLabel.textContent = room.players.length;
     el.lobbyPlayersList.innerHTML = room.players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${window.avatarIcon(p.avatar)}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     el.lobbyTimerEnabled.checked = room.settings.timerEnabled;
@@ -497,7 +498,7 @@
       btn.type = 'button';
       btn.className = 'vote-option-btn';
       btn.dataset.targetId = p.id;
-      btn.textContent = `${p.avatar || '🙂'} ${p.name}`;
+      btn.innerHTML = `${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}`;
       btn.addEventListener('click', () => {
         selectedGuessTarget = p.id;
         el.guessOptions.querySelectorAll('.vote-option-btn').forEach(b => b.classList.toggle('selected', b === btn));
@@ -563,7 +564,7 @@
   function renderEndScreen(players, partyStandings) {
     const sorted = players.slice().sort((a, b) => (b.score || 0) - (a.score || 0));
     el.scoreboardList.innerHTML = sorted.map(p => `
-      <span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>
+      <span class="player-chip">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="score-value">${p.score || 0}</span></span>
     `).join('');
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);

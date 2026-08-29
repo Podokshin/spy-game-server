@@ -1,7 +1,7 @@
 (() => {
   'use strict';
 
-  const AVATARS = ['🦊', '🐼', '🐵', '🦁', '🐯', '🐨', '🐰', '🦄', '🐲', '🐙', '🦉', '🐺', '🐧', '🦖', '🐝', '🦋', '🐳', '🦅', '🐢', '🐬', '🦔', '🐔', '🐸', '🦈'];
+  const AVATARS = window.AVATAR_KEYS;
   const SESSION_KEY = 'mafia_online_session_v1';
 
   const app = document.getElementById('app');
@@ -120,8 +120,9 @@
     const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'avatar-btn' + (avatar === selectedAvatar ? ' active' : '');
-    btn.textContent = avatar;
-    btn.setAttribute('aria-label', 'Аватар ' + avatar);
+    btn.innerHTML = window.avatarIcon(avatar, 56);
+    btn.dataset.avatar = avatar;
+    btn.setAttribute('aria-label', 'Аватар ' + (window.AVATAR_LABELS[avatar] || avatar));
     btn.addEventListener('click', () => {
       selectedAvatar = avatar;
       el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b === btn));
@@ -174,7 +175,7 @@
     if (partyParams.name) el.playerName.value = partyParams.name;
     if (partyParams.avatar) {
       selectedAvatar = partyParams.avatar;
-      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.textContent === partyParams.avatar));
+      el.avatarGrid.querySelectorAll('.avatar-btn').forEach(b => b.classList.toggle('active', b.dataset.avatar === partyParams.avatar));
     }
     if (partyParams.isHost) {
       socket.emit('create_room', { name: partyParams.name, avatar: partyParams.avatar, partyCode: partyParams.code }, (res) => {
@@ -263,7 +264,7 @@
     el.roomCodeDisplay.textContent = room.code;
     el.playerCount.textContent = room.players.length;
     el.playersList.innerHTML = room.players.map(p => `
-      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${escapeHtml(p.avatar || '🙂')}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
+      <span class="player-chip${p.connected === false ? ' disconnected' : ''}"><span class="player-avatar">${window.avatarIcon(p.avatar)}</span> ${escapeHtml(p.name)}${p.isHost ? ' <span class="host-tag">★ хост</span>' : ''}${p.connected === false ? ' ⏳' : ''}</span>
     `).join('');
 
     const enough = room.players.length >= 4;
@@ -343,7 +344,7 @@
     el.roleHint.textContent = ROLE_HINTS[data.role] || '';
     if (data.role === 'mafia' && data.teammates && data.teammates.length) {
       el.roleTeammates.innerHTML = '<p class="hint">Ваши сообщники: ' +
-        data.teammates.map(t => `${escapeHtml(t.avatar)} ${escapeHtml(t.name)}`).join(', ') + '</p>';
+        data.teammates.map(t => `${window.avatarIcon(t.avatar)} ${escapeHtml(t.name)}`).join(', ') + '</p>';
     } else {
       el.roleTeammates.innerHTML = '';
     }
@@ -372,7 +373,7 @@
 
   // ---------- Night ----------
   function playerBriefChip(p, extra) {
-    return `<span class="player-chip">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}${extra || ''}</span>`;
+    return `<span class="player-chip">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}${extra || ''}</span>`;
   }
 
   socket.on('night_started', (data) => {
@@ -400,7 +401,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'vote-option-btn';
-        btn.innerHTML = `${escapeHtml(t.avatar || '🙂')} ${escapeHtml(t.name)}`;
+        btn.innerHTML = `${window.avatarIcon(t.avatar)} ${escapeHtml(t.name)}`;
         btn.addEventListener('click', () => {
           wrap.querySelectorAll('.vote-option-btn').forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
@@ -416,7 +417,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'vote-option-btn';
-        btn.innerHTML = `${escapeHtml(t.avatar || '🙂')} ${escapeHtml(t.name)}`;
+        btn.innerHTML = `${window.avatarIcon(t.avatar)} ${escapeHtml(t.name)}`;
         btn.addEventListener('click', () => {
           wrap.querySelectorAll('.vote-option-btn').forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
@@ -433,7 +434,7 @@
         const btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'vote-option-btn';
-        btn.innerHTML = `${escapeHtml(t.avatar || '🙂')} ${escapeHtml(t.name)}`;
+        btn.innerHTML = `${window.avatarIcon(t.avatar)} ${escapeHtml(t.name)}`;
         btn.addEventListener('click', () => {
           wrap.querySelectorAll('.vote-option-btn').forEach(b => b.classList.remove('selected'));
           btn.classList.add('selected');
@@ -464,7 +465,7 @@
     stopTicking();
     el.dayRound.textContent = `#${data.round}`;
     el.dayVictimLine.innerHTML = data.victim
-      ? `Ночью погиб(ла): <b>${escapeHtml(data.victim.avatar)} ${escapeHtml(data.victim.name)}</b> — роль: <b>${escapeHtml(data.victim.role)}</b>`
+      ? `Ночью погиб(ла): <b>${window.avatarIcon(data.victim.avatar)} ${escapeHtml(data.victim.name)}</b> — роль: <b>${escapeHtml(data.victim.role)}</b>`
       : 'Этой ночью никто не погиб — доктор угадал, или мафия не смогла договориться.';
     startTicking(el.dayTimerDisplay, data.endsAt);
     el.forceEndDiscussionBtn.classList.toggle('hidden', !isHost);
@@ -484,7 +485,7 @@
       const btn = document.createElement('button');
       btn.type = 'button';
       btn.className = 'vote-option-btn';
-      btn.innerHTML = `${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)}`;
+      btn.innerHTML = `${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)}`;
       btn.addEventListener('click', () => {
         selectedVoteTarget = p.id;
         el.voteOptions.querySelectorAll('.vote-option-btn').forEach(b => b.classList.remove('selected'));
@@ -522,7 +523,7 @@
 
   socket.on('voting_result', ({ eliminated }) => {
     el.voteStatusHint.textContent = eliminated
-      ? `По итогам голосования выбывает: ${eliminated.avatar} ${eliminated.name} (${eliminated.role})`
+      ? `По итогам голосования выбывает: ${window.avatarIcon(eliminated.avatar)} ${eliminated.name} (${eliminated.role})`
       : 'Голоса разделились — никто не выбывает.';
   });
 
@@ -531,7 +532,7 @@
     stopTicking();
     el.endTitle.textContent = winner === 'mafia' ? '🔪 Победила мафия' : '🕊️ Победили мирные жители';
     el.rolesRevealList.innerHTML = roles.map(p => `
-      <span class="player-chip${!p.alive ? ' dead' : ''}">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="role-tag">${escapeHtml(p.role)}</span></span>
+      <span class="player-chip${!p.alive ? ' dead' : ''}">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="role-tag">${escapeHtml(p.role)}</span></span>
     `).join('');
     el.playAgainBtn.classList.toggle('hidden', !isHost);
     el.waitPlayAgainHint.classList.toggle('hidden', isHost);
@@ -607,7 +608,7 @@
       } else if (res.phase === 'day' && res.day) {
         el.dayRound.textContent = `#${res.day.round}`;
         el.dayVictimLine.innerHTML = res.day.victim
-          ? `Ночью погиб(ла): <b>${escapeHtml(res.day.victim.avatar)} ${escapeHtml(res.day.victim.name)}</b> — роль: <b>${escapeHtml(res.day.victim.role)}</b>`
+          ? `Ночью погиб(ла): <b>${window.avatarIcon(res.day.victim.avatar)} ${escapeHtml(res.day.victim.name)}</b> — роль: <b>${escapeHtml(res.day.victim.role)}</b>`
           : 'Этой ночью никто не погиб.';
         startTicking(el.dayTimerDisplay, res.day.endsAt);
         el.forceEndDiscussionBtn.classList.toggle('hidden', !isHost);
@@ -621,7 +622,7 @@
       } else if (res.phase === 'end' && res.gameOver) {
         el.endTitle.textContent = res.gameOver.winner === 'mafia' ? '🔪 Победила мафия' : '🕊️ Победили мирные жители';
         el.rolesRevealList.innerHTML = res.gameOver.roles.map(p => `
-          <span class="player-chip${!p.alive ? ' dead' : ''}">${escapeHtml(p.avatar || '🙂')} ${escapeHtml(p.name)} <span class="role-tag">${escapeHtml(p.role)}</span></span>
+          <span class="player-chip${!p.alive ? ' dead' : ''}">${window.avatarIcon(p.avatar)} ${escapeHtml(p.name)} <span class="role-tag">${escapeHtml(p.role)}</span></span>
         `).join('');
         el.playAgainBtn.classList.toggle('hidden', !isHost);
         el.waitPlayAgainHint.classList.toggle('hidden', isHost);

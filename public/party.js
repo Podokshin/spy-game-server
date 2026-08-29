@@ -21,6 +21,14 @@
     return div.innerHTML;
   }
 
+  // Аватар — ключ картинки (public/avatars/<key>.webp), не эмодзи. Строится
+  // напрямую (не через window.avatarIcon), т.к. party.js подключается и на
+  // React-страницах (Кто я, Категории), где avatar-icons.js не грузится.
+  function avatarImg(key) {
+    return '<img src="/avatars/' + encodeURIComponent(key || 'raccoon') + '.webp" width="20" height="20" alt="" ' +
+      'style="border-radius:50%;object-fit:cover;vertical-align:-4px;">';
+  }
+
   // Если в URL есть ?party=CODE — значит сюда попали через "Следующая игра"
   // из другой мини-игры того же вечера.
   function getPartyParams() {
@@ -62,7 +70,7 @@
       html += '<div class="field party-standings">' +
         '<label>🏅 Общий счёт вечера</label>' +
         '<div class="chip-list">' + standings.map(function (p) {
-          return '<span class="player-chip">' + escapeHtml(p.avatar || '🙂') + ' ' + escapeHtml(p.name) +
+          return '<span class="player-chip">' + avatarImg(p.avatar) + ' ' + escapeHtml(p.name) +
             ' <span class="score-value">' + p.total + '</span></span>';
         }).join('') + '</div></div>';
     }
