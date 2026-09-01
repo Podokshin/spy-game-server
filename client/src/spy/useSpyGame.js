@@ -161,8 +161,8 @@ export function useSpyGame() {
     setTally(t)
   }
 
-  function renderSpies(spies, category) {
-    setSpiesData({ spies, category })
+  function renderSpies(spies, category, decoyTopicName) {
+    setSpiesData({ spies, category, decoyTopicName: decoyTopicName || null })
     setRevealStage(1)
   }
 
@@ -193,7 +193,7 @@ export function useSpyGame() {
         } else if (res.phase === 'end') {
           resetEndScreen()
           if (res.tally) renderTally(res.tally)
-          if (res.revealStage >= 1 && res.spies) renderSpies(res.spies, res.yourRole ? res.yourRole.category : undefined)
+          if (res.revealStage >= 1 && res.spies) renderSpies(res.spies, res.yourRole ? res.yourRole.category : undefined, res.decoyTopicName)
           if (res.revealStage >= 2 && res.topicName) renderTopic(res.topicLabel, res.topicName, res.partyStandings)
           setScreen('end')
         } else if (res.phase === 'skipped' && res.skipped) {
@@ -247,8 +247,8 @@ export function useSpyGame() {
       if (window.fireConfetti) window.fireConfetti()
     }
 
-    function onSpyRevealed({ spies, category }) {
-      renderSpies(spies, category)
+    function onSpyRevealed({ spies, category, decoyTopicName }) {
+      renderSpies(spies, category, decoyTopicName)
     }
 
     function onTopicRevealed({ topicLabel, topicName, partyStandings }) {

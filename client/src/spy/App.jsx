@@ -109,6 +109,7 @@ function LobbyScreen(g) {
   const [category, setCategory] = useState(s.category)
   const [subCategory, setSubCategory] = useState(s.subCategory)
   const [twoSpies, setTwoSpies] = useState(!!s.twoSpies)
+  const [decoyMode, setDecoyMode] = useState(!!s.decoyMode)
   const [timerEnabled, setTimerEnabled] = useState(s.timerEnabled)
   const [timerMinutes, setTimerMinutes] = useState(s.timerMinutes)
 
@@ -116,13 +117,14 @@ function LobbyScreen(g) {
     setCategory(s.category)
     setSubCategory(s.subCategory)
     setTwoSpies(!!s.twoSpies)
+    setDecoyMode(!!s.decoyMode)
     setTimerEnabled(s.timerEnabled)
     setTimerMinutes(s.timerMinutes)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [s.category, s.subCategory, s.twoSpies, s.timerEnabled, s.timerMinutes])
+  }, [s.category, s.subCategory, s.twoSpies, s.decoyMode, s.timerEnabled, s.timerMinutes])
 
   const commit = (overrides) => {
-    const next = { category, subCategory, twoSpies, timerEnabled, timerMinutes, ...overrides }
+    const next = { category, subCategory, twoSpies, decoyMode, timerEnabled, timerMinutes, ...overrides }
     g.pushSettings(next)
   }
 
@@ -164,10 +166,19 @@ function LobbyScreen(g) {
 
       <div className="field">
         <label className="checkbox-field-label">
-          <input type="checkbox" checked={twoSpies} disabled={!g.isHost}
+          <input type="checkbox" checked={twoSpies} disabled={!g.isHost || decoyMode}
             onChange={e => { const v = e.target.checked; setTwoSpies(v); commit({ twoSpies: v }) }} />
           Два шпиона (нужно от 6 игроков)
         </label>
+      </div>
+
+      <div className="field">
+        <label className="checkbox-field-label">
+          <input type="checkbox" checked={decoyMode} disabled={!g.isHost}
+            onChange={e => { const v = e.target.checked; setDecoyMode(v); if (v) setTwoSpies(false); commit({ decoyMode: v, twoSpies: v ? false : twoSpies }) }} />
+          🎭 Двойник — шпион сам не знает, что он шпион
+        </label>
+        {decoyMode && <p className="hint">Шпиону вместо пустой роли достанется похожая, но другая тема (например, вместо «Ким Чен Ын» — «Дональд Трамп»). Работает только с одним шпионом.</p>}
       </div>
 
       <div className="field">
@@ -354,6 +365,9 @@ function EndScreen(g) {
               } />
             ))}
           </div>
+          {g.spiesData.decoyTopicName && (
+            <p className="hint">🎭 Шпион сам не знал, что он шпион — ему казалось, что тема: «{g.spiesData.decoyTopicName}»</p>
+          )}
         </div>
       )}
 
