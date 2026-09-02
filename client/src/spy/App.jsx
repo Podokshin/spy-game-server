@@ -170,19 +170,29 @@ function LobbyScreen(g) {
       </div>
 
       <div className="field">
-        <label className="checkbox-field-label">
-          <input type="checkbox" checked={twoSpies} disabled={!g.isHost || decoyMode}
-            onChange={e => { const v = e.target.checked; setTwoSpies(v); commit({ twoSpies: v }) }} />
-          Два шпиона (нужно от 6 игроков)
-        </label>
+        <button type="button" className={'mode-toggle-btn' + (twoSpies ? ' active' : '')}
+          disabled={!g.isHost || decoyMode}
+          onClick={() => { const v = !twoSpies; setTwoSpies(v); commit({ twoSpies: v }) }}>
+          <span className="mode-toggle-icon">🕵️‍♂️</span>
+          <span className="mode-toggle-text">
+            <span className="mode-toggle-title">Два шпиона</span>
+            <span className="mode-toggle-sub">Нужно от 6 игроков</span>
+          </span>
+          <span className="mode-toggle-switch" aria-hidden="true" />
+        </button>
       </div>
 
       <div className="field">
-        <label className="checkbox-field-label">
-          <input type="checkbox" checked={decoyMode} disabled={!g.isHost}
-            onChange={e => { const v = e.target.checked; setDecoyMode(v); if (v) setTwoSpies(false); commit({ decoyMode: v, twoSpies: v ? false : twoSpies }) }} />
-          🎭 Двойник — шпион сам не знает, что он шпион
-        </label>
+        <button type="button" className={'mode-toggle-btn' + (decoyMode ? ' active' : '')}
+          disabled={!g.isHost}
+          onClick={() => { const v = !decoyMode; setDecoyMode(v); if (v) setTwoSpies(false); commit({ decoyMode: v, twoSpies: v ? false : twoSpies }) }}>
+          <span className="mode-toggle-icon">🎭</span>
+          <span className="mode-toggle-text">
+            <span className="mode-toggle-title">Двойник</span>
+            <span className="mode-toggle-sub">Шпион сам не знает, что он шпион</span>
+          </span>
+          <span className="mode-toggle-switch" aria-hidden="true" />
+        </button>
         {decoyMode && <p className="hint">Шпиону вместо пустой роли достанется похожая, но другая тема (например, вместо «Ким Чен Ын» — «Дональд Трамп»). Работает только с одним шпионом.</p>}
       </div>
 
