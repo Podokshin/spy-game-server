@@ -2,10 +2,11 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'motion/react'
 import { GameCard } from './components/GameCard'
 import HubVideoPanel from './components/HubVideoPanel'
+import JoinRoomModal from './components/JoinRoomModal'
 import { Badge } from '@/components/ui/badge'
 import { GAMES } from './games'
 import { useVideoToggle } from './lib/useVideoToggle'
-import { DeviceMobile, SmileyWink, GameController as GameControllerIcon, ArrowRight } from '@phosphor-icons/react'
+import { DeviceMobile, SmileyWink, GameController as GameControllerIcon, ArrowRight, SignIn } from '@phosphor-icons/react'
 
 const STEPS = [
   { icon: DeviceMobile, text: 'Откройте ссылку или введите код комнаты' },
@@ -47,6 +48,7 @@ function HowToConnect({ glowing }) {
 
 export default function App() {
   const video = useVideoToggle()
+  const [joinOpen, setJoinOpen] = useState(false)
   const [glow, setGlow] = useState(null) // 'games' | 'how' | null — куда сейчас ведёт наведённая/нажатая кнопка
   const glowTimeoutRef = useRef(null)
 
@@ -138,13 +140,20 @@ export default function App() {
                   >
                     Как это работает?
                   </a>
+                  <button
+                    type="button"
+                    onClick={() => setJoinOpen(true)}
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
+                  >
+                    <SignIn size={18} weight="bold" /> Подключиться по коду
+                  </button>
                 </div>
               </section>
 
               <HowToConnect glowing={glow === 'how'} />
             </div>
 
-            <section id="games" className={'cta-glow-target' + (glow === 'games' ? ' is-glowing' : '')}>
+            <section id="games" className={'cta-glow-target rounded-lg border-2 border-transparent p-3 -m-3' + (glow === 'games' ? ' is-glowing' : '')}>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="m-0 font-heading text-[1.05rem] font-bold text-foreground">🎲 Все мини-игры</h2>
                 <Badge variant="outline" className="text-muted-foreground">{GAMES.length} игр</Badge>
@@ -183,6 +192,8 @@ export default function App() {
         ✨ Навайбкодил <b className="font-bold text-foreground">Papaluha</b> ✨
         <span className="shorts-indicator" />
       </div>
+
+      <JoinRoomModal open={joinOpen} onClose={() => setJoinOpen(false)} />
     </MotionConfig>
   )
 }

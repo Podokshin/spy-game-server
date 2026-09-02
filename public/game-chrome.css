@@ -195,9 +195,26 @@ html {
   font-weight: 700;
 }
 
-.gc-video-wrap video {
+.gc-video-wrap {
+  /* На хабе правая колонка растягивается по высоте под левую (align-items:
+     stretch) — а высота видео завязана на его ширину через aspect-ratio, без
+     потолка. На короткой странице (мало карточек/маленький вьюпорт) видео
+     "хотело" быть выше левой колонки, и flexbox расстягивал под него ВСЮ
+     строку — из-за этого хаб на глаз "прыгал" крупнее при включении видео.
+     max-height обрезает рост сверху. aspect-ratio/width/max-height — на
+     самой обёртке, а не на <video>: если их повесить прямо на <video>
+     внутри "flex-1 flex-col" родителя, некоторые браузеры на первом кадре
+     схлопывают его в 0×0 (гонка между stretch-подгонкой ширины и расчётом
+     aspect-ratio) — на обёртке с явным width:100% этой гонки нет. */
   width: 100%;
   aspect-ratio: 9 / 16;
+  max-height: min(600px, 65vh);
+  margin: 0 auto;
+}
+
+.gc-video-wrap video {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
   display: block;
   cursor: pointer;

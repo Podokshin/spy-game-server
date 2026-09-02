@@ -122,26 +122,18 @@
 
 /* Подсветка блока, на который ведёт кнопка в хероe ("Создать комнату" →
    #games, "Как это работает?" → #how) — включается при наведении/фокусе на
-   кнопку и коротко вспыхивает при клике, чтобы было видно, куда она ведёт. */
+   кнопку и коротко вспыхивает при клике, чтобы было видно, куда она ведёт.
+   Та же окантовка + цветная тень, что у карточек игр при наведении (см.
+   GameCard.jsx whileHover) — не радиальное пятно, а именно рамка блока.
+   index.css идёт вне слоя Tailwind-утилит, поэтому эти правила и так
+   перебивают border-border у #how независимо от специфичности. */
 .cta-glow-target {
-  position: relative;
-  isolation: isolate;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.cta-glow-target::before {
-  content: '';
-  position: absolute;
-  inset: -16px;
-  z-index: -1;
-  border-radius: 28px;
-  background: radial-gradient(60% 60% at 50% 50%, color-mix(in srgb, var(--color-spy) 40%, transparent), transparent 72%);
-  opacity: 0;
-  transition: opacity 0.35s ease;
-  pointer-events: none;
-}
-
-.cta-glow-target.is-glowing::before {
-  opacity: 1;
+.cta-glow-target.is-glowing {
+  border-color: var(--color-spy);
+  box-shadow: 0 16px 40px -18px var(--color-spy);
 }
 
 .mesh span:nth-child(1) { width: 380px; height: 380px; top: -140px; left: -120px; background: var(--color-spy); }

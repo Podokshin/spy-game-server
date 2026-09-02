@@ -41,15 +41,29 @@ const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
 
-registerSpyGame(io); // корневой namespace "/" — используется страницей /spy/
-registerMissionGame(io.of('/mission')); // отдельный namespace — используется страницей /mission/
-registerCodenamesGame(io.of('/codenames')); // отдельный namespace — используется страницей /codenames/
-registerMafiaGame(io.of('/mafia')); // отдельный namespace — используется страницей /mafia/
-registerWavelengthGame(io.of('/wavelength')); // отдельный namespace — используется страницей /wavelength/
-registerWhoamiGame(io.of('/whoami')); // отдельный namespace — используется страницей /whoami/
-registerCategoriesGame(io.of('/categories')); // отдельный namespace — используется страницей /categories/
-registerNardyGame(io.of('/nardy')); // отдельный namespace — используется страницей /nardy/
-registerCrocodileGame(io.of('/crocodile')); // отдельный namespace — используется страницей /crocodile/
+// Каждая игра хранит свои комнаты в собственной Map (код уникален только
+// внутри игры — у двух разных игр одновременно может быть комната с
+// одинаковым кодом). register*Game возвращает { hasRoom }, чтобы кнопка
+// "Подключиться по коду" на хабе могла определить, в какую игру вести,
+// не зная её заранее (см. /api/find-room ниже).
+const gameRegistry = {
+  spy: registerSpyGame(io), // корневой namespace "/" — используется страницей /spy/
+  mission: registerMissionGame(io.of('/mission')), // используется страницей /mission/
+  codenames: registerCodenamesGame(io.of('/codenames')), // используется страницей /codenames/
+  mafia: registerMafiaGame(io.of('/mafia')), // используется страницей /mafia/
+  wavelength: registerWavelengthGame(io.of('/wavelength')), // используется страницей /wavelength/
+  whoami: registerWhoamiGame(io.of('/whoami')), // используется страницей /whoami/
+  categories: registerCategoriesGame(io.of('/categories')), // используется страницей /categories/
+  nardy: registerNardyGame(io.of('/nardy')), // используется страницей /nardy/
+  crocodile: registerCrocodileGame(io.of('/crocodile')), // используется страницей /crocodile/
+};
+
+app.get('/api/find-room', (req, res) => {
+  const code = (req.query.code || '').toString().toUpperCase().trim();
+  if (!code) return res.json({ slug: null });
+  const slug = Object.keys(gameRegistry).find((key) => gameRegistry[key].hasRoom(code));
+  res.json({ slug: slug || null });
+});
 
 server.listen(PORT, () => {
   console.log(`Игротека запущена: http://localhost:${PORT}`);
