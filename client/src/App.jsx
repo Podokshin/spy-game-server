@@ -15,27 +15,27 @@ const STEPS = [
 
 function HowToConnect() {
   return (
-    <section id="how" className="mb-8 rounded-lg border-2 border-border bg-card p-5">
+    <section id="how" className="w-full rounded-lg border-2 border-border bg-card p-5 lg:w-[340px] lg:shrink-0">
       <h2 className="m-0 mb-4 font-heading text-[1rem] font-bold text-foreground">Как подключиться?</h2>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+      <div className="flex flex-col gap-4">
         {STEPS.map((s, i) => {
           const Icon = s.icon
           return (
             <Fragment key={i}>
-              <div className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">
+              <div className="flex items-start gap-3">
                 <div
                   className="flex size-11 shrink-0 items-center justify-center rounded-full border-2"
                   style={{ borderColor: 'var(--color-spy)', background: 'color-mix(in srgb, var(--color-spy) 18%, transparent)', color: 'var(--color-spy)' }}
                 >
                   <Icon size={20} weight="bold" />
                 </div>
-                <p className="m-0 pt-1 text-[0.83rem] leading-[1.4] text-muted-foreground sm:pt-0">
+                <p className="m-0 pt-1.5 text-[0.83rem] leading-[1.4] text-muted-foreground">
                   <span className="mr-1 font-bold text-foreground">{i + 1}.</span>
                   {s.text}
                 </p>
               </div>
               {i < STEPS.length - 1 && (
-                <ArrowRight size={18} weight="bold" className="mt-3 hidden shrink-0 text-muted-foreground/50 sm:block" />
+                <ArrowRight size={16} weight="bold" className="-my-1 ml-[18px] rotate-90 text-muted-foreground/50" />
               )}
             </Fragment>
           )
@@ -82,41 +82,43 @@ export default function App() {
 
         <div className="flex items-start gap-6">
           <div className="min-w-0 flex-1">
-            <section className="mb-8">
-              <h1 className="m-0 mb-3 font-heading text-[2rem] leading-[1.1] font-extrabold tracking-[-1px] text-foreground sm:text-[2.6rem]">
-                Мини-игры для<br />
-                <span
-                  style={{
-                    background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))',
-                    WebkitBackgroundClip: 'text',
-                    backgroundClip: 'text',
-                    color: 'transparent',
-                  }}
-                >
-                  дружеской компании
-                </span>
-              </h1>
-              <p className="m-0 mb-5 max-w-[480px] text-[0.98rem] leading-[1.6] text-muted-foreground">
-                Заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.
-              </p>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  href="#games"
-                  className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-heading text-[0.92rem] font-bold text-[#06060a] no-underline"
-                  style={{ background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))' }}
-                >
-                  <GameControllerIcon size={18} weight="bold" /> Создать комнату
-                </a>
-                <a
-                  href="#how"
-                  className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
-                >
-                  Как это работает?
-                </a>
-              </div>
-            </section>
+            <div className="mb-8 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
+              <section className="min-w-0 flex-1">
+                <h1 className="m-0 mb-3 font-heading text-[2rem] leading-[1.1] font-extrabold tracking-[-1px] text-foreground sm:text-[2.6rem]">
+                  Мини-игры для<br />
+                  <span
+                    style={{
+                      background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))',
+                      WebkitBackgroundClip: 'text',
+                      backgroundClip: 'text',
+                      color: 'transparent',
+                    }}
+                  >
+                    дружеской компании
+                  </span>
+                </h1>
+                <p className="m-0 mb-5 max-w-[480px] text-[0.98rem] leading-[1.6] text-muted-foreground">
+                  Заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.
+                </p>
+                <div className="flex flex-wrap gap-3">
+                  <a
+                    href="#games"
+                    className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-heading text-[0.92rem] font-bold text-[#06060a] no-underline"
+                    style={{ background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))' }}
+                  >
+                    <GameControllerIcon size={18} weight="bold" /> Создать комнату
+                  </a>
+                  <a
+                    href="#how"
+                    className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
+                  >
+                    Как это работает?
+                  </a>
+                </div>
+              </section>
 
-            <HowToConnect />
+              <HowToConnect />
+            </div>
 
             <section id="games">
               <div className="mb-4 flex items-center justify-between">
