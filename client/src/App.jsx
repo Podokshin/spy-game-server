@@ -80,10 +80,10 @@ export default function App() {
           </span>
         </header>
 
-        <div className="flex items-start gap-6">
+        <div className="flex items-stretch gap-6">
           <div className="min-w-0 flex-1">
             <div className="mb-8 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
-              <section className="flex min-w-0 flex-1 flex-col justify-center rounded-lg border-2 border-border bg-card p-6">
+              <section className="flex min-w-0 flex-1 flex-col justify-center">
                 <h1 className="m-0 mb-3 font-heading text-[2rem] leading-[1.1] font-extrabold tracking-[-1px] text-foreground sm:text-[2.6rem]">
                   Мини-игры для<br />
                   <span
@@ -144,7 +144,7 @@ export default function App() {
             </div>
           </div>
 
-          <aside className="sticky top-6 hidden w-[300px] shrink-0 xl:block">
+          <aside className="hidden w-[300px] shrink-0 xl:block">
             <HubVideoPanel enabled={video.enabled} />
           </aside>
         </div>
