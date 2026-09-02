@@ -1,4 +1,4 @@
-import { Fragment } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'motion/react'
 import { GameCard } from './components/GameCard'
 import HubVideoPanel from './components/HubVideoPanel'
@@ -13,9 +13,9 @@ const STEPS = [
   { icon: GameControllerIcon, text: 'Играйте и веселитесь вместе с друзьями!' },
 ]
 
-function HowToConnect() {
+function HowToConnect({ glowing }) {
   return (
-    <section id="how" className="w-full rounded-lg border-2 border-border bg-card p-5 lg:w-[340px] lg:shrink-0">
+    <section id="how" className={'cta-glow-target w-full rounded-lg border-2 border-border bg-card p-5 lg:w-[340px] lg:shrink-0' + (glowing ? ' is-glowing' : '')}>
       <h2 className="m-0 mb-4 font-heading text-[1rem] font-bold text-foreground">Как подключиться?</h2>
       <div className="flex flex-col gap-4">
         {STEPS.map((s, i) => {
@@ -47,6 +47,20 @@ function HowToConnect() {
 
 export default function App() {
   const video = useVideoToggle()
+  const [glow, setGlow] = useState(null) // 'games' | 'how' | null — куда сейчас ведёт наведённая/нажатая кнопка
+  const glowTimeoutRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(glowTimeoutRef.current), [])
+
+  function flashGlow(target) {
+    setGlow(target)
+    clearTimeout(glowTimeoutRef.current)
+    glowTimeoutRef.current = setTimeout(() => setGlow((g) => (g === target ? null : g)), 900)
+  }
+
+  function clearGlow(target) {
+    setGlow((g) => (g === target ? null : g))
+  }
 
   return (
     <MotionConfig reducedMotion="user">
@@ -105,22 +119,32 @@ export default function App() {
                     href="#games"
                     className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-heading text-[0.92rem] font-bold text-[#06060a] no-underline"
                     style={{ background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))' }}
+                    onMouseEnter={() => setGlow('games')}
+                    onMouseLeave={() => clearGlow('games')}
+                    onFocus={() => setGlow('games')}
+                    onBlur={() => clearGlow('games')}
+                    onClick={() => flashGlow('games')}
                   >
                     <GameControllerIcon size={18} weight="bold" /> Создать комнату
                   </a>
                   <a
                     href="#how"
                     className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
+                    onMouseEnter={() => setGlow('how')}
+                    onMouseLeave={() => clearGlow('how')}
+                    onFocus={() => setGlow('how')}
+                    onBlur={() => clearGlow('how')}
+                    onClick={() => flashGlow('how')}
                   >
                     Как это работает?
                   </a>
                 </div>
               </section>
 
-              <HowToConnect />
+              <HowToConnect glowing={glow === 'how'} />
             </div>
 
-            <section id="games">
+            <section id="games" className={'cta-glow-target' + (glow === 'games' ? ' is-glowing' : '')}>
               <div className="mb-4 flex items-center justify-between">
                 <h2 className="m-0 font-heading text-[1.05rem] font-bold text-foreground">🎲 Все мини-игры</h2>
                 <Badge variant="outline" className="text-muted-foreground">{GAMES.length} игр</Badge>
