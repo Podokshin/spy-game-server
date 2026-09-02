@@ -370,7 +370,7 @@ export default function App() {
           {g.screen === 'skipped' && <SkippedScreen {...g} />}
         </div>
 
-        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} maxDisplay={12} />
       </div>
 
       <Credit enabled={video.enabled} onToggle={video.toggle} />

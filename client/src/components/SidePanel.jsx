@@ -5,7 +5,7 @@ import PlayerListPanel from './PlayerListPanel'
 // Правая панель игры: либо фоновое видео (когда включено кликом по бейджу
 // внизу и ролики вообще есть), либо, по умолчанию, живой список игроков
 // комнаты. Десктоп-онли — на узких экранах скрывается через CSS.
-export default function SidePanel({ players, videoEnabled }) {
+export default function SidePanel({ players, videoEnabled, maxDisplay }) {
   const [videoFiles, setVideoFiles] = useState([])
 
   useEffect(() => {
@@ -19,7 +19,7 @@ export default function SidePanel({ players, videoEnabled }) {
 
   return (
     <aside className="gc-side-panel">
-      {showVideo ? <VideoPanel files={videoFiles} /> : <PlayerListPanel players={players} />}
+      {showVideo ? <VideoPanel files={videoFiles} /> : <PlayerListPanel players={players} maxDisplay={maxDisplay} />}
     </aside>
   )
 }
