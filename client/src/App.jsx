@@ -1,10 +1,11 @@
+import { Fragment } from 'react'
 import { MotionConfig } from 'motion/react'
 import { GameCard } from './components/GameCard'
 import HubVideoPanel from './components/HubVideoPanel'
 import { Badge } from '@/components/ui/badge'
 import { GAMES } from './games'
 import { useVideoToggle } from './lib/useVideoToggle'
-import { DeviceMobile, SmileyWink, GameController as GameControllerIcon } from '@phosphor-icons/react'
+import { DeviceMobile, SmileyWink, GameController as GameControllerIcon, ArrowRight } from '@phosphor-icons/react'
 
 const STEPS = [
   { icon: DeviceMobile, text: 'Откройте ссылку или введите код комнаты' },
@@ -20,15 +21,23 @@ function HowToConnect() {
         {STEPS.map((s, i) => {
           const Icon = s.icon
           return (
-            <div className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center" key={i}>
-              <div className="flex size-11 shrink-0 items-center justify-center rounded-full border-2 border-border bg-secondary text-foreground">
-                <Icon size={20} weight="bold" />
+            <Fragment key={i}>
+              <div className="flex flex-1 items-start gap-3 sm:flex-col sm:items-center sm:text-center">
+                <div
+                  className="flex size-11 shrink-0 items-center justify-center rounded-full border-2"
+                  style={{ borderColor: 'var(--color-spy)', background: 'color-mix(in srgb, var(--color-spy) 18%, transparent)', color: 'var(--color-spy)' }}
+                >
+                  <Icon size={20} weight="bold" />
+                </div>
+                <p className="m-0 pt-1 text-[0.83rem] leading-[1.4] text-muted-foreground sm:pt-0">
+                  <span className="mr-1 font-bold text-foreground">{i + 1}.</span>
+                  {s.text}
+                </p>
               </div>
-              <p className="m-0 pt-1 text-[0.83rem] leading-[1.4] text-muted-foreground sm:pt-0">
-                <span className="mr-1 font-bold text-foreground">{i + 1}.</span>
-                {s.text}
-              </p>
-            </div>
+              {i < STEPS.length - 1 && (
+                <ArrowRight size={18} weight="bold" className="mt-3 hidden shrink-0 text-muted-foreground/50 sm:block" />
+              )}
+            </Fragment>
           )
         })}
       </div>
