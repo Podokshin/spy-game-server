@@ -18,7 +18,15 @@ const app = express();
 // (немигрированные игры, /radio.js, /shorts.js, /videos и т.д.), продолжает
 // отдаваться из public/ как раньше.
 app.use(express.static(path.join(__dirname, 'client', 'dist')));
-app.use(express.static(path.join(__dirname, 'public')));
+// no-cache (не "без кэша", а "всегда перепроверяй у сервера") — файлы в
+// public/ (game-chrome.css, party.js, shorts.css и т.п.) отдаются по
+// постоянному пути без версии/хэша в URL, поэтому без явного заголовка
+// браузер может закэшировать их эвристически надолго и не увидеть правку
+// даже после деплоя. Собранные Vite-ассеты в client/dist себя так не ведут —
+// у них хэш в имени файла, там кэш сам сбрасывается на каждой сборке.
+app.use(express.static(path.join(__dirname, 'public'), {
+  setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache')
+}));
 
 const VIDEO_EXT = /\.(mp4|webm|mov)$/i;
 app.get('/api/videos', (req, res) => {
