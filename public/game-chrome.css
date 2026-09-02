@@ -94,7 +94,9 @@
 
 .gc-players-panel,
 .gc-video-wrap {
-  background: var(--panel);
+  /* Фолбэк на --card: на хабе (Tailwind-токены) нет переменной --panel,
+     а в 9 играх --card не определена — так работает в обоих контекстах. */
+  background: var(--panel, var(--card));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   overflow: hidden;

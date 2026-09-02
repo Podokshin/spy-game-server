@@ -35,8 +35,10 @@ export default defineConfig({
       // отдаёт server.js fallback на public/.
       '/radio.js': 'http://localhost:3000',
       '/radio.css': 'http://localhost:3000',
-      '/shorts.js': 'http://localhost:3000',
+      // shorts.js больше нигде не подключается (видео теперь React-панель
+      // справа), но shorts.css остаётся — оттуда стили клика по .credit.
       '/shorts.css': 'http://localhost:3000',
+      '/game-chrome.css': 'http://localhost:3000',
       // Каждая мигрированная игра переиспользует свой существующий
       // public/<game>/style.css (вёрстка уже была в порядке, менять её не
       // просили) — в dev его тоже нужно явно проксировать.
