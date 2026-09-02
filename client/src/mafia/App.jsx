@@ -16,6 +16,7 @@ import Header from '../components/Header'
 import Credit from '../components/Credit'
 import SidePanel from '../components/SidePanel'
 import { useVideoToggle } from '../lib/useVideoToggle'
+import RulesPanel from './RulesPanel'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
 const ROLE_LABELS_RU = { mafia: 'мафия', sheriff: 'шериф', doctor: 'доктор', civilian: 'мирный житель' }
@@ -347,6 +348,8 @@ export default function App() {
       <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
       <div className="gc-body">
+        <RulesPanel />
+
         <div id="app">
           {showSkipButton && (
             <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>

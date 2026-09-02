@@ -12,6 +12,7 @@ import Header from '../components/Header'
 import Credit from '../components/Credit'
 import SidePanel from '../components/SidePanel'
 import { useVideoToggle } from '../lib/useVideoToggle'
+import RulesPanel from './RulesPanel'
 import { mountNardyBoard } from './boardIsland'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
@@ -264,6 +265,8 @@ export default function App() {
       <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
       <div className="gc-body">
+        <RulesPanel />
+
         <div id="app" className={wide ? 'wide' : ''}>
           {g.screen === 'menu' && <MenuScreen {...g} />}
           {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
