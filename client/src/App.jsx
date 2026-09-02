@@ -16,7 +16,7 @@ const STEPS = [
 
 function HowToConnect({ glowing }) {
   return (
-    <section id="how" className={'cta-glow-target w-full rounded-lg border-2 border-border bg-card p-5 lg:w-[340px] lg:shrink-0' + (glowing ? ' is-glowing' : '')}>
+    <section id="how" className={'cta-glow-target w-full self-center rounded-lg border-2 border-border bg-card p-5 lg:w-[340px] lg:shrink-0' + (glowing ? ' is-glowing' : '')}>
       <h2 className="m-0 mb-4 font-heading text-[1rem] font-bold text-foreground">Как подключиться?</h2>
       <div className="flex flex-col gap-4">
         {STEPS.map((s, i) => {
