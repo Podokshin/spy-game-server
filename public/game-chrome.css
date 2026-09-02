@@ -1,0 +1,244 @@
+/* Общая "рамка" вокруг игр: шапка (лого/хаб/счёт) + боковая панель справа
+   (фоновое видео ↔ живой список игроков). Подключается на всех 9 играх,
+   поверх их собственного style.css — использует только те CSS-переменные,
+   которые уже определены в :root каждой игры (--bg/--panel/--accent/...). */
+
+.gc-page {
+  width: 100%;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.gc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 20px;
+  margin-bottom: 24px;
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.gc-header-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gc-header-nav {
+  display: flex;
+  gap: 8px;
+}
+
+.gc-header-nav-item {
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: var(--font-label);
+  font-weight: 600;
+  font-size: 0.82rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.gc-header-nav-item.active {
+  background: var(--panel-2);
+  color: var(--text);
+}
+
+.gc-header-nav-item.link {
+  color: var(--muted);
+  border: 2px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.gc-header-nav-item.link:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.gc-header-score {
+  background: var(--panel-2);
+  border: 2px solid var(--border);
+  border-radius: 999px;
+  padding: 7px 16px;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent);
+  white-space: nowrap;
+}
+
+.gc-body {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.gc-body > #app {
+  padding-bottom: 32px;
+}
+
+.gc-side-panel {
+  display: none; /* по умолчанию скрыто, показываем только на широких экранах */
+}
+
+.gc-players-panel,
+.gc-video-wrap {
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.gc-players-panel {
+  padding: 16px;
+}
+
+.gc-players-header {
+  font-family: var(--font-label);
+  font-size: 0.75rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.gc-players-count {
+  color: var(--text);
+}
+
+.gc-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.gc-player-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: var(--panel-2);
+  font-size: 0.85rem;
+}
+
+.gc-player-row.disconnected {
+  opacity: 0.5;
+}
+
+.gc-player-avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.gc-player-name {
+  flex: 1;
+  color: var(--text);
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gc-player-score {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.gc-video-wrap video {
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  object-fit: cover;
+  display: block;
+  cursor: pointer;
+}
+
+.gc-rules-panel {
+  display: none; /* по умолчанию скрыто, показываем только на широких экранах (см. wavelength/style.css) */
+  background: var(--panel);
+  border: 2px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px;
+}
+
+.gc-rules-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text);
+  margin: 0 0 14px;
+}
+
+.gc-rules-step {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.gc-rules-step-num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--panel-2);
+  color: var(--accent);
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+}
+
+.gc-rules-step-title {
+  font-weight: 700;
+  color: var(--text);
+  font-size: 0.88rem;
+  margin: 0 0 2px;
+}
+
+.gc-rules-step-body {
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.gc-rules-tip {
+  background: var(--panel-2);
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.gc-side-panel,
+.gc-rules-panel {
+  width: 280px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 24px;
+}
+
+@media (min-width: 1180px) {
+  .gc-side-panel,
+  .gc-rules-panel {
+    display: block;
+  }
+}

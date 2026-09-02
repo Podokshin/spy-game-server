@@ -15,6 +15,10 @@ import {
   PaperPlaneRight,
 } from '@phosphor-icons/react'
 import { AVATARS, useCrocodileGame } from './useCrocodileGame'
+import Header from '../components/Header'
+import Credit from '../components/Credit'
+import SidePanel from '../components/SidePanel'
+import { useVideoToggle } from '../lib/useVideoToggle'
 import { mountDrawingIsland } from './drawingIsland'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
@@ -344,19 +348,29 @@ function SkippedScreen(g) {
 
 export default function App() {
   const g = useCrocodileGame()
+  const video = useVideoToggle()
   const wide = g.screen === 'drawing'
+  const me = g.currentRoom?.players.find(p => p.id === g.myPlayerId)
 
   return (
-    <div id="app" className={wide ? 'wide' : ''}>
-      {g.screen === 'menu' && <MenuScreen {...g} />}
-      {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
-      {g.screen === 'choosing' && g.choosingData && <ChoosingScreen {...g} />}
-      {g.screen === 'drawing' && g.drawingRoundData && <DrawingScreen {...g} />}
-      {g.screen === 'reveal' && g.revealData && <RevealScreen {...g} />}
-      {g.screen === 'end' && g.endData && <EndScreen {...g} />}
-      {g.screen === 'skipped' && <SkippedScreen {...g} />}
+    <div className="gc-page">
+      <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
-      <div className="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+      <div className="gc-body">
+        <div id="app" className={wide ? 'wide' : ''}>
+          {g.screen === 'menu' && <MenuScreen {...g} />}
+          {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
+          {g.screen === 'choosing' && g.choosingData && <ChoosingScreen {...g} />}
+          {g.screen === 'drawing' && g.drawingRoundData && <DrawingScreen {...g} />}
+          {g.screen === 'reveal' && g.revealData && <RevealScreen {...g} />}
+          {g.screen === 'end' && g.endData && <EndScreen {...g} />}
+          {g.screen === 'skipped' && <SkippedScreen {...g} />}
+        </div>
+
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+      </div>
+
+      <Credit enabled={video.enabled} onToggle={video.toggle} />
     </div>
   )
 }

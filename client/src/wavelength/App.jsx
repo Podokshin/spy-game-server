@@ -11,6 +11,11 @@ import {
   Check,
 } from '@phosphor-icons/react'
 import { AVATARS, GUESS_TIME_MS, useWavelengthGame } from './useWavelengthGame'
+import Header from '../components/Header'
+import Credit from '../components/Credit'
+import SidePanel from '../components/SidePanel'
+import { useVideoToggle } from '../lib/useVideoToggle'
+import RulesPanel from './RulesPanel'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
 
@@ -204,7 +209,8 @@ function ClueScreen(g) {
 
         <div className="field">
           <label htmlFor="clueInput">Ваша подсказка (одна фраза)</label>
-          <input type="text" id="clueInput" maxLength={40} placeholder='Например: «почти как отпуск»' value={text} onChange={e => setText(e.target.value)} disabled={submitted} />
+          <input type="text" id="clueInput" maxLength={120} placeholder='Например: «почти как отпуск»' value={text} onChange={e => setText(e.target.value)} disabled={submitted} />
+          <span className="char-counter">{text.length}/120</span>
         </div>
         <button className="primary-btn" disabled={submitted} onClick={() => { const t = text.trim(); if (!t) return; setSubmitted(true); g.submitClue(t) }}>Дать подсказку</button>
 
@@ -382,25 +388,38 @@ function SkippedScreen(g) {
 
 export default function App() {
   const g = useWavelengthGame()
+  const video = useVideoToggle()
   const showSkipButton = ['clue', 'guess', 'reveal'].includes(g.screen)
 
   return (
-    <div id="app">
-      {showSkipButton && (
-        <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
-          <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
-        </button>
-      )}
+    <div className="gc-page">
+      {/* «Волна» — счёт командный, а не личный (player.score в этой игре не
+          используется), поэтому бейдж счёта в шапке здесь не показываем. */}
+      <Header />
 
-      {g.screen === 'menu' && <MenuScreen {...g} />}
-      {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
-      {g.screen === 'clue' && g.clueData && <ClueScreen {...g} key={g.clueData.round + g.clueData.mode} />}
-      {g.screen === 'guess' && g.guessData && <GuessScreen {...g} key={g.guessData.round} />}
-      {g.screen === 'reveal' && g.revealData && <RevealScreen {...g} />}
-      {g.screen === 'end' && g.endData && <EndScreen {...g} />}
-      {g.screen === 'skipped' && <SkippedScreen {...g} />}
+      <div className="gc-body">
+        <RulesPanel />
 
-      <div className="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+        <div id="app">
+          {showSkipButton && (
+            <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
+              <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
+            </button>
+          )}
+
+          {g.screen === 'menu' && <MenuScreen {...g} />}
+          {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
+          {g.screen === 'clue' && g.clueData && <ClueScreen {...g} key={g.clueData.round + g.clueData.mode} />}
+          {g.screen === 'guess' && g.guessData && <GuessScreen {...g} key={g.guessData.round} />}
+          {g.screen === 'reveal' && g.revealData && <RevealScreen {...g} />}
+          {g.screen === 'end' && g.endData && <EndScreen {...g} />}
+          {g.screen === 'skipped' && <SkippedScreen {...g} />}
+        </div>
+
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+      </div>
+
+      <Credit enabled={video.enabled} onToggle={video.toggle} />
     </div>
   )
 }

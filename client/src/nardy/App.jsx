@@ -8,6 +8,10 @@ import {
   Check,
 } from '@phosphor-icons/react'
 import { AVATARS, useNardyGame } from './useNardyGame'
+import Header from '../components/Header'
+import Credit from '../components/Credit'
+import SidePanel from '../components/SidePanel'
+import { useVideoToggle } from '../lib/useVideoToggle'
 import { mountNardyBoard } from './boardIsland'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
@@ -251,17 +255,27 @@ function SkippedScreen(g) {
 
 export default function App() {
   const g = useNardyGame()
+  const video = useVideoToggle()
   const wide = g.screen === 'board'
+  const me = g.currentRoom?.players.find(p => p.id === g.myPlayerId)
 
   return (
-    <div id="app" className={wide ? 'wide' : ''}>
-      {g.screen === 'menu' && <MenuScreen {...g} />}
-      {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
-      {g.screen === 'board' && g.boardInitialState && <BoardScreen {...g} />}
-      {g.screen === 'end' && g.endData && <EndScreen {...g} />}
-      {g.screen === 'skipped' && <SkippedScreen {...g} />}
+    <div className="gc-page">
+      <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
-      <div className="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+      <div className="gc-body">
+        <div id="app" className={wide ? 'wide' : ''}>
+          {g.screen === 'menu' && <MenuScreen {...g} />}
+          {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
+          {g.screen === 'board' && g.boardInitialState && <BoardScreen {...g} />}
+          {g.screen === 'end' && g.endData && <EndScreen {...g} />}
+          {g.screen === 'skipped' && <SkippedScreen {...g} />}
+        </div>
+
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+      </div>
+
+      <Credit enabled={video.enabled} onToggle={video.toggle} />
     </div>
   )
 }

@@ -10,6 +10,10 @@ import {
   Confetti,
 } from '@phosphor-icons/react'
 import { AVATARS, subcategoryMetaFor, useSpyGame } from './useSpyGame'
+import Header from '../components/Header'
+import Credit from '../components/Credit'
+import SidePanel from '../components/SidePanel'
+import { useVideoToggle } from '../lib/useVideoToggle'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
 
@@ -413,25 +417,35 @@ function SkippedScreen(g) {
 
 export default function App() {
   const g = useSpyGame()
+  const video = useVideoToggle()
   const showSkipButton = ['role', 'discussion', 'voting'].includes(g.screen)
+  const me = g.currentRoom?.players.find(p => p.id === g.myPlayerId)
 
   return (
-    <div id="app">
-      {showSkipButton && (
-        <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
-          <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
-        </button>
-      )}
+    <div className="gc-page">
+      <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
-      {g.screen === 'menu' && <MenuScreen {...g} />}
-      {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
-      {g.screen === 'role' && g.roleData && <RoleScreen {...g} />}
-      {g.screen === 'discussion' && g.discussionData && <DiscussionScreen {...g} />}
-      {g.screen === 'voting' && g.votingPlayers && <VotingScreen {...g} />}
-      {g.screen === 'end' && <EndScreen {...g} />}
-      {g.screen === 'skipped' && <SkippedScreen {...g} />}
+      <div className="gc-body">
+        <div id="app">
+          {showSkipButton && (
+            <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
+              <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
+            </button>
+          )}
 
-      <div className="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+          {g.screen === 'menu' && <MenuScreen {...g} />}
+          {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
+          {g.screen === 'role' && g.roleData && <RoleScreen {...g} />}
+          {g.screen === 'discussion' && g.discussionData && <DiscussionScreen {...g} />}
+          {g.screen === 'voting' && g.votingPlayers && <VotingScreen {...g} />}
+          {g.screen === 'end' && <EndScreen {...g} />}
+          {g.screen === 'skipped' && <SkippedScreen {...g} />}
+        </div>
+
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+      </div>
+
+      <Credit enabled={video.enabled} onToggle={video.toggle} />
     </div>
   )
 }

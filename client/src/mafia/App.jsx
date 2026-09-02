@@ -12,6 +12,10 @@ import {
   SkipForward,
 } from '@phosphor-icons/react'
 import { AVATARS, ROLE_HINTS, useMafiaGame } from './useMafiaGame'
+import Header from '../components/Header'
+import Credit from '../components/Credit'
+import SidePanel from '../components/SidePanel'
+import { useVideoToggle } from '../lib/useVideoToggle'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
 const ROLE_LABELS_RU = { mafia: 'мафия', sheriff: 'шериф', doctor: 'доктор', civilian: 'мирный житель' }
@@ -334,26 +338,36 @@ function SkippedScreen(g) {
 
 export default function App() {
   const g = useMafiaGame()
+  const video = useVideoToggle()
   const showSkipButton = ['role', 'night', 'day', 'voting'].includes(g.screen)
+  const me = g.currentRoom?.players.find(p => p.id === g.myPlayerId)
 
   return (
-    <div id="app">
-      {showSkipButton && (
-        <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
-          <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
-        </button>
-      )}
+    <div className="gc-page">
+      <Header score={typeof me?.score === 'number' ? me.score : undefined} />
 
-      {g.screen === 'menu' && <MenuScreen {...g} />}
-      {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
-      {g.screen === 'role' && g.myRole && <RoleScreen {...g} />}
-      {g.screen === 'night' && g.nightData && <NightScreen {...g} key={g.nightData.round} />}
-      {g.screen === 'day' && g.dayData && <DayScreen {...g} key={g.dayData.round} />}
-      {g.screen === 'voting' && g.voteAlive && <VotingScreen {...g} />}
-      {g.screen === 'end' && g.gameOver && <EndScreen {...g} />}
-      {g.screen === 'skipped' && <SkippedScreen {...g} />}
+      <div className="gc-body">
+        <div id="app">
+          {showSkipButton && (
+            <button type="button" className={'skip-vote-btn' + (g.myVoted ? ' voted' : '')} onClick={g.voteSkip}>
+              <SkipForward size={14} weight="bold" style={{ verticalAlign: -2 }} /> Скип ({g.skipVote.votes}/{g.skipVote.needed})
+            </button>
+          )}
 
-      <div className="credit">✨ Навайбкодил <b>Papaluha</b> ✨</div>
+          {g.screen === 'menu' && <MenuScreen {...g} />}
+          {g.screen === 'lobby' && g.currentRoom && <LobbyScreen {...g} />}
+          {g.screen === 'role' && g.myRole && <RoleScreen {...g} />}
+          {g.screen === 'night' && g.nightData && <NightScreen {...g} key={g.nightData.round} />}
+          {g.screen === 'day' && g.dayData && <DayScreen {...g} key={g.dayData.round} />}
+          {g.screen === 'voting' && g.voteAlive && <VotingScreen {...g} />}
+          {g.screen === 'end' && g.gameOver && <EndScreen {...g} />}
+          {g.screen === 'skipped' && <SkippedScreen {...g} />}
+        </div>
+
+        <SidePanel players={g.currentRoom?.players || []} videoEnabled={video.enabled} />
+      </div>
+
+      <Credit enabled={video.enabled} onToggle={video.toggle} />
     </div>
   )
 }

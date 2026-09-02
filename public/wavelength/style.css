@@ -145,6 +145,12 @@ h2 {
   font-weight: 600;
 }
 
+.char-counter {
+  align-self: flex-end;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
 .category-toggle {
   display: flex;
   gap: 8px;
@@ -488,11 +494,11 @@ input[type="range"] {
 
 .wave-bar-track {
   position: relative;
-  height: 18px;
+  height: 28px;
   border-radius: 999px;
   background: linear-gradient(90deg, var(--team-red), var(--accent) 50%, var(--team-blue));
   border: 2px solid var(--border);
-  margin: 14px 4px;
+  margin: 20px 4px;
 }
 
 .wave-bar-labels {
@@ -526,11 +532,11 @@ input[type="range"] {
 }
 
 .wave-bar-marker.marker-target {
-  width: 26px;
-  height: 26px;
+  width: 36px;
+  height: 36px;
   background: var(--accent);
-  border: 3px solid var(--text);
-  box-shadow: 0 0 0 4px rgba(139, 92, 246, 0.25);
+  border: 4px solid var(--text);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent) 30%, transparent), 0 6px 16px -4px color-mix(in srgb, var(--accent) 60%, transparent);
   z-index: 4;
 }
 
@@ -552,11 +558,11 @@ input[type="range"] {
 }
 
 .wave-bar-marker.marker-preview {
-  width: 18px;
-  height: 18px;
+  width: 30px;
+  height: 30px;
   background: var(--accent);
   opacity: 0.85;
-  border: 2px solid var(--text);
+  border: 3px solid var(--text);
   z-index: 3;
 }
 
