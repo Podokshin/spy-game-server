@@ -1,4 +1,4 @@
-import { GameController, House } from '@phosphor-icons/react'
+import { House } from '@phosphor-icons/react'
 
 // Общая шапка для всех 9 игр: бренд-лого слева, "Игра"/"Хаб" по центру,
 // счёт справа (если у этой игры вообще есть личный счёт игрока).
@@ -6,7 +6,7 @@ export default function Header({ score }) {
   return (
     <header className="gc-header">
       <a className="gc-header-brand" href="/">
-        <GameController size={22} weight="bold" /> Игротека
+        <img src="/favicon.svg" alt="" width="22" height="22" /> Игротека
       </a>
 
       <nav className="gc-header-nav">
