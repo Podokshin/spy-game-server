@@ -9,6 +9,7 @@ import {
   Check,
   PaperPlaneRight,
   BellRinging,
+  Smiley,
 } from '@phosphor-icons/react'
 import { AVATARS, useSkufGame } from './useSkufGame'
 import Header from '../components/Header'
@@ -18,6 +19,8 @@ import { useVideoToggle } from '../lib/useVideoToggle'
 import RulesPanel from './RulesPanel'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
+
+const QUICK_EMOJIS = ['😂', '❤️', '🔥', '😍', '😅', '🥵', '💀', '😭', '🙄', '😏', '👀', '🍑', '🍆', '💅', '🤡', '🫡', '👑', '💔', '😴', '🤔', '😎', '🥺', '💯', '🎉']
 
 function AvatarIcon({ avatar, size = 20, className }) {
   const key = AVATARS.includes(avatar) ? avatar : AVATARS[0]
@@ -184,9 +187,16 @@ function MessagingScreen(g) {
   const data = g.messagingData
   const { mm, ss, warning } = useCountdown(data.endsAt)
   const [draft, setDraft] = useState('')
+  const [showEmojis, setShowEmojis] = useState(false)
   const others = (g.currentRoom?.players || []).filter(p => p.id !== g.myPlayerId)
   const remaining = 4 - g.totalSentThisNight
   const activeContact = others.find(p => p.id === g.activeContactId)
+
+  function addEmoji(emoji) {
+    setDraft(d => (d + emoji).slice(0, 200))
+  }
+
+  useEffect(() => { setShowEmojis(false) }, [g.activeContactId])
 
   return (
     <section className="screen active">
@@ -211,7 +221,17 @@ function MessagingScreen(g) {
                   <div key={i} className={'chat-bubble ' + (m.from === g.myPlayerId ? 'mine' : 'theirs')}>{m.text}</div>
                 ))}
               </div>
+              {showEmojis && (
+                <div className="emoji-picker">
+                  {QUICK_EMOJIS.map(emoji => (
+                    <button key={emoji} type="button" className="emoji-btn" onClick={() => addEmoji(emoji)}>{emoji}</button>
+                  ))}
+                </div>
+              )}
               <div className="chat-input-row">
+                <button type="button" className={'emoji-toggle-btn' + (showEmojis ? ' active' : '')} onClick={() => setShowEmojis(v => !v)} disabled={remaining <= 0}>
+                  <Smiley size={22} weight={showEmojis ? 'fill' : 'regular'} />
+                </button>
                 <input
                   type="text" maxLength={200} placeholder={remaining > 0 ? 'Написать сообщение…' : 'Лимит сообщений исчерпан'}
                   value={draft} disabled={remaining <= 0}
@@ -233,7 +253,7 @@ function MessagingScreen(g) {
                   const unread = g.unreadByContact[p.id] || 0
                   return (
                     <button key={p.id} type="button" className={'contact-btn' + (count > 0 ? ' has-unread' : '')} onClick={() => g.setActiveContactId(p.id)}>
-                      <AvatarIcon avatar={p.avatar} /> {p.name}
+                      <AvatarIcon avatar={p.avatar} size={30} /> {p.name}
                       {unread > 0
                         ? <span className="unread-badge">{unread}</span>
                         : (count > 0 && <span className="contact-count">{count} сообщ.</span>)}
