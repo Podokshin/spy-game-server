@@ -177,7 +177,7 @@ export default function App() {
             </div>
           </div>
 
-          <aside className="hidden w-[300px] shrink-0 xl:block">
+          <aside className="hidden w-[clamp(300px,26vw,480px)] shrink-0 xl:block">
             <HubVideoPanel enabled={video.enabled} />
           </aside>
         </div>
