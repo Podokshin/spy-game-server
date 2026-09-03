@@ -249,7 +249,7 @@ html {
      aspect-ratio) — на обёртке с явным width:100% этой гонки нет. */
   width: 100%;
   aspect-ratio: 9 / 16;
-  max-height: min(600px, 65vh);
+  max-height: min(760px, 78vh);
   margin: 0 auto;
 }
 
