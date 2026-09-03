@@ -22,9 +22,16 @@ html {
 .gc-header {
   /* Grid, а не flex + space-between: тот способ центрирует средний элемент
      только когда боковые равны по ширине — а тут слева всегда лого, справа
-     иногда пусто (когда у игры нет личного счёта), и нав съезжал в сторону. */
+     иногда пусто (когда у игры нет личного счёта), и нав съезжал в сторону.
+     minmax(0, 1fr), а не голый 1fr: у голого 1fr неявный минимум — это
+     content-based min-width (auto), а не 0, поэтому на узком мобильном
+     экране колонки с nowrap-текстом (лого, счёт) не сжимались, требовали
+     себе полную ширину текста и раздвигали всю шапку — а с ней и всю
+     страницу — шире экрана (появлялся горизонтальный скролл, "съезжал
+     экран"). С minmax(0, 1fr) колонки могут сжиматься, а текст внутри
+     аккуратно обрезается многоточием (см. text-overflow ниже). */
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
   gap: 16px;
   padding: 12px 20px;
@@ -38,12 +45,23 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
   font-family: var(--font-display);
   font-weight: 800;
   font-size: 1.05rem;
   color: var(--text);
   text-decoration: none;
+}
+
+.gc-header-brand img {
+  flex-shrink: 0;
+}
+
+.gc-header-brand-text {
+  min-width: 0;
+  overflow: hidden;
   white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .gc-header-nav {

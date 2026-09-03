@@ -145,6 +145,19 @@
 .mesh span:nth-child(7) { width: 280px; height: 280px; bottom: 6%; left: 32%; background: var(--color-nardy); opacity: 0.2; }
 .mesh span:nth-child(8) { width: 280px; height: 280px; top: -130px; left: 46%; background: var(--color-categories); opacity: 0.2; }
 
+/* Отступы углового размытия рассчитаны на широкий десктопный экран — на
+   узком мобильном (уже, но не намного ниже) те же пиксельные отступы
+   уводят большую часть блюра за край, и у самого верха/низа экрана видно
+   чистый чёрный фон (особенно заметно там, где над ним нет карточки/текста
+   — в самом начале страницы и в самом её конце). Подтягиваем угловые пятна
+   ближе к краю на мобильных, чтобы размытие доставало до них. */
+@media (max-width: 640px) {
+  .mesh span:nth-child(1) { width: 300px; height: 300px; top: -50px; left: -80px; }
+  .mesh span:nth-child(2) { width: 280px; height: 280px; top: -30px; right: -90px; }
+  .mesh span:nth-child(3) { width: 280px; height: 280px; bottom: -60px; left: -20px; }
+  .mesh span:nth-child(4) { width: 260px; height: 260px; bottom: -50px; right: -60px; }
+}
+
 @keyframes floatA {
   0%   { transform: translate(0, 0) scale(1); }
   25%  { transform: translate(14vw, 9vh) scale(1.14); }

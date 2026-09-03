@@ -6,7 +6,7 @@ export default function Header({ score }) {
   return (
     <header className="gc-header">
       <a className="gc-header-brand" href="/">
-        <img src="/favicon.svg" alt="" width="22" height="22" /> Игротека
+        <img src="/favicon.svg" alt="" width="22" height="22" /> <span className="gc-header-brand-text">Игротека</span>
       </a>
 
       <nav className="gc-header-nav">
