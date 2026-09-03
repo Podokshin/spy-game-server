@@ -124,15 +124,22 @@ html {
   white-space: nowrap;
 }
 
+/* Grid, а не flex + justify-content:center: с флексом боковые колонки
+   центрировались вместе с игрой как единая группа, поэтому визуально
+   "плавали" где-то в середине экрана, а не стояли у краёв прямо под
+   шапкой. С гридом боковые треки — фиксированной ширины (clamp), сразу
+   у краёв, а центральная колонка (игра) — резиновая, занимает весь
+   остаток и может быть шире, чем раньше. */
 .gc-body {
-  display: flex;
-  justify-content: center;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
   align-items: flex-start;
   gap: 24px;
 }
 
 .gc-body > #app {
   padding-bottom: 32px;
+  margin: 0 auto;
 }
 
 .gc-side-panel {
@@ -317,17 +324,18 @@ html {
 
 .gc-side-panel,
 .gc-rules-panel {
-  /* flex-grow/shrink = 0: ширина — чистая функция ширины экрана (через
-     clamp), она не пересчитывается в зависимости от того, что внутри
-     (видео или список игроков) и насколько широк центральный контент.
-     Раньше был flex:1 1 320px — рос под свободное место, и из-за этого
-     при переключении видео/списка игроков колонка на кадр "прыгала". */
-  flex: 0 0 clamp(260px, 26vw, 480px);
   position: sticky;
   top: 24px;
 }
 
 @media (min-width: 1180px) {
+  .gc-body {
+    /* Ширина боковых треков — чистая функция ширины экрана (clamp), не
+       зависит от того, что внутри (видео или список игроков) и насколько
+       широк центральный контент — колонки не "прыгают" при переключениях. */
+    grid-template-columns: clamp(260px, 26vw, 480px) minmax(0, 1fr) clamp(260px, 26vw, 480px);
+  }
+
   .gc-side-panel,
   .gc-rules-panel {
     display: block;
