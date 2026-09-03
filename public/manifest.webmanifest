@@ -1,0 +1,15 @@
+{
+  "name": "Игротека",
+  "short_name": "Игротека",
+  "description": "9 мини-игр для дружеской компании — заходите с телефона по коду комнаты.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0a0a10",
+  "theme_color": "#0a0a10",
+  "lang": "ru",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+  ]
+}
