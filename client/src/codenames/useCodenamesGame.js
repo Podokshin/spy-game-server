@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'codenames_online_session_v1'
@@ -47,6 +48,8 @@ export function useCodenamesGame() {
   const [skipVote, setSkipVote] = useState({ votes: 0, needed: 0, voterIds: [] })
 
   const hasConnectedBefore = useRef(false)
+  const hasStartedBoard = useRef(false)
+  const wasWinner = useRef(false)
   const liveRef = useRef({})
   const me = currentRoom ? currentRoom.players.find(p => p.id === myPlayerId) : null
   const myTeam = me ? me.team : null
@@ -62,11 +65,21 @@ export function useCodenamesGame() {
     if (room.phase === 'lobby') {
       setColorKey(null)
       setGameState(null)
+      hasStartedBoard.current = false
+      wasWinner.current = false
       setScreen('lobby')
     }
   }
 
   function onGameState(gs) {
+    if (!hasStartedBoard.current) {
+      hasStartedBoard.current = true
+      playRoundStartSound()
+    }
+    if (gs.winner && !wasWinner.current) {
+      wasWinner.current = true
+      playResultSound()
+    }
     setGameState(gs)
     setScreen(gs.winner ? 'end' : 'board')
     if (gs.winner && window.fireConfetti) window.fireConfetti()
@@ -172,6 +185,7 @@ export function useCodenamesGame() {
   }, [])
 
   function createRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -180,6 +194,7 @@ export function useCodenamesGame() {
   }
 
   function joinRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')

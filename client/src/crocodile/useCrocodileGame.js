@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'crocodile_online_session_v1'
@@ -162,6 +163,7 @@ export function useCrocodileGame() {
     }
 
     function onRoundStarted(data) {
+      playRoundStartSound()
       const isArtist = data.artistId === liveRef.current.myPlayerId
       setArtistWord(null)
       setChoosingData(null)
@@ -184,6 +186,7 @@ export function useCrocodileGame() {
     }
 
     function onRoundEnded(data) {
+      playResultSound()
       setDrawingRoundData(null)
       setRevealData({ word: data.word, timeUp: data.timeUp, correctGuessers: data.correctGuessers, players: data.players })
       setCurrentRoom(r => (r ? { ...r, players: data.players } : r))
@@ -266,6 +269,7 @@ export function useCrocodileGame() {
   }, [])
 
   function createRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -275,6 +279,7 @@ export function useCrocodileGame() {
   }
 
   function joinRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')

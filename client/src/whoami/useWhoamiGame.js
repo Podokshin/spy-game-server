@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 // Ключи, не эмодзи — рендерятся в кастомные картинки (см. AvatarIcon в App.jsx).
 // Должно совпадать с ALLOWED_AVATARS в lib/shared.js.
@@ -172,8 +173,16 @@ export function useWhoamiGame() {
     }
 
     function onPlayerFinished(data) {
+      if (data.playerId === liveRef.current.myPlayerId) {
+        playResultSound()
+        setHaveIGuessed(true)
+      }
       setFinishedOrder(prev => (prev.includes(data.playerId) ? prev : [...prev, data.playerId]))
-      if (data.playerId === liveRef.current.myPlayerId) setHaveIGuessed(true)
+    }
+
+    function onIdentitiesAssigned(data) {
+      playRoundStartSound()
+      renderAssignedScreen(data)
     }
 
     function onGameFinished(data) {
@@ -199,7 +208,7 @@ export function useWhoamiGame() {
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     socket.on('room_update', onRoomUpdate)
-    socket.on('identities_assigned', renderAssignedScreen)
+    socket.on('identities_assigned', onIdentitiesAssigned)
     socket.on('ready_update', onReadyUpdate)
     socket.on('playing_started', renderPlayingScreen)
     socket.on('player_finished', onPlayerFinished)
@@ -212,7 +221,7 @@ export function useWhoamiGame() {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
       socket.off('room_update', onRoomUpdate)
-      socket.off('identities_assigned', renderAssignedScreen)
+      socket.off('identities_assigned', onIdentitiesAssigned)
       socket.off('ready_update', onReadyUpdate)
       socket.off('playing_started', renderPlayingScreen)
       socket.off('player_finished', onPlayerFinished)
@@ -255,6 +264,7 @@ export function useWhoamiGame() {
 
   // ---------- Actions (вызываются из экранов) ----------
   function createRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -263,6 +273,7 @@ export function useWhoamiGame() {
   }
 
   function joinRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')

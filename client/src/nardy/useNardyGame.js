@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'nardy_online_session_v1'
@@ -115,6 +116,7 @@ export function useNardyGame() {
     }
 
     function onRoundStarted(data) {
+      playRoundStartSound()
       setCurrentRoom(r => (r ? { ...r, players: data.players } : r))
       const me = data.players.find(p => p.id === liveRef.current.myPlayerId)
       if (me) setMyColor(me.color)
@@ -123,6 +125,7 @@ export function useNardyGame() {
     }
 
     function onGameFinished(data) {
+      playResultSound()
       if (data.players) setCurrentRoom(r => (r ? { ...r, players: data.players } : r))
       renderEndScreen(data)
       if (window.fireConfetti) window.fireConfetti()
@@ -186,6 +189,7 @@ export function useNardyGame() {
   }, [])
 
   function createRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -194,6 +198,7 @@ export function useNardyGame() {
   }
 
   function joinRoom() {
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')

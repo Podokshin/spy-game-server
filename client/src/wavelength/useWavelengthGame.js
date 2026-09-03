@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playTimeUpSound, playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'wavelength_online_session_v1'
@@ -25,39 +26,6 @@ function clearSession() {
 
 const DEFAULT_MENU_SUBTITLE = 'Две команды по очереди дают подсказку к секретной точке на шкале — угадайте её точнее соперников.'
 const INVITE_MENU_SUBTITLE = 'Вас пригласили сыграть! Впишите имя, выберите аватар и присоединяйтесь.'
-
-let audioCtx = null
-function getAudioCtx() {
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    audioCtx = Ctx ? new Ctx() : null
-  }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
-  return audioCtx
-}
-function beep(freq, startTime, duration, peakGain) {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
-  osc.type = 'sine'
-  osc.frequency.value = freq
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-  gain.gain.setValueAtTime(0, startTime)
-  gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.02)
-  gain.gain.linearRampToValueAtTime(0, startTime + duration)
-  osc.start(startTime)
-  osc.stop(startTime + duration + 0.02)
-}
-function playTimeUpSound() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const now = ctx.currentTime
-  beep(660, now, 0.16, 0.28)
-  beep(660, now + 0.22, 0.16, 0.28)
-  beep(880, now + 0.44, 0.35, 0.3)
-}
 
 export function useWavelengthGame() {
   const partyParams = window.PartyHub ? window.PartyHub.getPartyParams() : null
@@ -229,7 +197,18 @@ export function useWavelengthGame() {
 
     function onRoundResult(data) {
       if (data.timeUp) playTimeUpSound()
+      playResultSound()
       showRoundResult(data)
+    }
+
+    function onYourClueTurn(data) {
+      playRoundStartSound()
+      renderClueGiver(data)
+    }
+
+    function onRoundStarted(data) {
+      playRoundStartSound()
+      renderClueOther(data)
     }
 
     function onGameFinished(data) {
@@ -249,8 +228,8 @@ export function useWavelengthGame() {
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     socket.on('room_update', onRoomUpdate)
-    socket.on('your_clue_turn', renderClueGiver)
-    socket.on('round_started', renderClueOther)
+    socket.on('your_clue_turn', onYourClueTurn)
+    socket.on('round_started', onRoundStarted)
     socket.on('clue_submitted', onClueSubmitted)
     socket.on('guess_progress', onGuessProgress)
     socket.on('round_result', onRoundResult)
@@ -263,8 +242,8 @@ export function useWavelengthGame() {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
       socket.off('room_update', onRoomUpdate)
-      socket.off('your_clue_turn', renderClueGiver)
-      socket.off('round_started', renderClueOther)
+      socket.off('your_clue_turn', onYourClueTurn)
+      socket.off('round_started', onRoundStarted)
       socket.off('clue_submitted', onClueSubmitted)
       socket.off('guess_progress', onGuessProgress)
       socket.off('round_result', onRoundResult)
@@ -298,7 +277,7 @@ export function useWavelengthGame() {
   }, [])
 
   function createRoom() {
-    getAudioCtx()
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -307,7 +286,7 @@ export function useWavelengthGame() {
   }
 
   function joinRoom() {
-    getAudioCtx()
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')

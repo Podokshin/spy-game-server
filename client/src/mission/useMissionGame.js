@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playTimeUpSound, playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'mission_online_session_v1'
@@ -24,39 +25,6 @@ function clearSession() {
 
 const DEFAULT_MENU_SUBTITLE = 'У каждого своя секретная задача на раунд — выполните её незаметно, а потом угадайте чужие.'
 const INVITE_MENU_SUBTITLE = 'Вас пригласили сыграть! Впишите имя, выберите аватар и присоединяйтесь.'
-
-let audioCtx = null
-function getAudioCtx() {
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    audioCtx = Ctx ? new Ctx() : null
-  }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
-  return audioCtx
-}
-function beep(freq, startTime, duration, peakGain) {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
-  osc.type = 'sine'
-  osc.frequency.value = freq
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-  gain.gain.setValueAtTime(0, startTime)
-  gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.02)
-  gain.gain.linearRampToValueAtTime(0, startTime + duration)
-  osc.start(startTime)
-  osc.stop(startTime + duration + 0.02)
-}
-function playTimeUpSound() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const now = ctx.currentTime
-  beep(660, now, 0.16, 0.28)
-  beep(660, now + 0.22, 0.16, 0.28)
-  beep(880, now + 0.44, 0.35, 0.3)
-}
 
 export function useMissionGame() {
   const partyParams = window.PartyHub ? window.PartyHub.getPartyParams() : null
@@ -132,6 +100,16 @@ export function useMissionGame() {
 
   function showGuessResult(data) {
     setGuessResult(data)
+  }
+
+  function onYourMission(data) {
+    playRoundStartSound()
+    renderMissionCard(data)
+  }
+
+  function onGuessResult(data) {
+    playResultSound()
+    showGuessResult(data)
   }
 
   function renderEndScreen(players, partyStandings) {
@@ -229,14 +207,14 @@ export function useMissionGame() {
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     socket.on('room_update', onRoomUpdate)
-    socket.on('your_mission', renderMissionCard)
+    socket.on('your_mission', onYourMission)
     socket.on('ready_update', onReadyUpdate)
     socket.on('discussion_started', renderDiscussionScreen)
     socket.on('timer_paused', onTimerPaused)
     socket.on('timer_resumed', onTimerResumed)
     socket.on('guessing_started', onGuessingStarted)
     socket.on('guess_vote_update', onGuessVoteUpdate)
-    socket.on('guess_result', showGuessResult)
+    socket.on('guess_result', onGuessResult)
     socket.on('game_finished', onGameFinished)
     socket.on('next_game_selected', onNextGameSelected)
     socket.on('game_skipped', ({ players, partyStandings }) => renderSkippedScreen(players, partyStandings))
@@ -246,14 +224,14 @@ export function useMissionGame() {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
       socket.off('room_update', onRoomUpdate)
-      socket.off('your_mission', renderMissionCard)
+      socket.off('your_mission', onYourMission)
       socket.off('ready_update', onReadyUpdate)
       socket.off('discussion_started', renderDiscussionScreen)
       socket.off('timer_paused', onTimerPaused)
       socket.off('timer_resumed', onTimerResumed)
       socket.off('guessing_started', onGuessingStarted)
       socket.off('guess_vote_update', onGuessVoteUpdate)
-      socket.off('guess_result', showGuessResult)
+      socket.off('guess_result', onGuessResult)
       socket.off('game_finished', onGameFinished)
       socket.off('next_game_selected', onNextGameSelected)
       socket.off('skip_vote_update', onSkipVoteUpdate)
@@ -322,7 +300,7 @@ export function useMissionGame() {
   }
 
   function startGame() {
-    getAudioCtx()
+    unlockAudio()
     socket.emit('start_game')
   }
 

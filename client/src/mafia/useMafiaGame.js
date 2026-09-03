@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'mafia_online_session_v1'
@@ -162,6 +163,7 @@ export function useMafiaGame() {
     }
 
     function onYourRole(data) {
+      playRoundStartSound()
       setMyRole(data)
       setScreen('role')
     }
@@ -171,6 +173,7 @@ export function useMafiaGame() {
     }
 
     function onVotingResult({ eliminated }) {
+      playResultSound()
       setVoteStatusText(eliminated
         ? `По итогам голосования выбывает: ${eliminated.name} (${eliminated.role})`
         : 'Голоса разделились — никто не выбывает.')
@@ -243,6 +246,7 @@ export function useMafiaGame() {
   }, [])
 
   function createRoom() {
+    unlockAudio()
     if (!playerName.trim()) return setMenuError('Введите имя')
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
@@ -252,6 +256,7 @@ export function useMafiaGame() {
   }
 
   function joinRoom() {
+    unlockAudio()
     if (!playerName.trim()) return setMenuError('Введите имя')
     if (!joinCode.trim()) return setMenuError('Введите код комнаты')
     setMenuError('')

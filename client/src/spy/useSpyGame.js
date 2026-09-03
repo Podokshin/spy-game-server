@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
+import { playTimeUpSound, playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'spy_online_session_v1'
@@ -49,39 +50,6 @@ function clearSession() {
 
 const DEFAULT_MENU_SUBTITLE = 'Создайте комнату или присоединитесь по коду — играйте с друзьями, у каждого свой телефон.'
 const INVITE_MENU_SUBTITLE = 'Вас пригласили сыграть! Впишите имя, выберите аватар и присоединяйтесь.'
-
-let audioCtx = null
-function getAudioCtx() {
-  if (!audioCtx) {
-    const Ctx = window.AudioContext || window.webkitAudioContext
-    audioCtx = Ctx ? new Ctx() : null
-  }
-  if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume()
-  return audioCtx
-}
-function beep(freq, startTime, duration, peakGain) {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const osc = ctx.createOscillator()
-  const gain = ctx.createGain()
-  osc.type = 'sine'
-  osc.frequency.value = freq
-  osc.connect(gain)
-  gain.connect(ctx.destination)
-  gain.gain.setValueAtTime(0, startTime)
-  gain.gain.linearRampToValueAtTime(peakGain, startTime + 0.02)
-  gain.gain.linearRampToValueAtTime(0, startTime + duration)
-  osc.start(startTime)
-  osc.stop(startTime + duration + 0.02)
-}
-function playTimeUpSound() {
-  const ctx = getAudioCtx()
-  if (!ctx) return
-  const now = ctx.currentTime
-  beep(660, now, 0.16, 0.28)
-  beep(660, now + 0.22, 0.16, 0.28)
-  beep(880, now + 0.44, 0.35, 0.3)
-}
 
 export function useSpyGame() {
   const partyParams = window.PartyHub ? window.PartyHub.getPartyParams() : null
@@ -241,10 +209,16 @@ export function useSpyGame() {
     }
 
     function onVotingResult({ tally }) {
+      playResultSound()
       renderTally(tally)
       resetEndScreen()
       setScreen('end')
       if (window.fireConfetti) window.fireConfetti()
+    }
+
+    function onYourRole(data) {
+      playRoundStartSound()
+      renderRoleCard(data)
     }
 
     function onSpyRevealed({ spies, category, decoyTopicName }) {
@@ -267,7 +241,7 @@ export function useSpyGame() {
     socket.on('connect', onConnect)
     socket.on('disconnect', onDisconnect)
     socket.on('room_update', onRoomUpdate)
-    socket.on('your_role', renderRoleCard)
+    socket.on('your_role', onYourRole)
     socket.on('ready_update', onReadyUpdate)
     socket.on('discussion_started', renderDiscussionScreen)
     socket.on('timer_paused', onTimerPaused)
@@ -284,7 +258,7 @@ export function useSpyGame() {
       socket.off('connect', onConnect)
       socket.off('disconnect', onDisconnect)
       socket.off('room_update', onRoomUpdate)
-      socket.off('your_role', renderRoleCard)
+      socket.off('your_role', onYourRole)
       socket.off('ready_update', onReadyUpdate)
       socket.off('discussion_started', renderDiscussionScreen)
       socket.off('timer_paused', onTimerPaused)
@@ -322,7 +296,7 @@ export function useSpyGame() {
   }, [])
 
   function createRoom() {
-    getAudioCtx()
+    unlockAudio()
     setMenuError('')
     socket.emit('create_room', { name: playerName, avatar: selectedAvatar, partyCode: partyParams ? partyParams.code : undefined }, (res) => {
       if (!res.ok) return setMenuError('Не удалось создать комнату')
@@ -331,7 +305,7 @@ export function useSpyGame() {
   }
 
   function joinRoom() {
-    getAudioCtx()
+    unlockAudio()
     setMenuError('')
     socket.emit('join_room', { code: joinCode, name: playerName, avatar: selectedAvatar }, (res) => {
       if (!res.ok) return setMenuError(res.error || 'Не удалось присоединиться')
