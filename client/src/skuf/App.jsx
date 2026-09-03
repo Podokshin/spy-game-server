@@ -336,33 +336,106 @@ function DeltaBadge({ value }) {
   return <span className={'match-delta ' + sign}>{value > 0 ? '+' : ''}{value}</span>
 }
 
-function PairStep({ data }) {
+// Тайминги поэтапной сцены "кто кому писал": сперва инициатор, потом
+// адресат, потом переписка реплика за репликой (с "печатает…" перед каждой),
+// и только в конце — взаимно или нет. Целиком по таймеру, без кликов хоста.
+const REVEAL_A_DELAY = 150
+const REVEAL_B_DELAY = 650
+const REVEAL_MESSAGES_START = 1500
+const REVEAL_TYPING_MS = 550
+const REVEAL_MESSAGE_GAP = 350
+const REVEAL_OUTCOME_PAUSE = 650
+
+function TypingIndicator({ side }) {
+  return (
+    <div className={'typing-indicator ' + side}>
+      <span className="typing-dot" /><span className="typing-dot" /><span className="typing-dot" />
+    </div>
+  )
+}
+
+function PairStep({ data, onDone }) {
+  const [stageA, setStageA] = useState(false)
+  const [stageB, setStageB] = useState(false)
+  const [visibleCount, setVisibleCount] = useState(0)
+  const [typingSide, setTypingSide] = useState(null)
+  const [showOutcome, setShowOutcome] = useState(false)
+
+  useEffect(() => {
+    setStageA(false); setStageB(false); setVisibleCount(0); setTypingSide(null); setShowOutcome(false)
+    const timers = []
+    timers.push(setTimeout(() => setStageA(true), REVEAL_A_DELAY))
+    timers.push(setTimeout(() => setStageB(true), REVEAL_B_DELAY))
+
+    let t = REVEAL_MESSAGES_START
+    data.messages.forEach((m, i) => {
+      const side = m.from === data.a.id ? 'theirs' : 'mine'
+      timers.push(setTimeout(() => setTypingSide(side), t))
+      t += REVEAL_TYPING_MS
+      timers.push(setTimeout(() => { setTypingSide(null); setVisibleCount(i + 1) }, t))
+      t += REVEAL_MESSAGE_GAP
+    })
+    timers.push(setTimeout(() => { setShowOutcome(true); onDone && onDone() }, t + REVEAL_OUTCOME_PAUSE))
+
+    return () => timers.forEach(clearTimeout)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data.a.id, data.b.id])
+
+  const isMatch = data.pairKind === 'match'
+
   return (
     <div className="field">
       <div className="pair-reveal-header">
-        <AvatarIcon avatar={data.a.avatar} size={56} className="pair-reveal-avatar" />
-        <span className="pair-reveal-heart">💘</span>
-        <AvatarIcon avatar={data.b.avatar} size={56} className="pair-reveal-avatar" />
-      </div>
-      <p className="pair-reveal-names"><b>{data.a.name}</b> ↔ <b>{data.b.name}</b></p>
-      <div className="chat-thread" style={{ maxHeight: 'none' }}>
-        {data.messages.length === 0 && <p className="hint">Они заматчились, но так и не написали друг другу ни слова.</p>}
-        {data.messages.map((m, i) => (
-          <div key={i} className={'chat-bubble animated ' + (m.from === data.a.id ? 'theirs' : 'mine')} style={{ animationDelay: (i * 0.35) + 's' }}>{m.text}</div>
-        ))}
-      </div>
-      <div className="reveal-log" style={{ marginTop: 12 }}>
-        <div className="match-row matched">
-          <AvatarIcon avatar={data.a.avatar} />
-          <span className="match-outcome"><b>{data.a.name}</b>{data.infectedA && <span className="infection-badge">💊 завербован(а)</span>}</span>
-          <DeltaBadge value={data.a.delta} />
+        <div className={'pair-reveal-side' + (stageA ? ' visible' : '')}>
+          <AvatarIcon avatar={data.a.avatar} size={56} className="pair-reveal-avatar" />
+          <span className="pair-reveal-side-name">{data.a.name}</span>
         </div>
-        <div className="match-row matched">
-          <AvatarIcon avatar={data.b.avatar} />
-          <span className="match-outcome"><b>{data.b.name}</b>{data.infectedB && <span className="infection-badge">💊 завербован(а)</span>}</span>
-          <DeltaBadge value={data.b.delta} />
+        <span className={'pair-reveal-heart' + (showOutcome ? (isMatch ? ' is-match' : ' is-crush') : '')}>
+          {showOutcome ? (isMatch ? '💘' : '💔') : '✉️'}
+        </span>
+        <div className={'pair-reveal-side' + (stageB ? ' visible' : '')}>
+          <AvatarIcon avatar={data.b.avatar} size={56} className="pair-reveal-avatar" />
+          <span className="pair-reveal-side-name">{data.b.name}</span>
         </div>
       </div>
+
+      {stageB && (
+        <p className="pair-reveal-names"><b>{data.a.name}</b> позвал(а) на свидание <b>{data.b.name}</b></p>
+      )}
+
+      {stageB && (
+        <div className="chat-thread" style={{ maxHeight: 'none' }}>
+          {data.messages.length === 0 && visibleCount === 0 && !typingSide && (
+            <p className="hint">Они не обменялись друг с другом ни словом.</p>
+          )}
+          {data.messages.slice(0, visibleCount).map((m, i) => (
+            <div key={i} className={'chat-bubble animated ' + (m.from === data.a.id ? 'theirs' : 'mine')}>{m.text}</div>
+          ))}
+          {typingSide && <TypingIndicator side={typingSide} />}
+        </div>
+      )}
+
+      {showOutcome && (
+        <div className={'pair-outcome' + (isMatch ? '' : ' crush')}>
+          <p className="pair-outcome-text">
+            {isMatch ? 'Взаимно! Свидание состоялось 💘' : <><b>{data.b.name}</b> не ответил(а) взаимностью</>}
+          </p>
+          <div className="reveal-log">
+            <div className={'match-row' + (isMatch ? ' matched' : '')}>
+              <AvatarIcon avatar={data.a.avatar} />
+              <span className="match-outcome"><b>{data.a.name}</b>{data.infectedA && <span className="infection-badge">💊 завербован(а)</span>}</span>
+              <DeltaBadge value={data.a.delta} />
+            </div>
+            {isMatch && (
+              <div className="match-row matched">
+                <AvatarIcon avatar={data.b.avatar} />
+                <span className="match-outcome"><b>{data.b.name}</b>{data.infectedB && <span className="infection-badge">💊 завербован(а)</span>}</span>
+                <DeltaBadge value={data.b.delta} />
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -401,6 +474,13 @@ function RevealScreen(g) {
   const isLastNight = data.night >= data.totalNights
   const finishing = isLastNight || data.mlmWin
 
+  // Для 'pair' кнопка "Дальше" ждёт, пока доиграет сцена (аватарки → чат →
+  // итог) — иначе хост может кликнуть раньше и оборвать анимацию на середине.
+  const [stepReady, setStepReady] = useState(data.kind !== 'pair')
+  useEffect(() => {
+    setStepReady(data.kind !== 'pair')
+  }, [data.stepIndex, data.kind])
+
   return (
     <section className="screen active">
       <h2>Итоги ночи {data.night}</h2>
@@ -408,15 +488,19 @@ function RevealScreen(g) {
       {data.timeUp && data.kind === 'overview' && <p className="hint">Время вышло — доигрывали не все.</p>}
 
       {data.kind === 'overview' && <OverviewStep data={data} />}
-      {data.kind === 'pair' && <PairStep data={data} />}
+      {data.kind === 'pair' && <PairStep key={data.a.id + '-' + data.b.id} data={data} onDone={() => setStepReady(true)} />}
       {data.kind === 'final' && <FinalStep data={data} />}
 
       {g.isHost ? (
-        <button className="primary-btn" onClick={isFinalStep ? g.nextNight : g.nextRevealStep}>
-          {isFinalStep ? (finishing ? 'Завершить игру' : 'Следующая ночь') : 'Дальше'}
-        </button>
+        stepReady ? (
+          <button className="primary-btn" onClick={isFinalStep ? g.nextNight : g.nextRevealStep}>
+            {isFinalStep ? (finishing ? 'Завершить игру' : 'Следующая ночь') : 'Дальше'}
+          </button>
+        ) : (
+          <p className="hint">Досматриваем сцену…</p>
+        )
       ) : (
-        <p className="hint">{isFinalStep ? 'Хост переключит дальше…' : 'Хост покажет следующий шаг…'}</p>
+        <p className="hint">{!stepReady ? 'Досматриваем сцену…' : (isFinalStep ? 'Хост переключит дальше…' : 'Хост покажет следующий шаг…')}</p>
       )}
     </section>
   )
