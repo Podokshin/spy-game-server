@@ -11,7 +11,7 @@
     { key: 'wavelength', name: 'Волна', emoji: '🌊', path: '/wavelength/' },
     { key: 'whoami', name: 'Кто я?', emoji: '❓', path: '/whoami/' },
     { key: 'nardy', name: 'Длинные нарды', emoji: '🎲', path: '/nardy/' },
-    { key: 'crocodile', name: 'Крокодил', emoji: '🐊', path: '/crocodile/' },
+    { key: 'skuf', name: 'Скуф ищет альтушку', emoji: '💘', path: '/skuf/' },
     { key: 'categories', name: 'Категории', emoji: '⚡', path: '/categories/' }
   ];
 
