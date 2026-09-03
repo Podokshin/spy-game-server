@@ -60,8 +60,21 @@ body::before {
 #app {
   width: 100%;
   max-width: 480px;
+  min-width: 0;
   position: relative;
   z-index: 1;
+}
+
+/* Защита от того, что длинное имя/слово без пробелов раздвигает свой
+   flex-родитель шире 480px (а с ним — и всю раскладку с боковыми
+   панелями): без min-width:0 у flex-элементов по умолчанию действует
+   auto-минимум по содержимому, который игнорирует overflow-wrap. */
+.contact-btn, .match-row, .player-chip, .chat-bubble {
+  min-width: 0;
+}
+
+.contact-btn span, .match-outcome, .player-chip {
+  overflow-wrap: anywhere;
 }
 
 .screen {
@@ -436,35 +449,89 @@ input[type="text"]:focus, input[type="number"]:focus {
   color: var(--accent-2);
 }
 
+/* "Телефон" — рамка вокруг переписки на ночном экране, чтобы вся фаза
+   messaging ощущалась как реальный мессенджер, а не карточка настроек. */
+.phone-frame {
+  background: #0c0c11;
+  border: 3px solid #000;
+  border-radius: 34px;
+  padding: 10px 10px 14px;
+  box-shadow: 0 24px 60px -24px rgba(0, 0, 0, 0.65), inset 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
+
+.phone-notch {
+  width: 84px;
+  height: 16px;
+  background: #000;
+  border-radius: 0 0 12px 12px;
+  margin: 0 auto 8px;
+}
+
+.phone-screen {
+  background: var(--panel);
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 340px;
+}
+
+.phone-topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--panel-2);
+  border-bottom: 2px solid var(--border);
+  flex-shrink: 0;
+}
+
+.phone-topbar-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.phone-back-btn {
+  background: none;
+  border: none;
+  color: var(--text);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+}
+
 /* Список контактов для переписки */
 .contact-list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 2px;
+  padding: 6px;
+  overflow-y: auto;
+  flex: 1;
 }
 
 .contact-btn {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: var(--panel-2);
-  border: 2px solid var(--border);
+  background: transparent;
+  border: none;
   border-radius: 14px;
-  padding: 10px 14px;
+  padding: 10px 10px;
   color: var(--text);
   cursor: pointer;
   font-size: 0.95rem;
   font-weight: 600;
   text-align: left;
-  transition: border-color .15s ease, transform .1s ease;
+  transition: background .15s ease, transform .1s ease;
 }
 
 .contact-btn:active {
   transform: scale(0.98);
-}
-
-.contact-btn.has-unread {
-  border-color: var(--accent);
+  background: var(--panel-2);
 }
 
 .contact-btn .contact-count {
@@ -474,6 +541,22 @@ input[type="text"]:focus, input[type="number"]:focus {
   font-weight: 500;
 }
 
+.unread-badge {
+  margin-left: auto;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #06060a;
+  font-size: 0.72rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
 /* Переписка с одним контактом */
 .chat-thread {
   display: flex;
@@ -481,7 +564,8 @@ input[type="text"]:focus, input[type="number"]:focus {
   gap: 8px;
   max-height: 40vh;
   overflow-y: auto;
-  padding: 4px 2px;
+  padding: 12px;
+  flex: 1;
 }
 
 .chat-bubble {
@@ -507,9 +591,23 @@ input[type="text"]:focus, input[type="number"]:focus {
   border-bottom-left-radius: 4px;
 }
 
+.chat-bubble.animated {
+  opacity: 0;
+  animation: fadeInBubble 0.35s ease forwards;
+}
+
+@keyframes fadeInBubble {
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
 .chat-input-row {
   display: flex;
   gap: 8px;
+  padding: 10px;
+  border-top: 2px solid var(--border);
+  background: var(--panel-2);
+  flex-shrink: 0;
 }
 
 .chat-input-row input[type="text"] {
@@ -521,6 +619,97 @@ input[type="text"]:focus, input[type="number"]:focus {
   width: auto;
   padding: 10px 18px;
   flex-shrink: 0;
+}
+
+/* Тосты — уведомление о новом сообщении, пока чат с этим контактом закрыт */
+.toast-stack {
+  position: fixed;
+  top: 64px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(340px, calc(100% - 32px));
+  pointer-events: none;
+}
+
+.toast {
+  background: var(--panel);
+  border: 2px solid var(--accent);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6);
+  animation: toastIn 0.25s ease;
+  pointer-events: auto;
+}
+
+@keyframes toastIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.toast-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.toast-text b {
+  color: var(--text);
+}
+
+/* Поэтапное раскрытие ночи */
+.reveal-progress {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.overview-row {
+  opacity: 0;
+  animation: fadeIn 0.3s ease forwards;
+}
+
+.pair-reveal-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 16px 0 8px;
+}
+
+.pair-reveal-avatar {
+  border-radius: 50%;
+  border: 3px solid var(--border);
+}
+
+.pair-reveal-heart {
+  font-size: 1.8rem;
+  animation: heartPulse 1s ease-in-out infinite;
+}
+
+@keyframes heartPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.25); }
+}
+
+.pair-reveal-names {
+  text-align: center;
+  font-size: 0.95rem;
+  color: var(--muted);
+  margin: 0 0 8px;
+}
+
+.pair-reveal-names b {
+  color: var(--text);
 }
 
 .messages-left-badge {

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
-import { playTimeUpSound, playRoundStartSound, playResultSound, unlockAudio } from '../lib/sound'
+import { playTimeUpSound, playRoundStartSound, playResultSound, playPingSound, unlockAudio } from '../lib/sound'
 
 export const AVATARS = ['bandit', 'viking', 'astronaut', 'scout', 'merc', 'miner', 'alien', 'hero', 'assassin', 'warrior', 'nomad', 'sleepy']
 const SESSION_KEY = 'skuf_online_session_v1'
@@ -57,7 +57,9 @@ export function useSkufGame() {
 
   const [messagingData, setMessagingData] = useState(null)
   const [messagesByContact, setMessagesByContact] = useState({})
-  const [activeContactId, setActiveContactId] = useState(null)
+  const [activeContactId, setActiveContactIdState] = useState(null)
+  const [unreadByContact, setUnreadByContact] = useState({})
+  const [toasts, setToasts] = useState([])
 
   const [pickingData, setPickingData] = useState(null)
   const [myPick, setMyPick] = useState(undefined) // undefined = not chosen yet, null = "никого"
@@ -72,7 +74,18 @@ export function useSkufGame() {
 
   const hasConnectedBefore = useRef(false)
   const liveRef = useRef({})
-  liveRef.current = { currentRoom, myPlayerId, isHost, playerName, selectedAvatar }
+  liveRef.current = { currentRoom, myPlayerId, isHost, playerName, selectedAvatar, activeContactId }
+
+  function setActiveContactId(contactId) {
+    setActiveContactIdState(contactId)
+    if (contactId) setUnreadByContact(prev => (prev[contactId] ? { ...prev, [contactId]: 0 } : prev))
+  }
+
+  function pushToast(toast) {
+    const id = Math.random().toString(36).slice(2)
+    setToasts(prev => [...prev, { ...toast, id }])
+    setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500)
+  }
 
   function applyRoomUpdate(room) {
     const resolvedPlayerId = room.playerId || liveRef.current.myPlayerId
@@ -95,6 +108,8 @@ export function useSkufGame() {
     setMessagingData(data)
     setMessagesByContact(groupByContact(data.myMessages || [], liveRef.current.myPlayerId))
     setActiveContactId(null)
+    setUnreadByContact({})
+    setToasts([])
     setScreen('messaging')
   }
 
@@ -106,7 +121,7 @@ export function useSkufGame() {
     setScreen('picking')
   }
 
-  function renderRevealScreen(data) {
+  function renderRevealStep(data) {
     setRevealData(data)
     setScreen('reveal')
   }
@@ -126,9 +141,9 @@ export function useSkufGame() {
     renderRoleScreen(data)
   }
 
-  function onNightRevealed(data) {
-    playResultSound()
-    renderRevealScreen(data)
+  function onNightRevealStep(data) {
+    if (data.stepIndex === 0) playResultSound()
+    renderRevealStep(data)
   }
 
   useEffect(() => {
@@ -147,7 +162,7 @@ export function useSkufGame() {
         } else if (res.phase === 'picking' && res.picking) {
           renderPickingScreen(res.picking)
         } else if (res.phase === 'reveal' && res.reveal) {
-          renderRevealScreen(res.reveal)
+          renderRevealStep(res.reveal)
         } else if (res.phase === 'end') {
           renderEndScreen({ players: res.players, partyStandings: res.partyStandings, rolesByPlayerId: res.rolesByPlayerId, specialWinner: res.specialWinner || null })
         } else if (res.phase === 'skipped') {
@@ -182,12 +197,26 @@ export function useSkufGame() {
       setReadyHint(prev => (prev !== null ? `Готовы: ${readyCount} из ${total}` : prev))
     }
 
-    function onMessageEvent(msg) {
+    function appendMessage(msg) {
+      const contactId = msg.from === liveRef.current.myPlayerId ? msg.to : msg.from
       setMessagesByContact(prev => {
-        const contactId = msg.from === liveRef.current.myPlayerId ? msg.to : msg.from
         const list = prev[contactId] || []
         return { ...prev, [contactId]: [...list, msg] }
       })
+      return contactId
+    }
+
+    function onMessageSent(msg) {
+      appendMessage(msg)
+    }
+
+    function onMessageReceived(msg) {
+      const contactId = appendMessage(msg)
+      if (liveRef.current.activeContactId === contactId) return
+      playPingSound()
+      setUnreadByContact(prev => ({ ...prev, [contactId]: (prev[contactId] || 0) + 1 }))
+      const sender = (liveRef.current.currentRoom?.players || []).find(p => p.id === contactId)
+      pushToast({ contactId, name: sender ? sender.name : '???', avatar: sender ? sender.avatar : null, text: msg.text })
     }
 
     function onNightMessagingStarted(data) {
@@ -222,11 +251,11 @@ export function useSkufGame() {
     socket.on('your_role', onYourRole)
     socket.on('ready_update', onReadyUpdate)
     socket.on('night_messaging_started', onNightMessagingStarted)
-    socket.on('message_sent', onMessageEvent)
-    socket.on('message_received', onMessageEvent)
+    socket.on('message_sent', onMessageSent)
+    socket.on('message_received', onMessageReceived)
     socket.on('night_picking_started', onNightPickingStarted)
     socket.on('pick_progress', onPickProgress)
-    socket.on('night_revealed', onNightRevealed)
+    socket.on('night_reveal_step', onNightRevealStep)
     socket.on('game_finished', onGameFinished)
     socket.on('next_game_selected', onNextGameSelected)
     socket.on('game_skipped', ({ players, partyStandings }) => renderSkippedScreen(players, partyStandings))
@@ -239,11 +268,11 @@ export function useSkufGame() {
       socket.off('your_role', onYourRole)
       socket.off('ready_update', onReadyUpdate)
       socket.off('night_messaging_started', onNightMessagingStarted)
-      socket.off('message_sent', onMessageEvent)
-      socket.off('message_received', onMessageEvent)
+      socket.off('message_sent', onMessageSent)
+      socket.off('message_received', onMessageReceived)
       socket.off('night_picking_started', onNightPickingStarted)
       socket.off('pick_progress', onPickProgress)
-      socket.off('night_revealed', onNightRevealed)
+      socket.off('night_reveal_step', onNightRevealStep)
       socket.off('game_finished', onGameFinished)
       socket.off('next_game_selected', onNextGameSelected)
       socket.off('skip_vote_update', onSkipVoteUpdate)
@@ -343,6 +372,10 @@ export function useSkufGame() {
     socket.emit('force_finish_picking')
   }
 
+  function nextRevealStep() {
+    socket.emit('next_reveal_step')
+  }
+
   function nextNight() {
     socket.emit('next_night')
   }
@@ -390,10 +423,11 @@ export function useSkufGame() {
     roleData, readyHint, markReady, forceStartNight,
 
     messagingData, messagesByContact, activeContactId, setActiveContactId, sendMessage, totalSentThisNight, forceStartPicking,
+    unreadByContact, toasts,
 
     pickingData, myPick, submitPick, pickSubmitted, pickProgress, forceFinishPicking,
 
-    revealData, nextNight,
+    revealData, nextRevealStep, nextNight,
 
     endData, playAgain,
     skippedData,

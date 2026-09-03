@@ -61,3 +61,12 @@ export function playResultSound() {
   beep(390, now + 0.11, 0.12, 0.22)
   beep(520, now + 0.24, 0.24, 0.28)
 }
+
+// Лёгкий "динь" на входящее сообщение в чатах — короче и тише остальных,
+// чтобы не резать слух при активной переписке.
+export function playPingSound() {
+  const ctx = getAudioCtx()
+  if (!ctx) return
+  const now = ctx.currentTime
+  beep(900, now, 0.09, 0.16)
+}

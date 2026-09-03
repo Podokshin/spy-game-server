@@ -8,6 +8,7 @@ import {
   Link as LinkIcon,
   Check,
   PaperPlaneRight,
+  BellRinging,
 } from '@phosphor-icons/react'
 import { AVATARS, useSkufGame } from './useSkufGame'
 import Header from '../components/Header'
@@ -18,11 +19,11 @@ import RulesPanel from './RulesPanel'
 
 const AVATAR_LABELS = { bandit: 'Разбойник', viking: 'Викинг', astronaut: 'Космонавт', scout: 'Скаут', merc: 'Наёмник', miner: 'Шахтёр', alien: 'Пришелец', hero: 'Герой', assassin: 'Ассасин', warrior: 'Воин', nomad: 'Кочевница', sleepy: 'Соня' }
 
-function AvatarIcon({ avatar, size = 20 }) {
+function AvatarIcon({ avatar, size = 20, className }) {
   const key = AVATARS.includes(avatar) ? avatar : AVATARS[0]
   return (
     <img
-      src={`/avatars/${key}.webp`} width={size} height={size} alt=""
+      src={`/avatars/${key}.webp`} width={size} height={size} alt="" className={className}
       style={{ borderRadius: '50%', objectFit: 'cover', verticalAlign: -4 }}
     />
   )
@@ -165,6 +166,20 @@ function RoleScreen(g) {
   )
 }
 
+function ToastStack(g) {
+  return (
+    <div className="toast-stack">
+      {g.toasts.map(t => (
+        <div key={t.id} className="toast" onClick={() => g.setActiveContactId(t.contactId)}>
+          <AvatarIcon avatar={t.avatar} size={28} />
+          <span className="toast-text"><b>{t.name}</b>: {t.text}</span>
+          <BellRinging size={16} weight="fill" style={{ color: 'var(--accent)', flexShrink: 0 }} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function MessagingScreen(g) {
   const data = g.messagingData
   const { mm, ss, warning } = useCountdown(data.endsAt)
@@ -173,60 +188,67 @@ function MessagingScreen(g) {
   const remaining = 4 - g.totalSentThisNight
   const activeContact = others.find(p => p.id === g.activeContactId)
 
-  if (activeContact) {
-    const thread = g.messagesByContact[activeContact.id] || []
-    return (
-      <section className="screen active">
-        <div className="night-header">
-          <div className="night-num">Ночь {data.night} из {data.totalNights}</div>
-          <div className={'night-timer' + (warning ? ' warning' : '')}>{mm}:{ss}</div>
-        </div>
-        <button type="button" className="link-toggle" onClick={() => g.setActiveContactId(null)}>← Ко всем контактам</button>
-        <div className="field">
-          <label><AvatarIcon avatar={activeContact.avatar} /> {activeContact.name}</label>
-          <div className="chat-thread">
-            {thread.length === 0 && <p className="hint">Сообщений пока нет — начните переписку первым.</p>}
-            {thread.map((m, i) => (
-              <div key={i} className={'chat-bubble ' + (m.from === g.myPlayerId ? 'mine' : 'theirs')}>{m.text}</div>
-            ))}
-          </div>
-          <div className="chat-input-row">
-            <input
-              type="text" maxLength={200} placeholder={remaining > 0 ? 'Написать сообщение…' : 'Лимит сообщений исчерпан'}
-              value={draft} disabled={remaining <= 0}
-              onChange={e => setDraft(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter' && draft.trim() && remaining > 0) { g.sendMessage(activeContact.id, draft); setDraft('') } }}
-            />
-            <button type="button" className="primary-btn" disabled={!draft.trim() || remaining <= 0}
-              onClick={() => { g.sendMessage(activeContact.id, draft); setDraft('') }}>
-              <PaperPlaneRight size={16} weight="bold" />
-            </button>
-          </div>
-        </div>
-        <p className="messages-left-badge">Осталось сообщений на эту ночь: {remaining} из 4</p>
-      </section>
-    )
-  }
-
   return (
     <section className="screen active">
+      <ToastStack {...g} />
       <div className="night-header">
         <div className="night-num">Ночь {data.night} из {data.totalNights}</div>
         <div className={'night-timer' + (warning ? ' warning' : '')}>{mm}:{ss}</div>
       </div>
-      <p className="discuss-hint"><ChatCircleDots size={16} weight="bold" style={{ verticalAlign: -2 }} /> Пишите кому хотите — никто, кроме адресата, не увидит переписку до утра.</p>
+      {!activeContact && (
+        <p className="discuss-hint"><ChatCircleDots size={16} weight="bold" style={{ verticalAlign: -2 }} /> Пишите кому хотите — никто, кроме адресата, не увидит переписку до утра.</p>
+      )}
       <p className="messages-left-badge">Осталось сообщений на эту ночь: {remaining} из 4</p>
 
-      <div className="contact-list">
-        {others.map(p => {
-          const count = (g.messagesByContact[p.id] || []).length
-          return (
-            <button key={p.id} type="button" className={'contact-btn' + (count > 0 ? ' has-unread' : '')} onClick={() => g.setActiveContactId(p.id)}>
-              <AvatarIcon avatar={p.avatar} /> {p.name}
-              {count > 0 && <span className="contact-count">{count} сообщ.</span>}
-            </button>
-          )
-        })}
+      <div className="phone-frame">
+        <div className="phone-notch" />
+        <div className="phone-screen">
+          {activeContact ? (
+            <>
+              <div className="phone-topbar">
+                <button type="button" className="phone-back-btn" onClick={() => g.setActiveContactId(null)}><ArrowLeft size={18} weight="bold" /></button>
+                <AvatarIcon avatar={activeContact.avatar} size={26} />
+                <span className="phone-topbar-title">{activeContact.name}</span>
+              </div>
+              <div className="chat-thread">
+                {(g.messagesByContact[activeContact.id] || []).length === 0 && <p className="hint">Сообщений пока нет — начните переписку первым.</p>}
+                {(g.messagesByContact[activeContact.id] || []).map((m, i) => (
+                  <div key={i} className={'chat-bubble ' + (m.from === g.myPlayerId ? 'mine' : 'theirs')}>{m.text}</div>
+                ))}
+              </div>
+              <div className="chat-input-row">
+                <input
+                  type="text" maxLength={200} placeholder={remaining > 0 ? 'Написать сообщение…' : 'Лимит сообщений исчерпан'}
+                  value={draft} disabled={remaining <= 0}
+                  onChange={e => setDraft(e.target.value)}
+                  onKeyDown={e => { if (e.key === 'Enter' && draft.trim() && remaining > 0) { g.sendMessage(activeContact.id, draft); setDraft('') } }}
+                />
+                <button type="button" className="primary-btn" disabled={!draft.trim() || remaining <= 0}
+                  onClick={() => { g.sendMessage(activeContact.id, draft); setDraft('') }}>
+                  <PaperPlaneRight size={16} weight="bold" />
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="phone-topbar"><span className="phone-topbar-title">Сообщения</span></div>
+              <div className="contact-list">
+                {others.map(p => {
+                  const count = (g.messagesByContact[p.id] || []).length
+                  const unread = g.unreadByContact[p.id] || 0
+                  return (
+                    <button key={p.id} type="button" className={'contact-btn' + (count > 0 ? ' has-unread' : '')} onClick={() => g.setActiveContactId(p.id)}>
+                      <AvatarIcon avatar={p.avatar} /> {p.name}
+                      {unread > 0
+                        ? <span className="unread-badge">{unread}</span>
+                        : (count > 0 && <span className="contact-count">{count} сообщ.</span>)}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
       </div>
 
       {g.isHost && <button className="secondary-btn" onClick={g.forceStartPicking}>Перейти к выбору свидания сейчас</button>}
@@ -268,89 +290,112 @@ function PickingScreen(g) {
   )
 }
 
-function groupConversations(messages, players) {
-  const byId = {}
-  players.forEach(p => { byId[p.id] = p })
-  const pairs = {}
-  const order = []
-  messages.forEach(m => {
-    const key = [m.from, m.to].sort().join('|')
-    if (!pairs[key]) { pairs[key] = []; order.push(key) }
-    pairs[key].push(m)
-  })
-  return order.map(key => {
-    const [aId, bId] = key.split('|')
-    return { a: byId[aId], b: byId[bId], messages: pairs[key] }
-  })
+function OverviewStep({ data }) {
+  return (
+    <div className="field">
+      <label>Кто с кем встречался этой ночью</label>
+      <div className="reveal-log">
+        {data.players.map((p, i) => {
+          const partner = p.matchedWith ? data.players.find(x => x.id === p.matchedWith) : null
+          const outcome = partner ? `💘 Свидание с ${partner.name}` : (p.pickedId ? '🚫 Выбрал(а), но не совпало' : '➖ Никого не выбрал(а)')
+          return (
+            <div key={p.id} className={'match-row overview-row' + (partner ? ' matched' : '')} style={{ animationDelay: (i * 0.08) + 's' }}>
+              <AvatarIcon avatar={p.avatar} />
+              <span className="match-outcome"><b>{p.name}</b> — {outcome}</span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
 }
 
-function RevealScreen(g) {
-  const data = g.revealData
-  const conversations = groupConversations(data.messages, data.players)
-  const isLastNight = data.night >= data.totalNights
+function DeltaBadge({ value }) {
+  const sign = value > 0 ? 'positive' : value < 0 ? 'negative' : 'zero'
+  return <span className={'match-delta ' + sign}>{value > 0 ? '+' : ''}{value}</span>
+}
 
+function PairStep({ data }) {
   return (
-    <section className="screen active">
-      <h2>Итоги ночи {data.night}</h2>
-      {data.timeUp && <p className="hint">Время вышло — доигрывали не все.</p>}
-
-      {data.mlmWin && (
-        <div className="special-win-banner">💊 Все теперь в сети — МЛМ-щица побеждает мгновенно!</div>
-      )}
-
-      {conversations.length > 0 && (
-        <div className="field">
-          <label>Переписка этой ночью</label>
-          <div className="reveal-log">
-            {conversations.map((c, i) => (
-              <div key={i}>
-                <p className="reveal-thread-title"><AvatarIcon avatar={c.a?.avatar} size={14} /> {c.a?.name || '?'} ↔ {c.b?.name || '?'} <AvatarIcon avatar={c.b?.avatar} size={14} /></p>
-                <div className="chat-thread" style={{ maxHeight: 'none' }}>
-                  {c.messages.map((m, j) => (
-                    <div key={j} className={'chat-bubble ' + (m.from === c.a?.id ? 'theirs' : 'mine')}>{m.text}</div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+    <div className="field">
+      <div className="pair-reveal-header">
+        <AvatarIcon avatar={data.a.avatar} size={56} className="pair-reveal-avatar" />
+        <span className="pair-reveal-heart">💘</span>
+        <AvatarIcon avatar={data.b.avatar} size={56} className="pair-reveal-avatar" />
+      </div>
+      <p className="pair-reveal-names"><b>{data.a.name}</b> ↔ <b>{data.b.name}</b></p>
+      <div className="chat-thread" style={{ maxHeight: 'none' }}>
+        {data.messages.length === 0 && <p className="hint">Они заматчились, но так и не написали друг другу ни слова.</p>}
+        {data.messages.map((m, i) => (
+          <div key={i} className={'chat-bubble animated ' + (m.from === data.a.id ? 'theirs' : 'mine')} style={{ animationDelay: (i * 0.35) + 's' }}>{m.text}</div>
+        ))}
+      </div>
+      <div className="reveal-log" style={{ marginTop: 12 }}>
+        <div className="match-row matched">
+          <AvatarIcon avatar={data.a.avatar} />
+          <span className="match-outcome"><b>{data.a.name}</b>{data.infectedA && <span className="infection-badge">💊 завербован(а)</span>}</span>
+          <DeltaBadge value={data.a.delta} />
         </div>
-      )}
-
-      <div className="field">
-        <label>Кто с кем встречался</label>
-        <div className="reveal-log">
-          {data.players.map(p => {
-            const sign = p.delta > 0 ? 'positive' : p.delta < 0 ? 'negative' : 'zero'
-            const partner = p.matchedWith ? data.players.find(x => x.id === p.matchedWith) : null
-            const outcome = partner
-              ? `Свидание с ${partner.name} 💘`
-              : (p.pickedId ? 'Выбрал(а), но не совпало' : 'Никого не выбрал(а)')
-            return (
-              <div key={p.id} className={'match-row' + (partner ? ' matched' : '')}>
-                <AvatarIcon avatar={p.avatar} />
-                <span className="match-outcome"><b>{p.name}</b> — {outcome}
-                  {(data.newlyInfected || []).includes(p.id) && <span className="infection-badge">💊 завербован(а)</span>}
-                </span>
-                <span className={'match-delta ' + sign}>{p.delta > 0 ? '+' : ''}{p.delta}</span>
-              </div>
-            )
-          })}
+        <div className="match-row matched">
+          <AvatarIcon avatar={data.b.avatar} />
+          <span className="match-outcome"><b>{data.b.name}</b>{data.infectedB && <span className="infection-badge">💊 завербован(а)</span>}</span>
+          <DeltaBadge value={data.b.delta} />
         </div>
       </div>
+    </div>
+  )
+}
 
+function FinalStep({ data }) {
+  return (
+    <>
+      {data.mlmWin && <div className="special-win-banner">💊 Все теперь в сети — МЛМ-щица побеждает мгновенно!</div>}
+      <div className="field">
+        <label>Итог ночи</label>
+        <div className="reveal-log">
+          {data.players.map(p => (
+            <div key={p.id} className="match-row">
+              <AvatarIcon avatar={p.avatar} />
+              <span className="match-outcome"><b>{p.name}</b>
+                {(data.newlyInfected || []).includes(p.id) && <span className="infection-badge">💊 завербован(а)</span>}
+              </span>
+              <DeltaBadge value={p.delta} />
+            </div>
+          ))}
+        </div>
+      </div>
       {data.revealedRole && (
         <div className="role-reveal-banner">
           {data.revealedRole.icon} Роль игрока <AvatarIcon avatar={data.revealedRole.playerAvatar} /> <b>{data.revealedRole.playerName}</b> раскрыта:
           {' '}<b>{data.revealedRole.name}</b> — {data.revealedRole.desc}
         </div>
       )}
+    </>
+  )
+}
 
-      {!data.mlmWin && (
-        g.isHost ? (
-          <button className="primary-btn" onClick={g.nextNight}>{isLastNight ? 'Завершить игру' : 'Следующая ночь'}</button>
-        ) : (
-          <p className="hint">Хост переключит на следующую ночь…</p>
-        )
+function RevealScreen(g) {
+  const data = g.revealData
+  const isFinalStep = data.stepIndex >= data.totalSteps - 1
+  const isLastNight = data.night >= data.totalNights
+  const finishing = isLastNight || data.mlmWin
+
+  return (
+    <section className="screen active">
+      <h2>Итоги ночи {data.night}</h2>
+      <p className="reveal-progress">Шаг {data.stepIndex + 1} из {data.totalSteps}</p>
+      {data.timeUp && data.kind === 'overview' && <p className="hint">Время вышло — доигрывали не все.</p>}
+
+      {data.kind === 'overview' && <OverviewStep data={data} />}
+      {data.kind === 'pair' && <PairStep data={data} />}
+      {data.kind === 'final' && <FinalStep data={data} />}
+
+      {g.isHost ? (
+        <button className="primary-btn" onClick={isFinalStep ? g.nextNight : g.nextRevealStep}>
+          {isFinalStep ? (finishing ? 'Завершить игру' : 'Следующая ночь') : 'Дальше'}
+        </button>
+      ) : (
+        <p className="hint">{isFinalStep ? 'Хост переключит дальше…' : 'Хост покажет следующий шаг…'}</p>
       )}
     </section>
   )
