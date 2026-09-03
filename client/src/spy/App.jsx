@@ -197,11 +197,16 @@ function LobbyScreen(g) {
       </div>
 
       <div className="field">
-        <label className="checkbox-field-label">
-          <input type="checkbox" checked={timerEnabled} disabled={!g.isHost}
-            onChange={e => { const v = e.target.checked; setTimerEnabled(v); commit({ timerEnabled: v }) }} />
-          Таймер обсуждения
-        </label>
+        <button type="button" className={'mode-toggle-btn' + (timerEnabled ? ' active' : '')}
+          disabled={!g.isHost}
+          onClick={() => { const v = !timerEnabled; setTimerEnabled(v); commit({ timerEnabled: v }) }}>
+          <span className="mode-toggle-icon">⏱️</span>
+          <span className="mode-toggle-text">
+            <span className="mode-toggle-title">Таймер обсуждения</span>
+            <span className="mode-toggle-sub">Ограничивает время на раунд</span>
+          </span>
+          <span className="mode-toggle-switch" aria-hidden="true" />
+        </button>
       </div>
 
       {timerEnabled && (
