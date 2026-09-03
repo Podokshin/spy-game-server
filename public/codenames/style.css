@@ -22,6 +22,11 @@
   --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
   --font-label: 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  /* Читается game-chrome.css для центрального грид-трека — берём потолок
+     #app.wide (720px), а не обычного #app (620px), иначе на широких
+     экранах сам грид-трек резал бы карточную сетку до 620px. */
+  --app-track-max: 720px;
 }
 
 * { box-sizing: border-box; }
@@ -64,7 +69,7 @@ body::before {
 
 #app {
   width: 100%;
-  max-width: 480px;
+  max-width: 620px;
   position: relative;
   z-index: 1;
   transition: max-width .2s ease;

@@ -16,6 +16,8 @@
   --font-display: 'Bricolage Grotesque', 'Inter', sans-serif;
   --font-label: 'Inter', sans-serif;
   --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --app-track-max: 620px;
 }
 
 * { box-sizing: border-box; }
@@ -54,7 +56,7 @@ body::before {
 
 #app {
   width: 100%;
-  max-width: 480px;
+  max-width: var(--app-track-max);
   position: relative;
   z-index: 1;
 }
