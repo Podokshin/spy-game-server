@@ -195,8 +195,6 @@ function MessagingScreen(g) {
         <div className="night-num">Ночь {data.night} из {data.totalNights}</div>
         <div className={'night-timer' + (warning ? ' warning' : '')}>{mm}:{ss}</div>
       </div>
-      <p className="messages-left-badge">Осталось сообщений на эту ночь: {remaining} из 4</p>
-
       <div className="phone-frame">
         <div className="phone-notch" />
         <div className="phone-screen">
@@ -247,6 +245,8 @@ function MessagingScreen(g) {
           )}
         </div>
       </div>
+
+      <p className="messages-left-badge">Осталось сообщений на эту ночь: {remaining} из 4</p>
 
       {!activeContact && (
         <p className="discuss-hint"><ChatCircleDots size={16} weight="bold" style={{ verticalAlign: -2 }} /> Пишите кому хотите — никто, кроме адресата, не увидит переписку до утра.</p>
