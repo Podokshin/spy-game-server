@@ -13,6 +13,7 @@ const { registerCategoriesGame } = require('./lib/categories-game');
 const { registerNardyGame } = require('./lib/nardy-game');
 const { registerCrocodileGame } = require('./lib/crocodile-game');
 const { registerSkufGame } = require('./lib/skuf-game');
+const { registerWallGame } = require('./lib/wall-game');
 
 const app = express();
 // Собранный React-хаб (client/) имеет приоритет; всё, чего в нём нет
@@ -58,6 +59,7 @@ const gameRegistry = {
   nardy: registerNardyGame(io.of('/nardy')), // используется страницей /nardy/
   crocodile: registerCrocodileGame(io.of('/crocodile')), // используется страницей /crocodile/ — снята с хаба, но код рабочий
   skuf: registerSkufGame(io.of('/skuf')), // используется страницей /skuf/
+  wall: registerWallGame(io.of('/wall')), // используется страницей /wall/
 };
 
 app.get('/api/find-room', (req, res) => {

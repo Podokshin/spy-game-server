@@ -7,7 +7,7 @@
     { key: 'spy', name: 'Шпион', emoji: '🕵️', path: '/spy/' },
     { key: 'mission', name: 'Тайная миссия', emoji: '🎭', path: '/mission/' },
     { key: 'codenames', name: 'Кодовые имена', emoji: '🔤', path: '/codenames/' },
-    { key: 'mafia', name: 'Мафия', emoji: '🌙', path: '/mafia/' },
+    { key: 'wall', name: 'Стена признаний', emoji: '🧱', path: '/wall/' },
     { key: 'wavelength', name: 'Волна', emoji: '🌊', path: '/wavelength/' },
     { key: 'whoami', name: 'Кто я?', emoji: '❓', path: '/whoami/' },
     { key: 'nardy', name: 'Длинные нарды', emoji: '🎲', path: '/nardy/' },
