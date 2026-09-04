@@ -157,8 +157,12 @@ function RoleScreen(g) {
   return (
     <section className="screen active">
       <div className="role-card">
-        <span className="role-icon">{r.icon}</span>
-        <p className="role-title">{r.name}</p>
+        {r.art && (
+          <div className="role-art-frame">
+            <img src={r.art} alt="" className="role-art" />
+          </div>
+        )}
+        <p className="role-title"><span className="role-icon">{r.icon}</span> {r.name}</p>
         <p className="role-hint">{r.desc}</p>
         <p className="role-hint">Твоя роль — секрет. Она может раскрыться остальным позже, а может и не раскрыться никогда.</p>
         {g.readyHint === null && <button className="primary-btn" onClick={g.markReady}>Понял(а), готов(а)</button>}
@@ -440,7 +444,45 @@ function PairStep({ data, onDone }) {
   )
 }
 
-function FinalStep({ data }) {
+// Пауза перед тем, как карточка раскрытой роли покажет арт и текст — до
+// этого момента виден только силуэт-загадка, чтобы момент раскрытия
+// ощущался как момент, а не как мгновенно готовый факт.
+const ROLE_REVEAL_DELAY = 900
+
+function RoleRevealCard({ role, onDone }) {
+  const [revealed, setRevealed] = useState(false)
+
+  useEffect(() => {
+    setRevealed(false)
+    const t = setTimeout(() => { setRevealed(true); onDone && onDone() }, ROLE_REVEAL_DELAY)
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [role.playerId])
+
+  if (!revealed) {
+    return (
+      <div className="role-reveal-mystery">
+        <span className="role-reveal-mystery-icon">❓</span>
+        <p>Роль игрока <AvatarIcon avatar={role.playerAvatar} /> <b>{role.playerName}</b> раскрывается…</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="role-reveal-banner">
+      {role.art && <img src={role.art} alt="" className="role-reveal-art" />}
+      <p className="role-reveal-title">{role.icon} <b>{role.name}</b></p>
+      <p className="role-reveal-sub"><AvatarIcon avatar={role.playerAvatar} /> <b>{role.playerName}</b> — {role.desc}</p>
+    </div>
+  )
+}
+
+function FinalStep({ data, onDone }) {
+  useEffect(() => {
+    if (!data.revealedRole) onDone && onDone()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   return (
     <>
       {data.mlmWin && <div className="special-win-banner">💊 Все теперь в сети — МЛМ-щица побеждает мгновенно!</div>}
@@ -458,12 +500,7 @@ function FinalStep({ data }) {
           ))}
         </div>
       </div>
-      {data.revealedRole && (
-        <div className="role-reveal-banner">
-          {data.revealedRole.icon} Роль игрока <AvatarIcon avatar={data.revealedRole.playerAvatar} /> <b>{data.revealedRole.playerName}</b> раскрыта:
-          {' '}<b>{data.revealedRole.name}</b> — {data.revealedRole.desc}
-        </div>
-      )}
+      {data.revealedRole && <RoleRevealCard role={data.revealedRole} onDone={onDone} />}
     </>
   )
 }
@@ -474,11 +511,14 @@ function RevealScreen(g) {
   const isLastNight = data.night >= data.totalNights
   const finishing = isLastNight || data.mlmWin
 
-  // Для 'pair' кнопка "Дальше" ждёт, пока доиграет сцена (аватарки → чат →
-  // итог) — иначе хост может кликнуть раньше и оборвать анимацию на середине.
-  const [stepReady, setStepReady] = useState(data.kind !== 'pair')
+  // Для 'pair' и для 'final' с раскрытием роли кнопка "Дальше" ждёт, пока
+  // доиграет сцена — иначе хост может кликнуть раньше и оборвать анимацию
+  // на середине.
+  const needsWait = data.kind === 'pair' || (data.kind === 'final' && !!data.revealedRole)
+  const [stepReady, setStepReady] = useState(!needsWait)
   useEffect(() => {
-    setStepReady(data.kind !== 'pair')
+    setStepReady(!needsWait)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data.stepIndex, data.kind])
 
   return (
@@ -489,7 +529,7 @@ function RevealScreen(g) {
 
       {data.kind === 'overview' && <OverviewStep data={data} />}
       {data.kind === 'pair' && <PairStep key={data.a.id + '-' + data.b.id} data={data} onDone={() => setStepReady(true)} />}
-      {data.kind === 'final' && <FinalStep data={data} />}
+      {data.kind === 'final' && <FinalStep key={data.stepIndex} data={data} onDone={() => setStepReady(true)} />}
 
       {g.isHost ? (
         stepReady ? (
@@ -531,6 +571,7 @@ function EndScreen(g) {
               const role = roles[p.id]
               return (
                 <div key={p.id} className="match-row">
+                  {role?.art && <img src={role.art} alt="" className="role-mini-art" />}
                   <AvatarIcon avatar={p.avatar} />
                   <span className="match-outcome"><b>{p.name}</b>{role ? ` — ${role.icon} ${role.name}` : ''}</span>
                 </div>
