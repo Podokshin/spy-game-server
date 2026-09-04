@@ -1,11 +1,9 @@
 import { Fragment, useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'motion/react'
 import { GameCard } from './components/GameCard'
-import HubVideoPanel from './components/HubVideoPanel'
 import JoinRoomModal from './components/JoinRoomModal'
 import { Badge } from '@/components/ui/badge'
 import { GAMES } from './games'
-import { useVideoToggle } from './lib/useVideoToggle'
 import { DeviceMobile, SmileyWink, GameController as GameControllerIcon, ArrowRight, SignIn } from '@phosphor-icons/react'
 
 const STEPS = [
@@ -47,7 +45,6 @@ function HowToConnect({ glowing }) {
 }
 
 export default function App() {
-  const video = useVideoToggle()
   const [joinOpen, setJoinOpen] = useState(false)
   const [glow, setGlow] = useState(null) // 'games' | 'how' | null — куда сейчас ведёт наведённая/нажатая кнопка
   const glowTimeoutRef = useRef(null)
@@ -96,101 +93,87 @@ export default function App() {
           </span>
         </header>
 
-        <div className="flex items-stretch gap-6">
-          <div className="min-w-0 flex-1">
-            <div className="mb-8 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
-              <section className="flex min-w-0 flex-1 flex-col justify-center">
-                <h1 className="m-0 mb-3 font-heading text-[2rem] leading-[1.1] font-extrabold tracking-[-1px] text-foreground sm:text-[2.6rem]">
-                  Мини-игры для<br />
-                  <span
-                    style={{
-                      background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))',
-                      WebkitBackgroundClip: 'text',
-                      backgroundClip: 'text',
-                      color: 'transparent',
-                    }}
-                  >
-                    дружеской компании
-                  </span>
-                </h1>
-                <p className="m-0 mb-5 max-w-[480px] text-[0.98rem] leading-[1.6] text-muted-foreground">
-                  Заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.
-                </p>
-                <div className="flex flex-wrap gap-3">
-                  <a
-                    href="#games"
-                    className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-heading text-[0.92rem] font-bold text-[#06060a] no-underline"
-                    style={{ background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))' }}
-                    onMouseEnter={() => setGlow('games')}
-                    onMouseLeave={() => clearGlow('games')}
-                    onFocus={() => setGlow('games')}
-                    onBlur={() => clearGlow('games')}
-                    onClick={() => flashGlow('games')}
-                  >
-                    <GameControllerIcon size={18} weight="bold" /> Создать комнату
-                  </a>
-                  <a
-                    href="#how"
-                    className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
-                    onMouseEnter={() => setGlow('how')}
-                    onMouseLeave={() => clearGlow('how')}
-                    onFocus={() => setGlow('how')}
-                    onBlur={() => clearGlow('how')}
-                    onClick={() => flashGlow('how')}
-                  >
-                    Как это работает?
-                  </a>
-                  <button
-                    type="button"
-                    onClick={() => setJoinOpen(true)}
-                    className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
-                  >
-                    <SignIn size={18} weight="bold" /> Подключиться по коду
-                  </button>
-                </div>
-              </section>
-
-              <HowToConnect glowing={glow === 'how'} />
-            </div>
-
-            <section id="games" className={'cta-glow-target rounded-lg border-2 border-transparent p-3 -m-3' + (glow === 'games' ? ' is-glowing' : '')}>
-              <div className="mb-4 flex items-center justify-between">
-                <h2 className="m-0 font-heading text-[1.05rem] font-bold text-foreground">🎲 Все мини-игры</h2>
-                <Badge variant="outline" className="text-muted-foreground">{GAMES.length} игр</Badge>
-              </div>
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                {GAMES.map((game, i) => (
-                  <GameCard key={game.slug} index={i} {...game} />
-                ))}
-              </div>
-            </section>
-
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-[0.76rem] text-muted-foreground/70">
-              <Badge variant="outline" className="text-muted-foreground/70">12+</Badge>
-              <a href="/privacy/" className="text-inherit underline decoration-1 underline-offset-2 transition-colors hover:text-muted-foreground">
-                Политика обработки данных
+        <div className="mb-8 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">
+          <section className="flex min-w-0 flex-1 flex-col justify-center">
+            <h1 className="m-0 mb-3 font-heading text-[2rem] leading-[1.1] font-extrabold tracking-[-1px] text-foreground sm:text-[2.6rem]">
+              Мини-игры для<br />
+              <span
+                style={{
+                  background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}
+              >
+                дружеской компании
+              </span>
+            </h1>
+            <p className="m-0 mb-5 max-w-[480px] text-[0.98rem] leading-[1.6] text-muted-foreground">
+              Заходите с телефона по ссылке или коду комнаты и играйте вместе, без установки приложений.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <a
+                href="#games"
+                className="inline-flex items-center gap-2 rounded-full px-5 py-3 font-heading text-[0.92rem] font-bold text-[#06060a] no-underline"
+                style={{ background: 'linear-gradient(135deg, var(--color-spy), var(--color-wavelength))' }}
+                onMouseEnter={() => setGlow('games')}
+                onMouseLeave={() => clearGlow('games')}
+                onFocus={() => setGlow('games')}
+                onBlur={() => clearGlow('games')}
+                onClick={() => flashGlow('games')}
+              >
+                <GameControllerIcon size={18} weight="bold" /> Создать комнату
               </a>
-              <span className="opacity-50">·</span>
-              <a href="/terms/" className="text-inherit underline decoration-1 underline-offset-2 transition-colors hover:text-muted-foreground">
-                Правила сайта
+              <a
+                href="#how"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
+                onMouseEnter={() => setGlow('how')}
+                onMouseLeave={() => clearGlow('how')}
+                onFocus={() => setGlow('how')}
+                onBlur={() => clearGlow('how')}
+                onClick={() => flashGlow('how')}
+              >
+                Как это работает?
               </a>
+              <button
+                type="button"
+                onClick={() => setJoinOpen(true)}
+                className="inline-flex items-center gap-2 rounded-full border-2 border-border px-5 py-3 font-heading text-[0.92rem] font-bold text-foreground no-underline"
+              >
+                <SignIn size={18} weight="bold" /> Подключиться по коду
+              </button>
             </div>
+          </section>
+
+          <HowToConnect glowing={glow === 'how'} />
+        </div>
+
+        <section id="games" className={'cta-glow-target rounded-lg border-2 border-transparent p-3 -m-3' + (glow === 'games' ? ' is-glowing' : '')}>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="m-0 font-heading text-[1.05rem] font-bold text-foreground">🎲 Все мини-игры</h2>
+            <Badge variant="outline" className="text-muted-foreground">{GAMES.length} игр</Badge>
           </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {GAMES.map((game, i) => (
+              <GameCard key={game.slug} index={i} {...game} />
+            ))}
+          </div>
+        </section>
 
-          <aside className="hidden w-[clamp(300px,26vw,480px)] shrink-0 xl:block">
-            <HubVideoPanel enabled={video.enabled} />
-          </aside>
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2 text-[0.76rem] text-muted-foreground/70">
+          <Badge variant="outline" className="text-muted-foreground/70">12+</Badge>
+          <a href="/privacy/" className="text-inherit underline decoration-1 underline-offset-2 transition-colors hover:text-muted-foreground">
+            Политика обработки данных
+          </a>
+          <span className="opacity-50">·</span>
+          <a href="/terms/" className="text-inherit underline decoration-1 underline-offset-2 transition-colors hover:text-muted-foreground">
+            Правила сайта
+          </a>
         </div>
       </div>
 
-      <div
-        className={'credit fixed right-4 bottom-4 z-50 cursor-pointer rounded-full border-2 border-border bg-card px-[15px] py-[7px] font-heading text-[0.68rem] font-semibold whitespace-nowrap text-muted-foreground' + (video.enabled ? ' active' : '')}
-        data-shorts-toggle=""
-        title="Нажмите, чтобы включить/выключить фоновое видео справа"
-        onClick={video.toggle}
-      >
+      <div className="credit fixed right-4 bottom-4 z-50 rounded-full border-2 border-border bg-card px-[15px] py-[7px] font-heading text-[0.68rem] font-semibold whitespace-nowrap text-muted-foreground">
         ✨ Навайбкодил <b className="font-bold text-foreground">Papaluha</b> ✨
-        <span className="shorts-indicator" />
       </div>
 
       <JoinRoomModal open={joinOpen} onClose={() => setJoinOpen(false)} />
