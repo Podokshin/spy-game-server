@@ -15,9 +15,9 @@ function loadSession() {
     return null
   }
 }
-function saveSession(roomCode, playerId) {
-  if (!roomCode || !playerId) return
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId })) } catch { /* ignore */ }
+function saveSession(roomCode, playerId, sessionToken) {
+  if (!roomCode || !playerId || !sessionToken) return
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId, sessionToken })) } catch { /* ignore */ }
 }
 function clearSession() {
   try { sessionStorage.removeItem(SESSION_KEY) } catch { /* ignore */ }
@@ -65,9 +65,11 @@ export function useMafiaGame() {
 
   const hasConnectedBefore = useRef(false)
   const liveRef = useRef({})
+  const sessionTokenRef = useRef(null)
   liveRef.current = { currentRoom, myPlayerId, isHost, playerName, selectedAvatar }
 
   function applyRoomUpdate(room) {
+    if (room.sessionToken) sessionTokenRef.current = room.sessionToken
     const resolvedPlayerId = room.playerId || liveRef.current.myPlayerId
     setCurrentRoom(prev => Object.assign({}, prev, room))
     const hostNow = room.players.some(p => p.id === resolvedPlayerId && p.isHost)
@@ -78,12 +80,12 @@ export function useMafiaGame() {
   function enterRoom(res) {
     setMyPlayerId(res.playerId)
     setCurrentRoom(res)
-    saveSession(res.code, res.playerId)
+    saveSession(res.code, res.playerId, sessionTokenRef.current)
     applyRoomUpdate(res)
   }
 
   function renderNightStarted(data) {
-    saveSession(liveRef.current.currentRoom?.code, liveRef.current.myPlayerId)
+    saveSession(liveRef.current.currentRoom?.code, liveRef.current.myPlayerId, sessionTokenRef.current)
     setNightData({ round: data.round, endsAt: data.endsAt })
     setNightTurnData(null)
     setScreen('night')
@@ -149,7 +151,7 @@ export function useMafiaGame() {
     function onConnect() {
       if (hasConnectedBefore.current) {
         if (liveRef.current.currentRoom && liveRef.current.myPlayerId) {
-          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId)
+          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId, sessionTokenRef.current)
           attemptRejoin()
         }
       } else {

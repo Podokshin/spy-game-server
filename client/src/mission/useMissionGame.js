@@ -15,9 +15,9 @@ function loadSession() {
     return null
   }
 }
-function saveSession(roomCode, playerId) {
-  if (!roomCode || !playerId) return
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId })) } catch { /* ignore */ }
+function saveSession(roomCode, playerId, sessionToken) {
+  if (!roomCode || !playerId || !sessionToken) return
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId, sessionToken })) } catch { /* ignore */ }
 }
 function clearSession() {
   try { sessionStorage.removeItem(SESSION_KEY) } catch { /* ignore */ }
@@ -59,16 +59,18 @@ export function useMissionGame() {
 
   const hasConnectedBefore = useRef(false)
   const liveRef = useRef({})
+  const sessionTokenRef = useRef(null)
   liveRef.current = { currentRoom, myPlayerId, isHost, playerName, selectedAvatar }
 
   function applyRoomUpdate(room) {
+    if (room.sessionToken) sessionTokenRef.current = room.sessionToken
     const resolvedPlayerId = room.playerId || liveRef.current.myPlayerId
     const hostNow = room.players.some(p => p.id === resolvedPlayerId && p.isHost)
     setCurrentRoom(room)
     if (room.playerId) setMyPlayerId(room.playerId)
     setIsHost(hostNow)
     history.replaceState(null, '', '?room=' + room.code)
-    saveSession(room.code, resolvedPlayerId)
+    saveSession(room.code, resolvedPlayerId, sessionTokenRef.current)
     if (room.phase === 'lobby') setScreen('lobby')
   }
 
@@ -152,7 +154,7 @@ export function useMissionGame() {
     function onConnect() {
       if (hasConnectedBefore.current) {
         if (liveRef.current.currentRoom && liveRef.current.myPlayerId) {
-          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId)
+          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId, sessionTokenRef.current)
           attemptRejoin()
         }
       } else {

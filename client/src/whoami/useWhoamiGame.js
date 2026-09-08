@@ -20,10 +20,10 @@ function loadSession() {
   }
 }
 
-function saveSession(roomCode, playerId) {
-  if (!roomCode || !playerId) return
+function saveSession(roomCode, playerId, sessionToken) {
+  if (!roomCode || !playerId || !sessionToken) return
   try {
-    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId }))
+    sessionStorage.setItem(SESSION_KEY, JSON.stringify({ roomCode, playerId, sessionToken }))
   } catch {
     /* ignore */
   }
@@ -70,16 +70,18 @@ export function useWhoamiGame() {
   const hasConnectedBefore = useRef(false)
   // Живые копии для чтения из обработчиков сокета без лишних зависимостей эффекта.
   const liveRef = useRef({})
+  const sessionTokenRef = useRef(null)
   liveRef.current = { currentRoom, myPlayerId, isHost, playerName, selectedAvatar }
 
   function applyRoomUpdate(room) {
+    if (room.sessionToken) sessionTokenRef.current = room.sessionToken
     const resolvedPlayerId = room.playerId || liveRef.current.myPlayerId
     const hostNow = room.players.some(p => p.id === resolvedPlayerId && p.isHost)
     setCurrentRoom(room)
     if (room.playerId) setMyPlayerId(room.playerId)
     setIsHost(hostNow)
     history.replaceState(null, '', '?room=' + room.code)
-    saveSession(room.code, resolvedPlayerId)
+    saveSession(room.code, resolvedPlayerId, sessionTokenRef.current)
     if (room.phase === 'lobby') setScreen('lobby')
   }
 
@@ -149,7 +151,7 @@ export function useWhoamiGame() {
     function onConnect() {
       if (hasConnectedBefore.current) {
         if (liveRef.current.currentRoom && liveRef.current.myPlayerId) {
-          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId)
+          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId, sessionTokenRef.current)
           attemptRejoin()
         }
       } else {
