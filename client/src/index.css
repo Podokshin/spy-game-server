@@ -9,12 +9,10 @@
     --color-spy: #3aa7ff;
     --color-mission: #ff5fb0;
     --color-codenames: #ffc94a;
-    --color-mafia: #ff5a68;
     --color-wavelength: #8b5cf6;
     --color-whoami: #22d3ee;
     --color-nardy: #fb923c;
     --color-categories: #34d399;
-    --color-crocodile: #4ade80;
     --color-skuf: #ff2d78;
     --color-wall: #c026d3;
 
@@ -176,7 +174,7 @@
 .mesh span:nth-child(1) { width: 380px; height: 380px; top: -140px; left: -120px; background: var(--color-spy); }
 .mesh span:nth-child(2) { width: 340px; height: 340px; top: -100px; right: -140px; background: var(--color-mission); }
 .mesh span:nth-child(3) { width: 360px; height: 360px; bottom: -180px; left: 0%; background: var(--color-codenames); opacity: 0.22; }
-.mesh span:nth-child(4) { width: 320px; height: 320px; bottom: -150px; right: -110px; background: var(--color-mafia); opacity: 0.28; }
+.mesh span:nth-child(4) { width: 320px; height: 320px; bottom: -150px; right: -110px; background: var(--color-wall); opacity: 0.28; }
 .mesh span:nth-child(5) { width: 300px; height: 300px; top: 28%; left: -150px; background: var(--color-wavelength); opacity: 0.24; }
 .mesh span:nth-child(6) { width: 300px; height: 300px; top: 18%; right: -160px; background: var(--color-whoami); opacity: 0.24; }
 .mesh span:nth-child(7) { width: 280px; height: 280px; bottom: 6%; left: 32%; background: var(--color-nardy); opacity: 0.2; }

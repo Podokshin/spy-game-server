@@ -6,12 +6,10 @@ const { Server } = require('socket.io');
 const { registerSpyGame } = require('./lib/spy-game');
 const { registerMissionGame } = require('./lib/mission-game');
 const { registerCodenamesGame } = require('./lib/codenames-game');
-const { registerMafiaGame } = require('./lib/mafia-game');
 const { registerWavelengthGame } = require('./lib/wavelength-game');
 const { registerWhoamiGame } = require('./lib/whoami-game');
 const { registerCategoriesGame } = require('./lib/categories-game');
 const { registerNardyGame } = require('./lib/nardy-game');
-const { registerCrocodileGame } = require('./lib/crocodile-game');
 const { registerSkufGame } = require('./lib/skuf-game');
 const { registerWallGame } = require('./lib/wall-game');
 
@@ -52,12 +50,10 @@ const gameRegistry = {
   spy: registerSpyGame(io), // корневой namespace "/" — используется страницей /spy/
   mission: registerMissionGame(io.of('/mission')), // используется страницей /mission/
   codenames: registerCodenamesGame(io.of('/codenames')), // используется страницей /codenames/
-  mafia: registerMafiaGame(io.of('/mafia')), // используется страницей /mafia/
   wavelength: registerWavelengthGame(io.of('/wavelength')), // используется страницей /wavelength/
   whoami: registerWhoamiGame(io.of('/whoami')), // используется страницей /whoami/
   categories: registerCategoriesGame(io.of('/categories')), // используется страницей /categories/
   nardy: registerNardyGame(io.of('/nardy')), // используется страницей /nardy/
-  crocodile: registerCrocodileGame(io.of('/crocodile')), // используется страницей /crocodile/ — снята с хаба, но код рабочий
   skuf: registerSkufGame(io.of('/skuf')), // используется страницей /skuf/
   wall: registerWallGame(io.of('/wall')), // используется страницей /wall/
 };

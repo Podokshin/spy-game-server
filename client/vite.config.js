@@ -17,12 +17,10 @@ export default defineConfig({
         whoami: path.resolve(import.meta.dirname, 'whoami/index.html'),
         categories: path.resolve(import.meta.dirname, 'categories/index.html'),
         mission: path.resolve(import.meta.dirname, 'mission/index.html'),
-        mafia: path.resolve(import.meta.dirname, 'mafia/index.html'),
         codenames: path.resolve(import.meta.dirname, 'codenames/index.html'),
         wavelength: path.resolve(import.meta.dirname, 'wavelength/index.html'),
         spy: path.resolve(import.meta.dirname, 'spy/index.html'),
         nardy: path.resolve(import.meta.dirname, 'nardy/index.html'),
-        crocodile: path.resolve(import.meta.dirname, 'crocodile/index.html'),
         skuf: path.resolve(import.meta.dirname, 'skuf/index.html'),
         wall: path.resolve(import.meta.dirname, 'wall/index.html'),
       },
@@ -44,7 +42,7 @@ export default defineConfig({
       // Каждая мигрированная игра переиспользует свой существующий
       // public/<game>/style.css (вёрстка уже была в порядке, менять её не
       // просили) — в dev его тоже нужно явно проксировать.
-      '^/(spy|mission|codenames|mafia|wavelength|whoami|nardy|categories|crocodile|skuf|wall)/style\\.css$': 'http://localhost:3000',
+      '^/(spy|mission|codenames|wavelength|whoami|nardy|categories|skuf|wall)/style\\.css$': 'http://localhost:3000',
       '/nardy/rules-client.js': 'http://localhost:3000',
     },
   },

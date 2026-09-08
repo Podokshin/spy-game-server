@@ -85,7 +85,7 @@ export default function App() {
                 className="mx-[0.02em] inline-block -translate-y-[2px] scale-x-[1.08] rotate-[-6deg] font-bold italic"
                 style={{
                   background:
-                    'linear-gradient(135deg, var(--color-spy) 0%, var(--color-mission) 40%, var(--color-codenames) 70%, var(--color-mafia) 100%)',
+                    'linear-gradient(135deg, var(--color-spy) 0%, var(--color-mission) 40%, var(--color-codenames) 70%, var(--color-wall) 100%)',
                   WebkitBackgroundClip: 'text',
                   backgroundClip: 'text',
                   color: 'transparent',
