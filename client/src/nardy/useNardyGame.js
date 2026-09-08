@@ -56,6 +56,7 @@ export function useNardyGame() {
   function applyRoomUpdate(room) {
     if (room.sessionToken) sessionTokenRef.current = room.sessionToken
     const resolvedPlayerId = room.playerId || liveRef.current.myPlayerId
+    saveSession(room.code, resolvedPlayerId, sessionTokenRef.current)
     setCurrentRoom(room)
     if (room.playerId) setMyPlayerId(room.playerId)
     const meNow = room.players.find(p => p.id === resolvedPlayerId)
@@ -100,7 +101,6 @@ export function useNardyGame() {
     function onConnect() {
       if (hasConnectedBefore.current) {
         if (liveRef.current.currentRoom && liveRef.current.myPlayerId) {
-          saveSession(liveRef.current.currentRoom.code, liveRef.current.myPlayerId, sessionTokenRef.current)
           attemptRejoin()
         }
       } else {
