@@ -2,8 +2,10 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { MotionConfig } from 'motion/react'
 import { GameCard } from './components/GameCard'
 import JoinRoomModal from './components/JoinRoomModal'
+import ThemeToggle from './components/ThemeToggle'
 import { Badge } from '@/components/ui/badge'
 import { GAMES } from './games'
+import { useTheme } from './lib/useTheme'
 import { DeviceMobile, SmileyWink, GameController as GameControllerIcon, ArrowRight, SignIn } from '@phosphor-icons/react'
 
 const STEPS = [
@@ -45,6 +47,7 @@ function HowToConnect({ glowing }) {
 }
 
 export default function App() {
+  const { theme, toggle } = useTheme()
   const [joinOpen, setJoinOpen] = useState(false)
   const [glow, setGlow] = useState(null) // 'games' | 'how' | null — куда сейчас ведёт наведённая/нажатая кнопка
   const glowTimeoutRef = useRef(null)
@@ -71,26 +74,30 @@ export default function App() {
       <div className="grain" aria-hidden="true" />
 
       <div id="app" className="relative z-[2] mx-auto w-full max-w-[1360px] px-5 pt-8 pb-20">
-        <header className="mb-8 flex items-center gap-3">
-          <div className="flex size-10 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card shadow-[0_0_0_1px_rgba(0,0,0,0.3),0_12px_30px_-10px_rgba(255,95,176,0.35)]">
-            <img src="/favicon.svg" alt="" width="24" height="24" />
-          </div>
-          <span className="font-heading text-[1.3rem] font-extrabold tracking-[-0.5px] text-foreground">
-            Игр
-            <span
-              className="mx-[0.02em] inline-block -translate-y-[2px] scale-x-[1.08] rotate-[-6deg] font-bold italic"
-              style={{
-                background:
-                  'linear-gradient(135deg, var(--color-spy) 0%, var(--color-mission) 40%, var(--color-codenames) 70%, var(--color-mafia) 100%)',
-                WebkitBackgroundClip: 'text',
-                backgroundClip: 'text',
-                color: 'transparent',
-              }}
-            >
-              о
+        <header className="mb-8 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex size-10 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card shadow-[0_0_0_1px_rgba(0,0,0,0.3),0_12px_30px_-10px_rgba(255,95,176,0.35)]">
+              <img src="/favicon.svg" alt="" width="24" height="24" />
+            </div>
+            <span className="font-heading text-[1.3rem] font-extrabold tracking-[-0.5px] text-foreground">
+              Игр
+              <span
+                className="mx-[0.02em] inline-block -translate-y-[2px] scale-x-[1.08] rotate-[-6deg] font-bold italic"
+                style={{
+                  background:
+                    'linear-gradient(135deg, var(--color-spy) 0%, var(--color-mission) 40%, var(--color-codenames) 70%, var(--color-mafia) 100%)',
+                  WebkitBackgroundClip: 'text',
+                  backgroundClip: 'text',
+                  color: 'transparent',
+                }}
+              >
+                о
+              </span>
+              тека
             </span>
-            тека
-          </span>
+          </div>
+
+          <ThemeToggle theme={theme} onToggle={toggle} className="flex size-10 shrink-0 items-center justify-center rounded-md border-2 border-border bg-card text-muted-foreground transition-colors hover:text-foreground hover:border-foreground/30" />
         </header>
 
         <div className="mb-8 flex flex-col items-start gap-6 lg:flex-row lg:items-stretch">

@@ -1,8 +1,13 @@
 import { House } from '@phosphor-icons/react'
+import ThemeToggle from './ThemeToggle'
+import { useTheme } from '../lib/useTheme'
 
 // Общая шапка для всех 9 игр: бренд-лого слева, "Игра"/"Хаб" по центру,
-// счёт справа (если у этой игры вообще есть личный счёт игрока).
+// переключатель темы + счёт справа (если у этой игры вообще есть личный
+// счёт игрока).
 export default function Header({ score }) {
+  const { theme, toggle } = useTheme()
+
   return (
     <header className="gc-header">
       <a className="gc-header-brand" href="/">
@@ -16,11 +21,10 @@ export default function Header({ score }) {
         </a>
       </nav>
 
-      {typeof score === 'number' ? (
-        <span className="gc-header-score">🎫 Счёт: {score}</span>
-      ) : (
-        <span className="gc-header-score-spacer" />
-      )}
+      <div className="gc-header-right">
+        <ThemeToggle theme={theme} onToggle={toggle} />
+        {typeof score === 'number' && <span className="gc-header-score">🎫 Счёт: {score}</span>}
+      </div>
     </header>
   )
 }

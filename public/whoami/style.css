@@ -20,6 +20,19 @@
   --app-track-max: 620px;
 }
 
+:root[data-theme="light"] {
+  --bg: #f4f4f6;
+  --panel: #ffffff;
+  --panel-2: #ececf1;
+  --border: rgba(22, 21, 28, 0.12);
+  --text: #16151c;
+  --muted: rgba(22, 21, 28, 0.62);
+  --accent: #0e7490;
+  --accent-2: #dc2626;
+  --good: #059669;
+}
+
+
 * { box-sizing: border-box; }
 
 html, body {

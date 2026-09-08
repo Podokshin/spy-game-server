@@ -29,6 +29,20 @@
   --app-track-max: 720px;
 }
 
+:root[data-theme="light"] {
+  --bg: #f4f4f6;
+  --panel: #ffffff;
+  --panel-2: #ececf1;
+  --border: rgba(22, 21, 28, 0.12);
+  --text: #16151c;
+  --muted: rgba(22, 21, 28, 0.62);
+  --accent: #b45309;
+  --accent-2: #dc2626;
+  --good: #059669;
+  --gold: #b45309;
+}
+
+
 * { box-sizing: border-box; }
 
 html, body {
@@ -53,6 +67,14 @@ body {
   position: relative;
   overflow-x: hidden;
 }
+
+:root[data-theme="light"] body {
+  background:
+    radial-gradient(70% 45% at 50% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+    radial-gradient(90% 60% at 50% 110%, rgba(0, 0, 0, 0.05), transparent 55%),
+    var(--bg);
+}
+
 
 body::before {
   content: '🔤';
@@ -143,7 +165,7 @@ h2 {
 }
 
 .field {
-  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  background: linear-gradient(180deg, var(--panel), var(--bg));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: var(--sp-4);
@@ -321,7 +343,7 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 
 /* Room code */
 .room-code-box {
-  background: linear-gradient(160deg, var(--panel), #0a0a10cc);
+  background: linear-gradient(160deg, var(--panel), color-mix(in srgb, var(--bg) 80%, transparent));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 20px 24px;
@@ -397,7 +419,7 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 }
 
 .team-panel {
-  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  background: linear-gradient(180deg, var(--panel), var(--bg));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;
@@ -481,7 +503,7 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  background: linear-gradient(180deg, var(--panel), var(--bg));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: var(--sp-4);
@@ -519,7 +541,7 @@ input[type="text"]:focus, input[type="number"]:focus, select:focus {
 
 .clue-box {
   text-align: center;
-  background: linear-gradient(180deg, var(--panel), #0a0a10);
+  background: linear-gradient(180deg, var(--panel), var(--bg));
   border: 2px solid var(--border);
   border-radius: var(--radius);
   padding: 14px;

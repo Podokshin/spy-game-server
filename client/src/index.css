@@ -53,11 +53,6 @@
     --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/*
-  Игротека — тёмный сайт без переключения темы (как и все 9 игровых страниц),
-  поэтому семантические токены shadcn заданы сразу под тёмную палитру проекта
-  без отдельного .dark-варианта.
-*/
 :root {
     --background: #0a0a10;
     --foreground: #f7f6fb;
@@ -90,6 +85,46 @@
     /* Кривые из emil-design-eng, используются и в Motion-конфигах */
     --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
     --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+/* Светлая тема — переключается через data-theme на <html> (см.
+   client/src/lib/useTheme.js). :root[data-theme="light"] бьёт голый :root
+   по специфичности без !important, т.к. это один и тот же элемент (html). */
+:root[data-theme="light"] {
+    --background: #f4f4f6;
+    --foreground: #16151c;
+    --card: #ffffff;
+    --card-foreground: #16151c;
+    --popover: #ffffff;
+    --popover-foreground: #16151c;
+    --primary: #16151c;
+    --primary-foreground: #f4f4f6;
+    --secondary: #ececf1;
+    --secondary-foreground: #16151c;
+    --muted: #ececf1;
+    --muted-foreground: rgba(22, 21, 28, 0.62);
+    --accent: #ececf1;
+    --accent-foreground: #16151c;
+    --destructive: #dc2626;
+    --border: rgba(22, 21, 28, 0.12);
+    --input: rgba(22, 21, 28, 0.12);
+    --ring: rgba(22, 21, 28, 0.4);
+    --sidebar: #ffffff;
+    --sidebar-foreground: #16151c;
+    --sidebar-primary: #16151c;
+    --sidebar-primary-foreground: #f4f4f6;
+    --sidebar-accent: #ececf1;
+    --sidebar-accent-foreground: #16151c;
+    --sidebar-border: rgba(22, 21, 28, 0.12);
+    --sidebar-ring: rgba(22, 21, 28, 0.4);
+}
+
+:root[data-theme="light"] .mesh span {
+  opacity: 0.16;
+}
+
+:root[data-theme="light"] .grain {
+  opacity: 0.03;
 }
 
 @layer base {

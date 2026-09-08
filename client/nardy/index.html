@@ -2,6 +2,11 @@
 <html lang="ru">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Досинхронно применяем сохранённую тему до первой отрисовки — иначе
+      // на светлой теме был бы виден краткий "мигок" тёмной по умолчанию.
+      try { if (localStorage.getItem('siteTheme') === 'light') document.documentElement.setAttribute('data-theme', 'light'); } catch (e) {}
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Длинные нарды Online</title>
     <meta name="theme-color" content="#0a0a10">

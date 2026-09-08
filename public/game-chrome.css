@@ -122,8 +122,14 @@ html {
   border-color: var(--accent);
 }
 
-.gc-header-score {
+.gc-header-right {
   justify-self: end;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.gc-header-score {
   background: var(--panel-2);
   border: 2px solid var(--border);
   border-radius: 999px;
@@ -132,6 +138,30 @@ html {
   font-size: 0.85rem;
   color: var(--accent);
   white-space: nowrap;
+}
+
+.theme-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 2px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color .15s ease, border-color .15s ease, transform .1s ease;
+}
+
+.theme-toggle-btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.theme-toggle-btn:active {
+  transform: scale(0.92);
 }
 
 /* Grid, а не flex + justify-content:center: с флексом боковые колонки
